@@ -1,27 +1,15 @@
 ---
 name: validate-grpc-parity
 description: >
-  Independently validates that an implemented gRPC service is a faithful,
-  operable replacement for the WCF service it replaces, and decides whether
-  WCF retirement is permitted. It consumes the approved migration-spec.json,
-  the inventory, the decision log, and the implementation handoff reports;
-  executes builds, unit/integration tests, contract-compatibility checks,
-  security and deadline probes, streaming and concurrency exercises, and
-  performance measurements; and assesses thirteen parity gates covering
-  contract/Protobuf compatibility and reserved fields, build and tests,
-  success-path behavior, typed faults and status/error details, serialization
-  edge cases (decimal, presence/null/default, date/time, GUID, enum,
-  polymorphism), authentication/authorization/TLS/mTLS, deadlines/
-  cancellation/retries/idempotency, unary and client/server/bidirectional
-  streaming, session-state/concurrency/transaction/reliable-delivery
-  redesigns, payload and message limits with performance SLA evidence,
-  health/telemetry/deployment/service discovery, client migration/
-  coexistence/rollback, and WCF retirement criteria. It is read-only with
-  respect to application code — it never fixes what it finds — writes only
-  validation artifacts, uses golden production traffic only with explicit
-  permission and privacy controls, never infers parity from static analysis
-  or a passing build alone, and never approves retirement when consumer,
-  operational, or rollback evidence is incomplete.
+  Independently validates whether an implemented gRPC service is a faithful,
+  operable WCF replacement and whether retirement is permitted. Uses approved
+  migration artifacts and executes builds, tests, compatibility checks,
+  security and resilience probes, streaming and concurrency exercises, and
+  performance measurements across all parity gates. It never infers parity from
+  static analysis or a passing build alone. It does not modify application code,
+  writes only validation artifacts, requires explicit permission for production
+  traffic, and blocks retirement when consumer, operational, or rollback
+  evidence is incomplete.
 ---
 
 # Skill: Validate gRPC Parity

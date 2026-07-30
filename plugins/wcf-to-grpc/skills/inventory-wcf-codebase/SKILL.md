@@ -1,21 +1,14 @@
 ---
 name: inventory-wcf-codebase
 description: >
-  Produces an evidence-backed, incrementally completable inventory of a .NET
-  WCF codebase for gRPC migration planning. Works on both WCF servers and
-  client-only repositories. Discovers solutions, projects, target frameworks,
-  and packages; traces service, operation, data, message, fault, and callback
-  contracts to implementations and call sites; inspects app.config/web.config,
-  config transforms, and code-based configuration; and enumerates hosts,
-  endpoints, bindings, behaviors, quotas, timeouts, security, identity,
-  serialization, KnownType/inheritance, sessions, instance/concurrency modes,
-  transactions, reliable sessions, one-way/duplex/streaming, inspectors and
-  interceptors, generated proxies, ChannelFactory usage, consumers, external
-  dependencies, deployment, and tests. Separates facts from derived conclusions
-  and unknowns, attaches file/symbol/line evidence with confidence, flags
-  unsupported or high-risk features, and emits output conforming to
-  schemas/inventory.schema.json. Read-only: it never edits the analyzed
-  repository.
+  Produces an evidence-backed inventory of a .NET WCF server or client codebase
+  for gRPC migration planning. Traces contracts, implementations, call sites,
+  configuration, hosts, endpoints, bindings, behaviors, security,
+  serialization, sessions, concurrency, transactions, streaming, proxies,
+  consumers, deployment, and tests. Separates facts, conclusions, and unknowns;
+  records file, symbol, and line evidence with confidence; flags unsupported or
+  high-risk features; and emits schemas/inventory.schema.json output. It is
+  read-only and never edits the analyzed repository.
 ---
 
 # Skill: Inventory a WCF Codebase

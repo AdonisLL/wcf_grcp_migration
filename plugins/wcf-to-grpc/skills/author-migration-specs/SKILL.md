@@ -1,20 +1,15 @@
 ---
 name: author-migration-specs
 description: >
-  Authors deterministic, evidence-backed WCF-to-gRPC migration artifacts from an
-  approved inventory, decision log, and mapping result. Produces a target
-  architecture, per-service Protobuf contract specifications, a dependency-
-  ordered migration roadmap, and independently implementable, fleet-ready work
-  packages conforming to schemas/migration-spec.schema.json, plus the rendered
-  assessment, decision, architecture, contract, roadmap, and work-package
-  Markdown. Designs proto package/version/file layout, service boundaries, unary
-  and streaming RPC shapes, field numbering and reservation, presence and
-  nullability, decimal/time/GUID/enum/polymorphism handling, status and error
-  details, deadlines, cancellation, retries and idempotency, security and
-  authorization, session/state and transaction redesign, telemetry and health,
-  hosting, deployment, coexistence, client cutover, rollback, parity tests, and
-  WCF retirement gates. It blocks on unresolved blocking decisions and never
-  publishes issues, implements code, or claims runtime parity.
+  Authors deterministic, evidence-backed WCF-to-gRPC migration specifications
+  from an approved inventory, decision log, and mapping result. Produces target
+  architecture, Protobuf contracts, a dependency-ordered roadmap, and
+  independently implementable work packages conforming to
+  schemas/migration-spec.schema.json. Covers RPC and message design, errors,
+  resilience, security, state, transactions, telemetry, hosting, deployment,
+  coexistence, cutover, rollback, parity tests, and WCF retirement gates. Blocks
+  on unresolved decisions and never publishes issues, implements code, or claims
+  runtime parity.
 ---
 
 # Skill: Author WCF-to-gRPC Migration Specifications
