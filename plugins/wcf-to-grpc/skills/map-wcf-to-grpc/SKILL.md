@@ -3,7 +3,7 @@ name: map-wcf-to-grpc
 description: >
   Translates an evidence-backed WCF inventory and recorded migration decisions
   into deterministic gRPC/Protobuf mapping guidance with risk flags. The
-  target is always gRPC on ASP.NET Core; constructs with no safe direct gRPC
+  target is always gRPC for .NET; constructs with no safe direct gRPC
   equivalent are flagged as redesign risks and routed to an explicit
   architectural decision instead of being silently replaced by REST, CoreWCF,
   or a messaging system.
@@ -30,7 +30,7 @@ decision before specification authoring can proceed.
 
 ## Mandatory product rule
 
-The target platform is **gRPC on ASP.NET Core**. When a WCF feature has no
+The target platform is **gRPC for .NET**. When a WCF feature has no
 safe direct gRPC equivalent, this skill must:
 
 1. Flag the construct as `UNSUPPORTED` with a risk level (`HIGH` or `MEDIUM`).

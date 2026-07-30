@@ -1,9 +1,9 @@
 # Security and Authorization Mapping Reference
 
-> **Scope:** Mapping from WCF security modes and credential types to gRPC /
-> ASP.NET Core equivalents. Constructs with no direct gRPC equivalent are
+> **Scope:** Mapping from WCF security modes and credential types to
+> gRPC for .NET equivalents. Constructs with no direct gRPC equivalent are
 > marked **UNSUPPORTED** and flagged as redesign risks. The target is always
-> gRPC on ASP.NET Core; this reference does not substitute REST or CoreWCF as
+> gRPC for .NET; this reference does not substitute REST or CoreWCF as
 > a workaround. Risk levels follow `feature-mapping.md`. See `sources.md`.
 
 ---
@@ -75,19 +75,19 @@ TLS (§1.2); the credential type maps per §2 below.
 ### 2.1 Windows Authentication (NTLM / Kerberos) — UNSUPPORTED (HIGH risk)
 
 `NetTcpBinding` and `WSHttpBinding` frequently use Windows Integrated
-Authentication (NTLM or Kerberos/SPNEGO). **gRPC on ASP.NET Core does not
+Authentication (NTLM or Kerberos/SPNEGO). **gRPC for .NET does not
 natively support NTLM or Kerberos negotiation over HTTP/2.**
 
 **Required redesign** (architectural decision required); common replacement
 strategies:
 - **Microsoft Entra ID (formerly Azure AD):** issue short-lived JWT access
-  tokens scoped to the gRPC service and validate them with the ASP.NET Core
+  tokens scoped to the gRPC service and validate them with the .NET
   JWT Bearer authentication middleware. Suitable for internal and external
   consumers alike.
 - **Active Directory Federation Services (AD FS) + OAuth 2.0:** federate
   existing Windows identities via OIDC to issue JWTs.
 - **Negotiate/SPNEGO over HTTP/2:** experimental in some environments; not
-  officially supported by ASP.NET Core gRPC and must not be assumed stable.
+  officially supported by gRPC for .NET and must not be assumed stable.
 
 This is a **blocking** architectural decision — migration cannot proceed for
 affected services until the user approves a replacement identity mechanism.
@@ -114,7 +114,7 @@ user-to-service scenarios:
 1. The client obtains a JWT from an identity provider.
 2. The client sends the token as `Authorization: Bearer <token>` in gRPC
    call metadata.
-3. The server validates it with ASP.NET Core JWT Bearer authentication.
+3. The server validates it with .NET JWT Bearer authentication.
 
 ```csharp
 // Server: Program.cs
@@ -177,23 +177,23 @@ When a load balancer or reverse proxy (nginx, Envoy, Azure Application
 Gateway) terminates TLS, traffic from the proxy to the application server
 travels over plaintext HTTP/2. Acceptable only when the intra-cluster network
 is trusted and the proxy enforces mTLS or IP allow-listing on the backend
-leg. Configure ASP.NET Core to trust the proxy via `UseForwardedHeaders` and
+leg. Configure .NET to trust the proxy via `UseForwardedHeaders` and
 `KnownProxies`.
 
 ---
 
 ## 4. Authorization
 
-gRPC services use the standard ASP.NET Core authorization pipeline.
+gRPC services use the standard .NET authorization pipeline.
 
-| WCF Mechanism | gRPC / ASP.NET Core Equivalent | Risk |
+| WCF Mechanism | gRPC for .NET Equivalent | Risk |
 |------------------|--------------------------------|------|
 | `PrincipalPermissionAttribute` | `[Authorize(Roles = "...")]` | LOW |
 | `ServiceAuthorizationManager` | Custom `IAuthorizationHandler` | MEDIUM |
-| Custom `IAuthorizationPolicy` | ASP.NET Core `AuthorizationPolicy` | MEDIUM |
+| Custom `IAuthorizationPolicy` | .NET `AuthorizationPolicy` | MEDIUM |
 | `ClaimsPrincipal` checks | Same API via `ServerCallContext.GetHttpContext().User` | LOW |
 | Role-based (`WindowsIdentity`) | Claims-based via JWT role claims | MEDIUM |
-| `AspNetCompatibilityRequirementsMode` | Not applicable; gRPC runs natively on ASP.NET Core | N/A |
+| `AspNetCompatibilityRequirementsMode` | Not applicable; gRPC runs natively on .NET | N/A |
 
 Apply `[Authorize]` to the gRPC service class or to individual method
 overrides, and read the authenticated principal via
@@ -223,7 +223,7 @@ before specification authoring begins.
 
 WCF certificate and credential configuration commonly lives in `app.config`
 or `web.config`. gRPC services should instead use:
-- ASP.NET Core `IConfiguration` / `IOptions<T>` for runtime configuration.
+- .NET `IConfiguration` / `IOptions<T>` for runtime configuration.
 - `X509Store` or a managed secret store (Azure Key Vault, HashiCorp Vault)
   for certificate and key material.
 - Environment variables or a managed identity for credentials — never

@@ -25,17 +25,17 @@ mandatory mapping rule.
   this skill. Content is summarized in original language throughout these
   references; the source text is not reproduced.
 
-### S2 — ASP.NET Core gRPC documentation area (overview)
+### S2 — gRPC for .NET documentation area (overview)
 - **URL:** <https://learn.microsoft.com/en-us/aspnet/core/grpc/>
 - **Publisher:** Microsoft Corporation
-- **Notes:** Landing page for gRPC on ASP.NET Core: Protobuf tooling,
+- **Notes:** Landing page for gRPC for .NET: Protobuf tooling,
   hosting, and client creation. Used for general hosting and tooling claims.
 
 ### S3 — gRPC services with ASP.NET Core
 - **URL:** <https://learn.microsoft.com/en-us/aspnet/core/grpc/aspnetcore>
 - **Publisher:** Microsoft Corporation
 - **Notes:** Kestrel configuration, IIS/HTTP.sys hosting, named-pipe and
-  non-ASP.NET-Core project hosting. Used for hosting-topology claims.
+  non-web project hosting. Used for hosting-topology claims.
 
 ### S4 — Create gRPC services and methods
 - **URL:** <https://learn.microsoft.com/en-us/aspnet/core/grpc/services>

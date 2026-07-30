@@ -82,7 +82,7 @@
     <circle cx="115" cy="73" r="17" fill="#fff"/>
     <circle cx="115" cy="73" r="8" fill="#27b8c7"/>
     <text x="115" y="148" fill="#fff" font-size="30" font-weight="800" text-anchor="middle">gRPC</text>
-    <text x="115" y="178" fill="#b7d9df" font-size="15" text-anchor="middle">Protobuf · HTTP/2 · ASP.NET</text>
+    <text x="115" y="178" fill="#b7d9df" font-size="15" text-anchor="middle">Protobuf · HTTP/2 · .NET</text>
     <g fill="#74ead2" font-size="13" text-anchor="middle">
       <text x="115" y="210">Modern service platform</text>
       <text x="115" y="232">verified before cutover</text>

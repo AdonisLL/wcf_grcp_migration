@@ -18,7 +18,7 @@
       "EVD-order-service-contract",
       "EVD-order-status-callback"
     ],
-    "migrationScope": "Migrate the Contoso order intake WCF service and its internal consumers to gRPC on ASP.NET Core; external partner traffic stays on the legacy endpoint until its cutover decision is approved.",
+    "migrationScope": "Migrate the Contoso order intake WCF service and its internal consumers to gRPC for .NET; external partner traffic stays on the legacy endpoint until its cutover decision is approved.",
     "riskIds": [
       "RSK-duplex-callback",
       "RSK-external-soap-consumers",
@@ -937,7 +937,7 @@
         "decisionIds": [
           "DEC-hosting-platform"
         ],
-        "design": "The Windows Service host is replaced by an ASP.NET Core host on Kestrel serving HTTP/2 over TLS on 8443, with a separate HTTP/1.1 port for health and metrics. IIS is not used because it cannot serve gRPC reliably.",
+        "design": "The Windows Service host is replaced by a modern .NET host on Kestrel serving HTTP/2 over TLS on 8443, with a separate HTTP/1.1 port for health and metrics. IIS is not used because it cannot serve gRPC reliably.",
         "evidenceIds": [
           "EVD-order-service-binding"
         ],
@@ -1019,7 +1019,7 @@
         "decisionIds": [
           "DEC-authorization-model"
         ],
-        "design": "ASP.NET Core authorization replaces PrincipalPermission: the default policy denies unauthenticated calls, orders.write guards SubmitOrder, orders.read guards SubscribeOrderStatus, and per-order data scoping is enforced in the service implementation and proved by tests.",
+        "design": ".NET authorization replaces PrincipalPermission: the default policy denies unauthenticated calls, orders.write guards SubmitOrder, orders.read guards SubscribeOrderStatus, and per-order data scoping is enforced in the service implementation and proved by tests.",
         "evidenceIds": [
           "EVD-order-service-binding"
         ],
@@ -1502,7 +1502,7 @@
       "deliverables": [
         {
           "action": "create",
-          "description": "ASP.NET Core gRPC host with Kestrel HTTP/2, TLS, authentication, authorization policies, interceptors, telemetry, and health checks.",
+          "description": "gRPC for .NET host with Kestrel HTTP/2, TLS, authentication, authorization policies, interceptors, telemetry, and health checks.",
           "path": "src/Contoso.Orders.Grpc/Program.cs"
         },
         {
@@ -1555,7 +1555,7 @@
         "Do not implement the order service RPCs.",
         "Do not change WCF hosting or routing."
       ],
-      "objective": "Stand up the ASP.NET Core gRPC host with transport security, authentication, authorization policies, error mapping, telemetry, and health checks.",
+      "objective": "Stand up the gRPC for .NET host with transport security, authentication, authorization policies, error mapping, telemetry, and health checks.",
       "riskIds": [],
       "rollback": {
         "dataImpact": {

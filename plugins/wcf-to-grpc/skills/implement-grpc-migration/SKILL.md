@@ -3,7 +3,7 @@ name: implement-grpc-migration
 description: >
   Implements one approved, fleet-ready WCF-to-gRPC work package at a time from
   an approved migration-spec.json: .proto contracts and codegen wiring,
-  ASP.NET Core gRPC server hosting, adapters that delegate to existing
+  gRPC for .NET server hosting, adapters that delegate to existing
   business logic, generated gRPC clients, authentication/authorization,
   interceptors and error mapping, deadlines/cancellation/retries/idempotency,
   telemetry and health checks, streaming/session-state/transaction
@@ -251,7 +251,7 @@ for the normative per-surface guidance:
 | Surface | Covers |
 |---|---|
 | Proto and codegen | `.proto` layout, package/version conventions, `Grpc.Tools`/build wiring, compatibility checks |
-| Hosting | ASP.NET Core/Kestrel, HTTP/2 and TLS, named-pipe/UDS transports, process model |
+| Hosting | Kestrel on modern .NET, HTTP/2 and TLS, named-pipe/UDS transports, process model |
 | Adapters | Delegating gRPC service classes to existing business logic without rewriting it |
 | Clients | Generated `Grpc.Net.Client` clients, channel/connection configuration |
 | Auth/authz | Authentication schemes, authorization policies, per-RPC overrides |

@@ -154,7 +154,7 @@ Every option contains:
 - `grpcCentered`.
 
 For a proposed or approved selection, `grpcCentered` must be `true`. The
-description must identify gRPC on ASP.NET Core as the service/API destination.
+description must identify gRPC for .NET as the service/API destination.
 
 A supporting component is gRPC-centered only when:
 
@@ -346,7 +346,7 @@ At minimum, require explicit decision approval for:
       "id": "OPT-order-service-identity-oidc",
       "title": "OIDC workload identity",
       "description": "Authenticate gRPC callers with short-lived OIDC/OAuth 2.0 tokens issued by the approved enterprise provider.",
-      "advantages": ["Standards-based claims", "Works with ASP.NET Core authorization"],
+      "advantages": ["Standards-based claims", "Works with modern .NET authorization"],
       "disadvantages": ["Requires provider and client registration"],
       "consequences": ["Clients obtain and attach tokens", "Server validates issuer and audience"],
       "grpcCentered": true
@@ -380,15 +380,15 @@ At minimum, require explicit decision approval for:
     {
       "id": "OPT-order-service-runtime-net10",
       "title": ".NET 10 LTS",
-      "description": "Host the gRPC service on ASP.NET Core using .NET 10 LTS.",
-      "advantages": ["Current LTS support window", "Full ASP.NET Core gRPC support"],
+      "description": "Host the gRPC service on modern .NET using .NET 10 LTS.",
+      "advantages": ["Current LTS support window", "Full gRPC for .NET support"],
       "disadvantages": ["May require upgrading deployment images and libraries"],
       "consequences": ["Build and deployment baselines move to .NET 10"],
       "grpcCentered": true
     }
   ],
   "selectedOptionId": "OPT-order-service-runtime-net10",
-  "decision": "Target .NET 10 LTS for the ASP.NET Core gRPC host.",
+  "decision": "Target .NET 10 LTS for the gRPC for .NET host.",
   "rationale": "The platform owner selected the current LTS and no inventory constraint requires an older supported runtime.",
   "unresolvedReason": null,
   "nextAction": "Request architecture review approval.",

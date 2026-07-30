@@ -17,7 +17,7 @@ files it produces see [output-contracts.md](output-contracts.md).
 | Who approves the specification, the issue preview, and the retirement? | Each is a distinct human act; the plugin will stop and ask by name. |
 | What may the agents do? Network, GitHub mutation, test harness, golden traffic, load test, production access? | All default to off. Nothing is granted implicitly. |
 
-The **target is always gRPC on ASP.NET Core**. This is a fixed product
+The **target is always gRPC for .NET**. This is a fixed product
 decision, not a recommendation the plugin will renegotiate. A WCF construct
 that gRPC cannot express directly becomes an explicit redesign risk and a
 recorded decision — never a quiet retarget to REST, CoreWCF, or a message
@@ -80,7 +80,7 @@ to an explicit decision.
 
 ### Mechanical or low-risk
 
-| WCF | gRPC on ASP.NET Core |
+| WCF | gRPC for .NET |
 |---|---|
 | `[ServiceContract]` | Protobuf `service` (no interface inheritance; flatten) |
 | `[OperationContract]` request/response | Unary `rpc` (one request message, one response message) |
@@ -295,7 +295,7 @@ Guidance in this plugin is derived from the sources indexed in
 principally Microsoft's *gRPC for WCF Developers*
 ([local copy](../assets/gRPC-for-WCF-Developers.pdf),
 [online edition](https://learn.microsoft.com/en-us/dotnet/architecture/grpc-for-wcf-developers/)),
-the [ASP.NET Core gRPC documentation](https://learn.microsoft.com/en-us/aspnet/core/grpc/),
+the [gRPC for .NET documentation](https://learn.microsoft.com/en-us/aspnet/core/grpc/),
 the [Protocol Buffers proto3 language guide](https://protobuf.dev/programming-guides/proto3/),
 and the [gRPC status code definitions](https://grpc.io/docs/guides/status-codes/).
 Support windows change with every .NET release: re-check the

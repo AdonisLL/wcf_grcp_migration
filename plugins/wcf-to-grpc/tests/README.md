@@ -75,5 +75,5 @@ not run it.
   flow, reliable sessions, and streamed payloads.
 
 Each `expected.json` records inventory facts, evidence, risks, questions,
-mandatory ASP.NET Core gRPC mapping expectations, explicit redesign risks, and
+mandatory gRPC for .NET mapping expectations, explicit redesign risks, and
 an acyclic work-package specification.

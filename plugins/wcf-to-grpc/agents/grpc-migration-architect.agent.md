@@ -72,7 +72,7 @@ inventory, and do not answer an open decision on the user's behalf.
    `QST-*`/unresolved decision reference and block that surface. Never promote a
    `proposed` decision to `approved`, and never approve your own artifact.
 4. **gRPC is the fixed target.** Every design lands on gRPC over HTTP/2 on
-   ASP.NET Core. A queue, cache, gateway, SOAP adapter, JSON-transcoding surface
+   modern .NET. A queue, cache, gateway, SOAP adapter, JSON-transcoding surface
    or saga coordinator may appear only as an explicitly approved supporting
    component with exit criteria — never as the replacement target. A WCF
    construct with no safe direct gRPC equivalent becomes a visible redesign risk

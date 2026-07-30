@@ -14,7 +14,7 @@ description: >
 ## Purpose
 
 Turn an evidence-backed WCF inventory into an explicit, reviewable decision
-log for a migration whose mandatory destination is **gRPC on ASP.NET Core**.
+log for a migration whose mandatory destination is **gRPC for .NET**.
 The interview closes business, architecture, operational, and rollout choices
 that static analysis cannot establish confidently. It does not repeat
 repository-discoverable questions, author the migration specification,
@@ -43,7 +43,7 @@ before starting.
 
 ## Non-negotiable rules
 
-- **gRPC is mandatory.** Every final option keeps gRPC on ASP.NET Core as the
+- **gRPC is mandatory.** Every final option keeps gRPC for .NET as the
   service migration target. A broker, cache, gateway, SOAP adapter, JSON
   transcoding surface, saga coordinator, or similar technology may appear
   only as an explicitly approved supporting redesign component. It must not

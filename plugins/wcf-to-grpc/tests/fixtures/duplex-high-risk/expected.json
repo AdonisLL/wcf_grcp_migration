@@ -161,8 +161,8 @@
     }
   ],
   "mapping": {
-    "target": "grpc-aspnetcore",
-    "targetRuntime": "ASP.NET Core gRPC",
+    "target": "grpc-dotnet",
+    "targetRuntime": "gRPC for .NET",
     "serviceMappings": [
       {
         "sourceServiceId": "SVC-duplex-dispatch",
@@ -266,11 +266,11 @@
           "WP-duplex-state-redesign",
           "WP-duplex-streaming"
         ],
-        "objective": "Implement ASP.NET Core gRPC services and parity, reconnect, ordering, and failure-injection tests."
+        "objective": "Implement gRPC for .NET services and parity, reconnect, ordering, and failure-injection tests."
       }
     ],
     "expectations": [
-      "The mandatory target is ASP.NET Core gRPC; CoreWCF, REST, and message brokers may be coexistence or implementation details but not replacement targets.",
+      "The mandatory target is gRPC for .NET; CoreWCF, REST, and message brokers may be coexistence or implementation details but not replacement targets.",
       "Every duplex, one-way, session, transaction, reliable-delivery, and raw-stream behavior is an explicit redesign risk with an approved decision and executable parity criteria.",
       "The dependency graph is acyclic and keeps shared contract work ahead of independently owned state and streaming work."
     ]

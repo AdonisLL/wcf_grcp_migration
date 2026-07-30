@@ -55,7 +55,7 @@ Only implement the surfaces your assigned package's `scope` and
   foundation package. A per-service package imports them; it does not
   redefine or edit them.
 
-## 2. ASP.NET Core gRPC server hosting
+## 2. gRPC for .NET server hosting
 
 - Add the gRPC server only to the project(s)/host the `hosting` architecture
   section and the package's deliverables name. Configure Kestrel endpoints
@@ -106,7 +106,7 @@ Only implement the surfaces your assigned package's `scope` and
 - Implement the authentication scheme the `security` section names (for
   example OIDC/JWT bearer, mTLS with client-certificate validation) — never
   substitute your own scheme.
-- Implement ASP.NET Core authorization policies from the `authorization`
+- Implement modern .NET authorization policies from the `authorization`
   section; apply the default (deny-by-default) policy at the service level
   and per-RPC overrides exactly as each `RPC-*`'s `authorizationPolicy`
   states. "Inherits the service default" is only valid when that default is

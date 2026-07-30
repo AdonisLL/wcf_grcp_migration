@@ -83,7 +83,7 @@ repository does not have. Waves are typical, not fixed.
 | Package | Typical wave | Fleet | Purpose |
 |---|---|---|---|
 | `WP-foundation-proto-conventions` | 1 | sequential | Proto layout, package naming, versioning policy, shared types (decimal, money, IDs), generated-code configuration, compatibility check tooling |
-| `WP-foundation-host-bootstrap` | 1 | sequential | ASP.NET Core host, Kestrel/HTTP-2/TLS, configuration, DI composition, project structure |
+| `WP-foundation-host-bootstrap` | 1 | sequential | Kestrel host on modern .NET, HTTP/2/TLS, configuration, DI composition, project structure |
 | `WP-foundation-cross-cutting` | 2 | sequential | Error-mapping interceptor, authentication/authorization policies, logging/tracing/metrics, health checks, deadline and cancellation plumbing |
 | `WP-<service>-contract` | 2–3 | eligible per service | The service `.proto`, message mappings, reservations, generated-code registration |
 | `WP-<service>-server` | 3–4 | eligible per service | Service implementation delegating to existing business logic, request/response conversion, validation, error mapping |

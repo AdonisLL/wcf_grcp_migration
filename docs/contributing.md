@@ -72,7 +72,7 @@ It fails the build on any of:
 - a broken local Markdown link or heading anchor;
 - a fixture whose source or evidence path is missing, whose evidence line
   number exceeds the file, whose XML does not parse, whose mapping target is
-  not ASP.NET Core gRPC, or whose risks are not explicit redesign risks;
+  not gRPC for .NET, or whose risks are not explicit redesign risks;
 - missing fixture coverage for any required WCF feature tag.
 
 CI ([`validate-plugin.yml`](../.github/workflows/validate-plugin.yml)) runs the
@@ -116,7 +116,7 @@ failure.
 - Never use `TBD`, `TODO`, `FIXME`, a placeholder, or an empty section. If it
   is not ready, do not merge it. The repository contains no placeholder files
   and no `.gitkeep` stubs, and should not gain any.
-- Terminology: `gRPC`, `Protobuf`, `ASP.NET Core`, `WCF`, `.NET`, `HTTP/2`.
+- Terminology: `gRPC`, `gRPC for .NET`, `Protobuf`, `WCF`, `.NET`, `HTTP/2`.
 
 ## 5. Schemas
 
@@ -135,7 +135,7 @@ Fixtures under `plugins/wcf-to-grpc/tests/fixtures/` are **static legacy WCF
 sources** — they are never built or restored. Each fixture directory contains
 the WCF sources, a project and solution file, an `App.config`, and an
 `expected.json` that records inventory facts with evidence line numbers, risks,
-questions, mandatory ASP.NET Core gRPC mapping expectations, explicit redesign
+questions, mandatory gRPC for .NET mapping expectations, explicit redesign
 risks, and an acyclic work-package specification.
 
 To add one:

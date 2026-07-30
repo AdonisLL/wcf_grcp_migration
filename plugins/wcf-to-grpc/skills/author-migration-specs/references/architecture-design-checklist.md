@@ -138,7 +138,7 @@ entry for every WCF security mode with no direct gRPC equivalent.
 
 ## 8. `authorization`
 
-Must state: the ASP.NET Core authorization policies replacing
+Must state: the modern .NET authorization policies replacing
 `PrincipalPermission`, role checks, and custom authorization managers; the
 default policy (deny by default) and per-RPC overrides; claim/role mapping from
 the new identity provider; how per-message or data-scoped authorization is

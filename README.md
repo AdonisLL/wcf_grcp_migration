@@ -2,7 +2,7 @@
 
 A GitHub Copilot CLI plugin marketplace containing **`wcf-to-grpc`**: five
 agents, seven skills, six artifact schemas, and a dependency-free validator that
-take a legacy .NET WCF codebase to **gRPC on ASP.NET Core** — through
+take a legacy .NET WCF codebase to **gRPC for .NET** — through
 evidence-backed analysis, an explicit decision record, a reviewable
 specification, gated implementation, and independent parity validation, ending
 at a WCF retirement gate that will not open without proof.
@@ -32,6 +32,10 @@ who must resolve it, and stops.
 
 The plugin itself has no runtime dependency, no build step, no MCP server, and
 no hooks.
+
+The product-facing target is **gRPC for .NET**. Server projects run on Kestrel
+and use the literal `Grpc.AspNetCore` package name; that package is unrelated to
+the retired `Grpc.Core` implementation.
 
 ## Installation
 
@@ -311,7 +315,7 @@ deliberately excluded from CI.
 
 - Microsoft, *gRPC for WCF Developers* — [local copy](assets/gRPC-for-WCF-Developers.pdf) ·
   [online edition](https://learn.microsoft.com/en-us/dotnet/architecture/grpc-for-wcf-developers/)
-- [gRPC on ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/grpc/)
+- [gRPC for .NET](https://learn.microsoft.com/en-us/aspnet/core/grpc/)
 - [Protocol Buffers proto3 language guide](https://protobuf.dev/programming-guides/proto3/) ·
   [well-known types](https://protobuf.dev/reference/protobuf/google.protobuf/)
 - [gRPC status codes](https://grpc.io/docs/guides/status-codes/)

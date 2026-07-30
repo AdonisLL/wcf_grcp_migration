@@ -2,7 +2,7 @@
 
 > **Scope:** Guidance for mapping WCF service-model constructs (contracts,
 > bindings, behaviors, instance/concurrency modes, extensibility points, and
-> observability) to gRPC on ASP.NET Core. Each entry states a risk level.
+> observability) to gRPC for .NET. Each entry states a risk level.
 > **LOW** = mechanical change, **MEDIUM** = semantic difference requiring
 > review, **HIGH** = no direct equivalent; an architectural redesign and a
 > recorded decision are required. See `sources.md` for full citations.
@@ -71,10 +71,10 @@ See `error-and-streaming-mapping.md` §1.
 
 ## 2. Bindings
 
-WCF bindings bundle transport, encoding, and security. gRPC on ASP.NET Core
+WCF bindings bundle transport, encoding, and security. gRPC for .NET
 always uses HTTP/2 with Protobuf encoding and TLS; there is no one-to-one
 binding concept, so each binding property is mapped to an explicit Kestrel,
-channel, or ASP.NET Core configuration setting.
+channel, or .NET hosting configuration setting.
 
 | WCF Binding | gRPC Equivalent | Risk |
 |-------------|-----------------|------|
@@ -92,7 +92,7 @@ redesign around an external message broker (an explicit decision from the
 user) exposed via a gRPC client-streaming method or a dedicated adapter
 service. Do not silently substitute a REST or non-gRPC queue consumer.
 
-**`NetNamedPipeBinding`:** ASP.NET Core gRPC supports intra-machine IPC over
+**`NetNamedPipeBinding`:** gRPC for .NET supports intra-machine IPC over
 Unix domain sockets or Windows named pipes. This is a supported, low-risk
 alternative.
 
@@ -116,13 +116,13 @@ deadline (`DateTime.UtcNow + offset`) for `CallOptions.Deadline`. gRPC has
 
 ### 3.1 `ServiceBehaviorAttribute`
 
-| WCF Property | gRPC / ASP.NET Core Equivalent | Risk |
+| WCF Property | gRPC for .NET Equivalent | Risk |
 |---------------|--------------------------------|------|
-| `InstanceContextMode.PerCall` | Default ASP.NET Core scoped service lifetime | LOW |
+| `InstanceContextMode.PerCall` | Default scoped service lifetime in gRPC for .NET | LOW |
 | `InstanceContextMode.PerSession` | **UNSUPPORTED** — gRPC has no session concept | HIGH |
 | `InstanceContextMode.Singleton` | Register the service with `AddSingleton` | LOW |
 | `ConcurrencyMode.Single` | Not applicable; concurrency is governed by DI lifetime | LOW |
-| `ConcurrencyMode.Multiple` | Default ASP.NET Core behavior | LOW |
+| `ConcurrencyMode.Multiple` | Default concurrent request behavior | LOW |
 | `ConcurrencyMode.Reentrant` | **UNSUPPORTED** — replace with async/await | HIGH |
 | `MaxItemsInObjectGraph` | No equivalent; Protobuf has no object-graph cycle detection | MEDIUM |
 
@@ -134,9 +134,9 @@ recorded and approved before specification authoring proceeds.
 
 ### 3.2 Throttling
 
-| WCF Setting | gRPC / ASP.NET Core Equivalent |
+| WCF Setting | gRPC for .NET Equivalent |
 |-------------|--------------------------------|
-| `MaxConcurrentCalls` | ASP.NET Core rate-limiting middleware / concurrency limits |
+| `MaxConcurrentCalls` | .NET rate-limiting middleware / concurrency limits |
 | `MaxConcurrentSessions` | Not applicable (no sessions) |
 | `MaxConcurrentInstances` | DI lifetime management |
 
@@ -145,7 +145,7 @@ recorded and approved before specification authoring proceeds.
 `IDispatchMessageInspector` and `IClientMessageInspector` intercept SOAP
 messages before/after dispatch. The gRPC equivalent is a **gRPC
 interceptor** (`Interceptor` base class, server- or client-side) or, for
-HTTP-level concerns, ASP.NET Core middleware.
+HTTP-level concerns, .NET middleware.
 
 - Use interceptors for gRPC-specific concerns (auth, logging, correlation);
   they see `ServerCallContext` / `ClientInterceptorContext` and can inspect
@@ -227,10 +227,10 @@ before the spec can be authored.
 
 | WCF Feature | gRPC Equivalent |
 |--------------|------------------|
-| `System.Diagnostics` tracing | ASP.NET Core `ILogger` + OpenTelemetry |
+| `System.Diagnostics` tracing | .NET `ILogger` + OpenTelemetry |
 | WCF performance counters | .NET metrics + OpenTelemetry metrics |
 | `DiagnosticSource` | `ActivitySource` / OpenTelemetry tracing |
-| Message logging | gRPC/ASP.NET Core logging (`EnableDetailedErrors` in development only) |
+| Message logging | gRPC for .NET logging (`EnableDetailedErrors` in development only) |
 | WS-Management | **UNSUPPORTED** — use cloud-native orchestration/observability instead |
 
 ---

@@ -3,7 +3,7 @@ name: gRPC Migration Implementer
 description: >
   Implements one approved, fleet-ready WCF-to-gRPC work package at a time
   from an approved migration-spec.json, turning its acceptance criteria into
-  working code: .proto contracts and codegen wiring, ASP.NET Core gRPC
+  working code: .proto contracts and codegen wiring, gRPC for .NET
   server hosting, adapters that delegate to existing business logic,
   generated gRPC clients, authentication/authorization, interceptors and
   error mapping, deadlines/cancellation/retries/idempotency, telemetry and

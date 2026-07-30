@@ -1,7 +1,7 @@
 # wcf-to-grpc
 
-Copilot CLI plugin that takes a legacy .NET WCF codebase to **gRPC on
-ASP.NET Core**: evidence-backed analysis, an explicit decision record, a
+Copilot CLI plugin that takes a legacy .NET WCF codebase to **gRPC for
+.NET**: evidence-backed analysis, an explicit decision record, a
 reviewable specification, gated implementation, and independent parity
 validation ending at a WCF retirement gate that will not open without proof.
 
@@ -34,7 +34,7 @@ in the [repository README](../../README.md). Deeper documentation:
   issues, or implementations.
 - [`agents/grpc-migration-implementer.agent.md`](agents/grpc-migration-implementer.agent.md)
   implements exactly one approved, fleet-ready work package at a time from an
-  approved `migration-spec.json` — `.proto`/codegen, ASP.NET Core gRPC
+  approved `migration-spec.json` — `.proto`/codegen, gRPC for .NET
   hosting, adapters to existing business logic, clients, auth/authz,
   interceptors/errors, deadlines/cancellation/retries/idempotency,
   telemetry/health, streaming/state/transaction redesign, tests, and
@@ -119,7 +119,7 @@ in the [repository README](../../README.md). Deeper documentation:
 
 ## Non-negotiable guarantees
 
-- **gRPC on ASP.NET Core is the fixed target.** No stage retargets to REST,
+- **gRPC for .NET is the fixed target.** No stage retargets to REST,
   CoreWCF, or messaging; constructs gRPC cannot express become explicit
   redesign risks and recorded decisions.
 - **No implementation before an approved specification**, and no GitHub label,

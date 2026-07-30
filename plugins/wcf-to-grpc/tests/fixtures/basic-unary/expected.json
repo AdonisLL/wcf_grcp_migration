@@ -72,7 +72,7 @@
       "id": "RSK-basic-transport-credential",
       "severity": "medium",
       "construct": "basicHttpBinding TransportCredentialOnly with Windows credentials",
-      "consequence": "ASP.NET Core gRPC requires an explicit TLS and authentication design rather than copying SOAP transport settings.",
+      "consequence": "gRPC for .NET requires an explicit TLS and authentication design rather than copying SOAP transport settings.",
       "redesignRequired": true
     }
   ],
@@ -87,8 +87,8 @@
     }
   ],
   "mapping": {
-    "target": "grpc-aspnetcore",
-    "targetRuntime": "ASP.NET Core gRPC",
+    "target": "grpc-dotnet",
+    "targetRuntime": "gRPC for .NET",
     "serviceMappings": [
       {
         "sourceServiceId": "SVC-basic-customer",
@@ -127,11 +127,11 @@
         "dependsOn": [
           "WP-basic-contract"
         ],
-        "objective": "Implement ASP.NET Core gRPC hosting, authentication, service adapter, and generated client migration."
+        "objective": "Implement gRPC for .NET hosting, authentication, service adapter, and generated client migration."
       }
     ],
     "expectations": [
-      "The target remains gRPC on ASP.NET Core and does not fall back to REST or CoreWCF.",
+      "The target remains gRPC for .NET and does not fall back to REST or CoreWCF.",
       "The specification defines decimal, DateTime, Guid, enum-zero, deadline, authentication, coexistence, and rollback behavior."
     ]
   }

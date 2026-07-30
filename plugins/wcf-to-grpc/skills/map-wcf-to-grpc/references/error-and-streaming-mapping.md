@@ -4,7 +4,7 @@
 > patterns (streaming, sessions, callbacks, one-way operations), instance
 > management, and transactional behavior to gRPC equivalents. Constructs with
 > no direct gRPC equivalent are documented as redesign risks. The target is
-> always gRPC on ASP.NET Core. Risk levels follow `feature-mapping.md`. See
+> always gRPC for .NET. Risk levels follow `feature-mapping.md`. See
 > `sources.md` for citations.
 
 ---
@@ -310,14 +310,14 @@ Error handling must be explicitly designed.
 
 ## 7. Concurrency and Instance Management
 
-| WCF `ConcurrencyMode` / `InstanceContextMode` | gRPC / ASP.NET Core Equivalent | Risk |
+| WCF `ConcurrencyMode` / `InstanceContextMode` | gRPC for .NET Equivalent | Risk |
 |---------------------------------------------------|--------------------------------|------|
 | `PerCall` + `Multiple` | Default scoped DI lifetime + async methods | LOW |
 | `Singleton` + `Single` | `AddSingleton` + `SemaphoreSlim` / `lock` | LOW |
 | `PerSession` + any concurrency mode | **UNSUPPORTED** — see §4.1 | HIGH |
 | `Reentrant` | **UNSUPPORTED** — replace with async/await | HIGH |
 
-gRPC services have a scoped lifetime by default in ASP.NET Core (one
+gRPC services have a scoped lifetime by default in gRPC for .NET (one
 instance per request), equivalent to WCF's `PerCall`. Code that relies on
 `OperationContext.Current` for instance-level state does not compile against
 gRPC and must be refactored.

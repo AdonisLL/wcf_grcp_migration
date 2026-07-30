@@ -3,7 +3,7 @@
 > **Scope:** Guidance on hosting-topology changes when moving from WCF to
 > gRPC, strategies for running WCF and gRPC side by side during transition,
 > recommended rollout phases, and exit criteria for retiring WCF. The target
-> is always gRPC on ASP.NET Core. Any coexistence adapter that exposes a SOAP
+> is always gRPC for .NET. Any coexistence adapter that exposes a SOAP
 > or REST endpoint to legacy consumers is a temporary bridge, not a migration
 > destination. See `sources.md` for citations.
 
@@ -22,25 +22,25 @@ WCF services are commonly hosted:
 
 ### 1.2 gRPC Hosting Requirements
 
-ASP.NET Core gRPC requires:
-- **ASP.NET Core** as the application host (the `Microsoft.NET.Sdk.Web` SDK,
-  or a `<FrameworkReference Include="Microsoft.AspNetCore.App" />` added to a
+gRPC for .NET server hosting requires:
+- **A modern .NET host running Kestrel** with the `Grpc.AspNetCore` package
+  (normally the `Microsoft.NET.Sdk.Web` SDK, or a
+  `<FrameworkReference Include="Microsoft.AspNetCore.App" />` added to a
   non-web project).
 - **HTTP/2** at the transport layer (Kestrel; IIS or HTTP.sys on Windows
   Server 2022+ with .NET 5+).
 - **TLS** on any Kestrel endpoint that must serve both HTTP/1.1 and HTTP/2,
   since protocol selection there depends on ALPN negotiation.
 
-Non-ASP.NET-Core project types (Windows Services, WPF apps, console apps)
-can still host a gRPC server by adding a framework reference to
-`Microsoft.AspNetCore.App`.
+Windows Services, WPF apps, and console apps can still host a gRPC server by
+adding a framework reference to `Microsoft.AspNetCore.App`.
 
 ### 1.3 Hosting Migration by WCF Topology
 
 | WCF Hosting | gRPC Equivalent |
 |---------------|--------------------|
-| IIS on .NET Framework | Kestrel with ASP.NET Core in-process hosting, or IIS on .NET 5+ |
-| IIS on Windows Server 2022+ | IIS with HTTP/2 + TLS and ASP.NET Core in-process hosting |
+| IIS on .NET Framework | Rehost on modern .NET with Kestrel, optionally integrated with IIS |
+| IIS on Windows Server 2022+ | Kestrel with IIS integration, HTTP/2, and TLS |
 | Windows Service (`ServiceHost`) | An `IHostedService` / `BackgroundService` run via `sc.exe` or a service wrapper |
 | Self-hosted console | `WebApplication.Run()` on Kestrel |
 | COM+ / WAS activation | Not applicable; use container orchestration or a Windows Service instead |
@@ -54,7 +54,7 @@ Envoy) that terminates or forwards HTTP/2 to Kestrel.
 
 ### 1.5 Named Pipes and Unix Domain Sockets
 
-`NetNamedPipeBinding` can be replaced with ASP.NET Core's built-in named-pipe
+`NetNamedPipeBinding` can be replaced with Kestrel's built-in named-pipe
 or Unix-domain-socket transport for intra-machine gRPC:
 
 ```csharp
@@ -96,7 +96,7 @@ of requiring a hard cutover.
 
 ### 3.1 Side-by-Side Services (same host, different endpoints)
 
-Host WCF (`ServiceHost`) and gRPC (ASP.NET Core/Kestrel) on the same machine,
+Host WCF (`ServiceHost`) and gRPC (Kestrel on modern .NET) on the same machine,
 listening on different ports — for example WCF on port 5000 (HTTP/SOAP or
 net.tcp) and gRPC on port 5001 (HTTPS/HTTP2). Both share the same business
 logic layer (a shared library or DI service), and clients migrate
@@ -126,14 +126,14 @@ This adapter is a **temporary bridge, not a migration destination**; it must
 have an explicit retirement date recorded in the decision log. The long-term
 goal remains migrating every consumer to gRPC directly.
 
-Implementation options include custom ASP.NET Core middleware (SOAP parsing
+Implementation options include custom .NET middleware (SOAP parsing
 plus a gRPC client call), or a third-party SOAP-to-gRPC shim such as
 CoreWCF — neither is endorsed by this plugin as a permanent migration
 target.
 
 ### 3.4 gRPC JSON Transcoding
 
-For browser-based or REST consumers, ASP.NET Core's built-in gRPC JSON
+For browser-based or REST consumers, gRPC for .NET JSON
 transcoding can expose the same gRPC service as an HTTP/JSON API without a
 separate REST implementation:
 
@@ -169,7 +169,7 @@ as work-package dependencies.
 ### Phase 1: Shared Foundation (sequential; cannot be parallelized)
 1. Define Protobuf package/version conventions and shared type definitions
    (`decimal.proto`, error-detail protos, etc.).
-2. Stand up the ASP.NET Core hosting project with TLS, health checks, and
+2. Stand up the gRPC for .NET hosting project with TLS, health checks, and
    observability (logging, metrics, tracing).
 3. Implement authentication/authorization middleware.
 4. Define the gRPC interceptor chain (error handling, logging, correlation).

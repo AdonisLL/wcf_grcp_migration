@@ -121,8 +121,8 @@
     }
   ],
   "mapping": {
-    "target": "grpc-aspnetcore",
-    "targetRuntime": "ASP.NET Core gRPC",
+    "target": "grpc-dotnet",
+    "targetRuntime": "gRPC for .NET",
     "serviceMappings": [
       {
         "sourceServiceId": "SVC-secure-invoice",
@@ -176,11 +176,11 @@
           "WP-fault-contract",
           "WP-fault-security"
         ],
-        "objective": "Implement the ASP.NET Core gRPC adapter and parity tests for success, faults, and serialization edges."
+        "objective": "Implement the gRPC for .NET adapter and parity tests for success, faults, and serialization edges."
       }
     ],
     "expectations": [
-      "The target remains gRPC on ASP.NET Core; SOAP message security is recorded as a blocking redesign risk.",
+      "The target remains gRPC for .NET; SOAP message security is recorded as a blocking redesign risk.",
       "Golden parity cases cover null versus default, high-precision decimal, leap-day UTC timestamps, unknown enums, every KnownType subtype, and typed validation faults."
     ]
   }

@@ -593,8 +593,8 @@ foreach ($expectedFile in $expectedFiles) {
 
     $riskIds = @((Get-PropertyValue $expected "risks") | ForEach-Object { Get-PropertyValue $_ "id" })
     $mapping = Get-PropertyValue $expected "mapping"
-    Add-Check ((Get-PropertyValue $mapping "target") -eq "grpc-aspnetcore") "Fixture $($expectedFile.FullName) does not require the gRPC target."
-    Add-Check ((Get-PropertyValue $mapping "targetRuntime") -eq "ASP.NET Core gRPC") "Fixture $($expectedFile.FullName) does not require ASP.NET Core gRPC."
+    Add-Check ((Get-PropertyValue $mapping "target") -eq "grpc-dotnet") "Fixture $($expectedFile.FullName) does not require the gRPC target."
+    Add-Check ((Get-PropertyValue $mapping "targetRuntime") -eq "gRPC for .NET") "Fixture $($expectedFile.FullName) does not require gRPC for .NET."
     foreach ($risk in @(Get-PropertyValue $expected "risks")) {
         Add-Check ((Get-PropertyValue $risk "redesignRequired") -eq $true) "Fixture risk '$((Get-PropertyValue $risk "id"))' is not an explicit redesign risk."
     }

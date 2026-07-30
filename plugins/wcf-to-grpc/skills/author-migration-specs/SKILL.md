@@ -22,7 +22,7 @@ description: >
 ## Purpose
 
 Convert repository evidence and explicit migration decisions into a complete,
-reviewable specification for gRPC on ASP.NET Core that an implementer — or a
+reviewable specification for gRPC for .NET that an implementer — or a
 fleet of parallel implementers — can execute without re-deriving intent.
 
 This skill is used by the **gRPC Migration Architect** agent
@@ -66,7 +66,7 @@ risk IDs that must resolve them.
   question, promote a `proposed` decision to `approved`, or approve the
   specification. Approval is a human act recorded in the artifacts.
 - **gRPC is the fixed target.** Every design lands on gRPC over HTTP/2 on
-  ASP.NET Core. A queue, cache, gateway, SOAP adapter, JSON-transcoding surface,
+  modern .NET. A queue, cache, gateway, SOAP adapter, JSON-transcoding surface,
   or saga coordinator may appear only as an approved supporting component with
   exit criteria. A WCF construct with no safe direct gRPC equivalent becomes a
   visible redesign risk with a specified gRPC-centered replacement — never a

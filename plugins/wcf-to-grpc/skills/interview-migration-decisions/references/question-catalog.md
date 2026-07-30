@@ -6,7 +6,7 @@ ask verbatim. Generate a question only when inventory evidence triggers it,
 code/configuration cannot settle the future-state choice, and no approved,
 non-stale decision already resolves it.
 
-The mandatory destination is gRPC on ASP.NET Core. Supporting components are
+The mandatory destination is gRPC for .NET. Supporting components are
 permitted only when explicitly approved as part of a gRPC-centered design.
 Do not offer REST, CoreWCF, SOAP, queues, or another protocol as the permanent
 replacement target.
@@ -27,8 +27,8 @@ replacement target.
 
 | Topic key | Trigger and evidence | Focused question | Why / recommendation | Category / gate / skip |
 |---|---|---|---|---|
-| `target-runtime` | Always, once per migration; cite current project/OS/deployment constraints. | Which supported .NET runtime will host the new gRPC services? | Runtime controls ASP.NET Core/gRPC support and support lifetime. Recommend the current .NET LTS after checking the support policy; as of 2026-07-30, recommend .NET 10 LTS. | `target-runtime`; specification blocker. Never skip. |
-| `hosting-model` | `HOST-*`, deployment-platform `DEP-*`, IIS/Windows Service/self-host evidence, or unknown target host. | Which approved platform will host the ASP.NET Core gRPC service? | Determines Kestrel/IIS/container integration, HTTP/2, service lifecycle, and operations. Recommend the existing supported platform when it meets HTTP/2/TLS and operational requirements; otherwise recommend Kestrel on the organization's standard platform. | `hosting`; blocker. Skip only when an approved platform policy already covers every affected service. |
+| `target-runtime` | Always, once per migration; cite current project/OS/deployment constraints. | Which supported .NET runtime will host the new gRPC services? | Runtime controls gRPC for .NET support and support lifetime. Recommend the current .NET LTS after checking the support policy; as of 2026-07-30, recommend .NET 10 LTS. | `target-runtime`; specification blocker. Never skip. |
+| `hosting-model` | `HOST-*`, deployment-platform `DEP-*`, IIS/Windows Service/self-host evidence, or unknown target host. | Which approved platform will host the gRPC for .NET service? | Determines Kestrel/IIS/container integration, HTTP/2, service lifecycle, and operations. Recommend the existing supported platform when it meets HTTP/2/TLS and operational requirements; otherwise recommend Kestrel on the organization's standard platform. | `hosting`; blocker. Skip only when an approved platform policy already covers every affected service. |
 | `operating-system` | OS-specific APIs, Windows auth, named pipes, IIS, COM+, service installers, or container constraints. | Must the target remain Windows-hosted, or may it run on the standard cross-platform environment? | Affects compatibility, image/runtime choice, identity, and local IPC. Do not infer organizational deployment permission from current Windows code. | `hosting`; blocker when platform-sensitive. |
 | `service-process-layout` | Several `SVC-*` share a host/process, singleton state, conflicting scaling/SLA/security needs. | Should the affected services remain in one deployable host or be split into independently deployed gRPC hosts? | Determines failure isolation, scaling, ownership, and fleet write boundaries. Recommend preserving a cohesive host initially unless evidence shows materially different scaling, security, or release ownership. | `service-boundary`; blocker. Skip for one service/one host with no future split choice. |
 
@@ -62,7 +62,7 @@ Never ask for credentials, keys, tokens, certificates, or connection strings.
 | `service-authentication` | Internal service-to-service calls, certificate dependencies, zero-trust policy, or TLS client-credential evidence. | Will service-to-service callers use bearer workload identity, mTLS, or an approved combination? | Determines channel setup, certificate/token operations, and principal construction. Recommend managed workload identity/JWT; add mTLS when policy or trust boundaries require it. | `security`; blocking. |
 | `transport-security` | SecurityMode.None, TLS termination, proxy/gateway, certificate evidence, external reachability. | Where must TLS terminate, and is encryption required on every backend hop? | HTTP/2/TLS topology affects trust boundaries and certificate ownership. Recommend TLS for production and explicit backend protection after gateway termination. | `security`; blocking. |
 | `message-security-replacement` | WCF `SecurityMode.Message`, signing/encryption, WS-Security, or compliance risk. | Which approved TLS and application-level protection replaces the evidenced message-security requirement? | gRPC has no WS-Security equivalent. Recommend TLS/mTLS plus signed identity tokens; application field encryption only when a documented requirement survives threat/compliance review. | `security`; blocking, explicit approval. |
-| `authorization-policy` | PrincipalPermission, roles, custom authorization manager/policy, ClaimsPrincipal checks, or operation authorization unknown. | Which claims and ASP.NET Core authorization policy preserve this operation's access rules? | Authentication replacement can silently alter authorization semantics. Recommend policy-based authorization with stable claims and parity tests. | `authorization`; blocking. |
+| `authorization-policy` | PrincipalPermission, roles, custom authorization manager/policy, ClaimsPrincipal checks, or operation authorization unknown. | Which claims and .NET authorization policy preserve this operation's access rules? | Authentication replacement can silently alter authorization semantics. Recommend policy-based authorization with stable claims and parity tests. | `authorization`; blocking. |
 | `secret-certificate-ownership` | Certificate/identity dependencies or environment config. | Which team/system owns provisioning, rotation, revocation, and access policy for the required credentials? | Operational ownership is required without collecting secret values. | `security`; implementation blocker. |
 
 ## 5. Protobuf compatibility and ownership
@@ -127,7 +127,7 @@ Use
 | `reliable-delivery` | reliable sessions, ordered delivery, retries across reconnects, WS-ReliableMessaging. | What delivery guarantee is actually required across connection failures? | gRPC orders messages within a stream but does not provide exactly-once delivery. Recommend at-least-once plus idempotency/outbox where loss is unacceptable; do not promise exactly once without a proven application protocol. | `reliable-delivery`; blocking. |
 | `queue-redesign` | MSMQ/NetMsmqBinding/message-queue dependency. | Which approved broker/worker design will support durable asynchronous work while gRPC remains the service API/control boundary? | Queues are supporting components, not replacement targets. Requires ownership, replay, dead-letter, retention, and operational approval. | `reliable-delivery`; blocking, explicit approval. |
 | `ordering-scope` | `requiresOrderedDelivery=true`, queue/session ordering. | Is ordering required globally, per client, per entity, or only within one stream? | Narrow ordering enables scalable partitioning and avoids unnecessary serialization. Recommend the narrowest evidenced ordering key. | `reliable-delivery`; blocking. |
-| `named-pipe-transport` | NetNamedPipeBinding/local-machine consumers. | Must communication remain machine-local, and is ASP.NET Core gRPC over Windows named pipes approved for those callers? | Preserves local IPC but affects hosting, permissions, diagnostics, and external access. Recommend named-pipe gRPC when locality is intentional; otherwise standard HTTPS gRPC. | `hosting`; blocking. |
+| `named-pipe-transport` | NetNamedPipeBinding/local-machine consumers. | Must communication remain machine-local, and is gRPC for .NET over Windows named pipes approved for those callers? | Preserves local IPC but affects hosting, permissions, diagnostics, and external access. Recommend named-pipe gRPC when locality is intentional; otherwise standard HTTPS gRPC. | `hosting`; blocking. |
 
 ## 11. Deadlines, retries, cancellation, and idempotency
 
@@ -212,4 +212,3 @@ Use
 - If an approved organization policy already specifies OIDC, OpenTelemetry,
   deployment, or discovery and applies to the affected IDs, reuse it and ask
   only repository-specific exceptions.
-

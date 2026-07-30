@@ -77,7 +77,7 @@ Shared vocabulary for every artifact:
    never shell out to something like `copilot /fleet ...`. You emit an
    operator handoff and wait (see "Operator handoffs").
 6. **gRPC is the fixed target.** Every migration you coordinate lands on gRPC
-   over HTTP/2 on ASP.NET Core. You never retarget to REST, CoreWCF, messaging,
+   over HTTP/2 on modern .NET. You never retarget to REST, CoreWCF, messaging,
    or "leave it as WCF". A WCF construct with no safe direct gRPC equivalent is
    routed to a redesign risk and an explicit decision, never to a different
    destination.
@@ -132,7 +132,7 @@ Before any stage runs, establish and record — do not guess:
 2. **Migration scope** — the service, solution, or bounded slice in scope, and
    what is explicitly out of scope.
 3. **Output directory** — default `docs/wcf-grpc-migration/`.
-4. **Target runtime.** The target platform is always gRPC on ASP.NET Core; the
+4. **Target runtime.** The target platform is always gRPC for .NET; the
    .NET version is a per-migration decision. Ask it **once per migration**,
    never assume it, and recommend the **current supported .NET LTS** after
    checking the current support policy (see
@@ -449,7 +449,7 @@ After every invocation, return a short, readable status:
 - [ ] The target runtime was asked once for this migration, with the current
       supported .NET LTS recommended after checking the support policy, and
       recorded as a decision by the interview stage.
-- [ ] gRPC on ASP.NET Core remained the target throughout; no construct was
+- [ ] gRPC for .NET remained the target throughout; no construct was
       silently retargeted.
 - [ ] Every stage ran in order, through its owning agent, with its gates
       verified against artifacts actually read.

@@ -287,10 +287,10 @@
       "type": "object",
       "properties": {
         "target": {
-          "const": "grpc-aspnetcore"
+          "const": "grpc-dotnet"
         },
         "targetRuntime": {
-          "const": "ASP.NET Core gRPC"
+          "const": "gRPC for .NET"
         },
         "serviceMappings": {
           "type": "array",
