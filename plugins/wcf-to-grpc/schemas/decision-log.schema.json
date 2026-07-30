@@ -1,0 +1,472 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./decision-log.schema.json",
+  "title": "WCF to gRPC migration decision log",
+  "description": "Architectural questions, considered options, explicit unresolved values, approvals, and traceability to inventory evidence and downstream specifications.",
+  "allOf": [
+    {
+      "$ref": "./common.schema.json#/$defs/artifactBase"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "const": "decision-log"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^DLOG-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "inventoryId": {
+          "type": "string",
+          "pattern": "^INV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decision"
+          }
+        }
+      },
+      "required": [
+        "inventoryId",
+        "decisions"
+      ]
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "enum": [
+            "target-runtime",
+            "hosting",
+            "service-boundary",
+            "protobuf",
+            "serialization",
+            "security",
+            "authorization",
+            "errors",
+            "streaming",
+            "session-state",
+            "transactions",
+            "reliable-delivery",
+            "consumer-cutover",
+            "coexistence",
+            "deployment",
+            "observability",
+            "performance",
+            "retirement",
+            "other"
+          ]
+        },
+        "state": {
+          "enum": [
+            "unresolved",
+            "proposed",
+            "approved",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "questionIds": {
+          "$ref": "./common.schema.json#/$defs/questionIdArray"
+        },
+        "context": {
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        },
+        "selectedOptionId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^OPT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decision": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rationale": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unresolvedReason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nextAction": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "affectedIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "approvals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decisionApproval"
+          }
+        },
+        "supersededBy": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "category",
+        "state",
+        "questionIds",
+        "context",
+        "options",
+        "selectedOptionId",
+        "decision",
+        "rationale",
+        "unresolvedReason",
+        "nextAction",
+        "owner",
+        "affectedIds",
+        "riskIds",
+        "evidenceIds",
+        "approvals",
+        "supersededBy"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unresolved"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "selectedOptionId": {
+                "type": "null"
+              },
+              "decision": {
+                "type": "null"
+              },
+              "rationale": {
+                "type": "null"
+              },
+              "unresolvedReason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "nextAction": {
+                "type": "string",
+                "minLength": 1
+              },
+              "questionIds": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "proposed",
+                  "approved"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "selectedOptionId": {
+                "type": "string",
+                "pattern": "^OPT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "decision": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1
+              },
+              "unresolvedReason": {
+                "type": "null"
+              },
+              "options": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "approved"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "approvals": {
+                "minItems": 1,
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "const": "approved"
+                    }
+                  },
+                  "required": [
+                    "state"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "rejected"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "selectedOptionId": {
+                "type": "string",
+                "pattern": "^OPT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "decision": {
+                "type": "null"
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1
+              },
+              "unresolvedReason": {
+                "type": "null"
+              },
+              "approvals": {
+                "minItems": 1,
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "const": "rejected"
+                    }
+                  },
+                  "required": [
+                    "state"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "superseded"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "supersededBy": {
+                "type": "string",
+                "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "option": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^OPT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "advantages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "disadvantages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "consequences": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "grpcCentered": {
+          "type": "boolean",
+          "description": "Must be true for a final migration option; temporary coexistence bridges remain permitted when gRPC is the destination."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "advantages",
+        "disadvantages",
+        "consequences",
+        "grpcCentered"
+      ],
+      "additionalProperties": false
+    },
+    "decisionApproval": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^APV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "reviewer": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "state": {
+          "enum": [
+            "requested",
+            "approved",
+            "rejected"
+          ]
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "reviewer",
+        "state",
+        "at",
+        "note"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

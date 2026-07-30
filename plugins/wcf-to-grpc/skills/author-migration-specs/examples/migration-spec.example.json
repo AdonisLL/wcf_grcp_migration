@@ -1,0 +1,2137 @@
+{
+  "approval": {
+    "state": "draft"
+  },
+  "artifactId": "MSPEC-contoso-orders",
+  "artifactType": "migration-spec",
+  "assessment": {
+    "complexity": "high",
+    "constraints": [
+      "External partner consumers cannot be upgraded on the internal release schedule.",
+      "Order totals are financial values and must not lose precision."
+    ],
+    "dependencyIds": [
+      "DEP-orders-sql"
+    ],
+    "evidenceIds": [
+      "EVD-order-service-binding",
+      "EVD-order-service-contract",
+      "EVD-order-status-callback"
+    ],
+    "migrationScope": "Migrate the Contoso order intake WCF service and its internal consumers to gRPC on ASP.NET Core; external partner traffic stays on the legacy endpoint until its cutover decision is approved.",
+    "riskIds": [
+      "RSK-duplex-callback",
+      "RSK-external-soap-consumers",
+      "RSK-order-total-decimal"
+    ],
+    "serviceIds": [
+      "SVC-order-service"
+    ],
+    "summary": "One WCF service (IOrderService) exposes a unary order intake operation and a duplex status-callback operation over wsHttpBinding. Order totals use System.Decimal and the duplex callback has no direct gRPC equivalent, so both require a specified redesign.",
+    "unresolvedQuestionIds": [
+      "QST-external-consumer-upgrade-control"
+    ]
+  },
+  "citations": [
+    {
+      "claim": "IOrderService declares SubmitOrder and SubscribeOrderStatus with a duplex callback contract.",
+      "confidence": "high",
+      "id": "EVD-order-service-contract",
+      "kind": "code",
+      "locator": "src/Contoso.Orders/IOrderService.cs#L14-L58"
+    },
+    {
+      "claim": "The order endpoint uses wsHttpBinding with message security and a 60-second send timeout.",
+      "confidence": "high",
+      "id": "EVD-order-service-binding",
+      "kind": "configuration",
+      "locator": "src/Contoso.Orders.Host/app.config#L22-L64"
+    },
+    {
+      "claim": "IOrderStatusCallback pushes status changes to connected clients.",
+      "confidence": "high",
+      "id": "EVD-order-status-callback",
+      "kind": "code",
+      "locator": "src/Contoso.Orders/IOrderStatusCallback.cs#L8-L19"
+    },
+    {
+      "claim": "OrderRequest carries a decimal TotalAmount and a nullable RequestedDeliveryDate.",
+      "confidence": "high",
+      "id": "EVD-order-request-contract",
+      "kind": "code",
+      "locator": "src/Contoso.Orders/Contracts/OrderRequest.cs#L10-L44"
+    },
+    {
+      "claim": "OrderValidationFault is declared as a typed fault on SubmitOrder.",
+      "confidence": "high",
+      "id": "EVD-order-validation-fault",
+      "kind": "code",
+      "locator": "src/Contoso.Orders/Faults/OrderValidationFault.cs#L7-L21"
+    },
+    {
+      "claim": "An external partner endpoint is exposed separately from the internal endpoint.",
+      "confidence": "medium",
+      "id": "EVD-external-partner-endpoint",
+      "kind": "configuration",
+      "locator": "src/Contoso.Orders.Host/web.config#L88-L96"
+    },
+    {
+      "claim": "The reviewer confirmed .NET 10 LTS as the migration target runtime.",
+      "confidence": "high",
+      "id": "EVD-target-runtime-confirmation",
+      "kind": "user-statement",
+      "locator": "user-statement:target-runtime-review"
+    }
+  ],
+  "contracts": [
+    {
+      "apiVersion": {
+        "state": "known",
+        "value": "v1"
+      },
+      "approval": {
+        "state": "draft"
+      },
+      "compatibilityRules": [
+        "Field numbers are assigned once; removed fields keep their number and name reserved.",
+        "Only additive changes are permitted while the WCF endpoint remains routable.",
+        "A breaking change requires a new package version contoso.orders.v2 registered alongside v1."
+      ],
+      "decisionIds": [
+        "DEC-decimal-representation",
+        "DEC-duplex-to-server-streaming",
+        "DEC-protobuf-versioning"
+      ],
+      "evidenceIds": [
+        "EVD-order-request-contract",
+        "EVD-order-service-contract",
+        "EVD-order-status-callback"
+      ],
+      "id": "SPEC-order-service",
+      "messages": [
+        {
+          "evidenceIds": [
+            "EVD-order-request-contract"
+          ],
+          "fields": [
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "OrderRequest.CustomerId (Guid) is serialized as its canonical lowercase 8-4-4-4-12 string form."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-request-contract"
+              ],
+              "id": "PF-submit-order-request-customer-id",
+              "name": "customer_id",
+              "number": {
+                "state": "known",
+                "value": 1
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Required. The WCF member is IsRequired, so an empty string is rejected with INVALID_ARGUMENT."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "string"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-request-customer-id"
+              ],
+              "validationRules": [
+                "Must parse as a GUID."
+              ]
+            },
+            {
+              "cardinality": "repeated",
+              "conversionRules": [
+                "A null Items array and an empty array both serialize as an empty repeated field; the distinction is not preserved."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-request-contract"
+              ],
+              "id": "PF-submit-order-request-items",
+              "name": "items",
+              "number": {
+                "state": "known",
+                "value": 2
+              },
+              "presenceSemantics": {
+                "reason": "Repeated fields have no explicit presence in proto3.",
+                "state": "not-applicable"
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "OrderItem"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-request-items"
+              ],
+              "validationRules": [
+                "At least one item is required."
+              ]
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "System.Decimal maps to contoso.common.v1.DecimalValue (units plus nanos); double is never used for money."
+              ],
+              "decisionIds": [
+                "DEC-decimal-representation"
+              ],
+              "evidenceIds": [
+                "EVD-order-request-contract"
+              ],
+              "id": "PF-submit-order-request-total-amount",
+              "name": "total_amount",
+              "number": {
+                "state": "known",
+                "value": 3
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Required. Because the field is a message, an absent total is distinguishable from a zero total."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "contoso.common.v1.DecimalValue"
+              },
+              "riskIds": [
+                "RSK-order-total-decimal"
+              ],
+              "sourceFieldIds": [
+                "FLD-order-request-total-amount"
+              ],
+              "validationRules": [
+                "nanos must be within -999999999..999999999 and share the sign of units.",
+                "Scale must not exceed four decimal places."
+              ]
+            },
+            {
+              "cardinality": "optional",
+              "conversionRules": [
+                "Nullable<DateTime> maps to google.protobuf.Timestamp in UTC; local kinds are converted before serialization."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-request-contract"
+              ],
+              "id": "PF-submit-order-request-requested-delivery-date",
+              "name": "requested_delivery_date",
+              "number": {
+                "state": "known",
+                "value": 5
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Optional. Absence means no delivery preference and is distinct from the Unix epoch."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "google.protobuf.Timestamp"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-request-requested-delivery-date"
+              ],
+              "validationRules": [
+                "Must not be earlier than the server receive time."
+              ]
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "New field with no WCF source; supplied by the client so SubmitOrder is safely retryable."
+              ],
+              "decisionIds": [
+                "DEC-idempotent-submit-order"
+              ],
+              "evidenceIds": [
+                "EVD-order-service-contract"
+              ],
+              "id": "PF-submit-order-request-idempotency-key",
+              "name": "idempotency_key",
+              "number": {
+                "state": "known",
+                "value": 6
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Required. An empty value is rejected with INVALID_ARGUMENT."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "string"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [],
+              "validationRules": [
+                "Maximum 64 characters; unique per logical submission."
+              ]
+            }
+          ],
+          "id": "MSG-submit-order-request",
+          "name": "SubmitOrderRequest",
+          "polymorphismPolicy": {
+            "reason": "OrderRequest declares no KnownType and is not inherited.",
+            "state": "not-applicable"
+          },
+          "reservedNames": [
+            "legacy_customer_ref"
+          ],
+          "reservedNumbers": [
+            4
+          ],
+          "sourceContractIds": [
+            "DC-order-request"
+          ]
+        },
+        {
+          "evidenceIds": [
+            "EVD-order-request-contract"
+          ],
+          "fields": [
+            {
+              "cardinality": "singular",
+              "conversionRules": [],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-request-contract"
+              ],
+              "id": "PF-order-item-sku",
+              "name": "sku",
+              "number": {
+                "state": "known",
+                "value": 1
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Required; an empty value is rejected."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "string"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-item-sku"
+              ],
+              "validationRules": [
+                "Must match the catalogue SKU format."
+              ]
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "System.Int32 maps to int32; the proto3 default of 0 is rejected by validation rather than treated as absence."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-request-contract"
+              ],
+              "id": "PF-order-item-quantity",
+              "name": "quantity",
+              "number": {
+                "state": "known",
+                "value": 2
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Implicit presence; zero is invalid input so the default cannot be confused with a real value."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "int32"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-item-quantity"
+              ],
+              "validationRules": [
+                "Must be greater than zero."
+              ]
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "System.Decimal maps to contoso.common.v1.DecimalValue."
+              ],
+              "decisionIds": [
+                "DEC-decimal-representation"
+              ],
+              "evidenceIds": [
+                "EVD-order-request-contract"
+              ],
+              "id": "PF-order-item-unit-price",
+              "name": "unit_price",
+              "number": {
+                "state": "known",
+                "value": 3
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Required message; absence is rejected."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "contoso.common.v1.DecimalValue"
+              },
+              "riskIds": [
+                "RSK-order-total-decimal"
+              ],
+              "sourceFieldIds": [
+                "FLD-order-item-unit-price"
+              ],
+              "validationRules": [
+                "Must be zero or positive."
+              ]
+            }
+          ],
+          "id": "MSG-order-item",
+          "name": "OrderItem",
+          "polymorphismPolicy": {
+            "reason": "OrderItem declares no KnownType and is not inherited.",
+            "state": "not-applicable"
+          },
+          "reservedNames": [],
+          "reservedNumbers": [],
+          "sourceContractIds": [
+            "DC-order-item"
+          ]
+        },
+        {
+          "evidenceIds": [
+            "EVD-order-service-contract"
+          ],
+          "fields": [
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "Guid is serialized as its canonical string form."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-service-contract"
+              ],
+              "id": "PF-submit-order-response-order-id",
+              "name": "order_id",
+              "number": {
+                "state": "known",
+                "value": 1
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Always populated on a successful response."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "string"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-confirmation-order-id"
+              ],
+              "validationRules": []
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "OrderStatus members map to ORDER_STATUS_* with ORDER_STATUS_UNSPECIFIED = 0; unknown values are surfaced, never coerced."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-service-contract"
+              ],
+              "id": "PF-submit-order-response-status",
+              "name": "status",
+              "number": {
+                "state": "known",
+                "value": 2
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Implicit presence; the server never returns ORDER_STATUS_UNSPECIFIED."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "OrderStatus"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-confirmation-status"
+              ],
+              "validationRules": []
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "DateTime (Utc) maps to google.protobuf.Timestamp."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-service-contract"
+              ],
+              "id": "PF-submit-order-response-accepted-at",
+              "name": "accepted_at",
+              "number": {
+                "state": "known",
+                "value": 3
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Always populated on a successful response."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "google.protobuf.Timestamp"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-order-confirmation-accepted-at"
+              ],
+              "validationRules": []
+            }
+          ],
+          "id": "MSG-submit-order-response",
+          "name": "SubmitOrderResponse",
+          "polymorphismPolicy": {
+            "reason": "OrderConfirmation declares no KnownType and is not inherited.",
+            "state": "not-applicable"
+          },
+          "reservedNames": [],
+          "reservedNumbers": [],
+          "sourceContractIds": [
+            "DC-order-confirmation"
+          ]
+        },
+        {
+          "evidenceIds": [
+            "EVD-order-status-callback"
+          ],
+          "fields": [
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "Derived from the duplex subscription argument; the WCF callback channel itself has no gRPC equivalent."
+              ],
+              "decisionIds": [
+                "DEC-duplex-to-server-streaming"
+              ],
+              "evidenceIds": [
+                "EVD-order-status-callback"
+              ],
+              "id": "PF-subscribe-order-status-request-order-id",
+              "name": "order_id",
+              "number": {
+                "state": "known",
+                "value": 1
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Required; an empty value is rejected with INVALID_ARGUMENT."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "string"
+              },
+              "riskIds": [
+                "RSK-duplex-callback"
+              ],
+              "sourceFieldIds": [
+                "FLD-status-subscription-order-id"
+              ],
+              "validationRules": [
+                "Must parse as a GUID."
+              ]
+            }
+          ],
+          "id": "MSG-subscribe-order-status-request",
+          "name": "SubscribeOrderStatusRequest",
+          "polymorphismPolicy": {
+            "reason": "The subscription argument is a scalar identifier.",
+            "state": "not-applicable"
+          },
+          "reservedNames": [],
+          "reservedNumbers": [],
+          "sourceContractIds": []
+        },
+        {
+          "evidenceIds": [
+            "EVD-order-status-callback"
+          ],
+          "fields": [
+            {
+              "cardinality": "singular",
+              "conversionRules": [],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-status-callback"
+              ],
+              "id": "PF-order-status-event-order-id",
+              "name": "order_id",
+              "number": {
+                "state": "known",
+                "value": 1
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Always populated on every streamed event."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "string"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-status-callback-order-id"
+              ],
+              "validationRules": []
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "OrderStatus members map to ORDER_STATUS_* with ORDER_STATUS_UNSPECIFIED = 0."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-status-callback"
+              ],
+              "id": "PF-order-status-event-status",
+              "name": "status",
+              "number": {
+                "state": "known",
+                "value": 2
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Implicit presence; the server never emits ORDER_STATUS_UNSPECIFIED."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "OrderStatus"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-status-callback-status"
+              ],
+              "validationRules": []
+            },
+            {
+              "cardinality": "singular",
+              "conversionRules": [
+                "Callback timestamps are converted to UTC before streaming."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-status-callback"
+              ],
+              "id": "PF-order-status-event-occurred-at",
+              "name": "occurred_at",
+              "number": {
+                "state": "known",
+                "value": 3
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Always populated; consumers use it to detect gaps after a reconnect."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "google.protobuf.Timestamp"
+              },
+              "riskIds": [
+                "RSK-duplex-callback"
+              ],
+              "sourceFieldIds": [
+                "FLD-status-callback-occurred-at"
+              ],
+              "validationRules": []
+            },
+            {
+              "cardinality": "optional",
+              "conversionRules": [
+                "The callback's optional Detail string maps to an explicit-presence field so an empty detail stays distinguishable from no detail."
+              ],
+              "decisionIds": [],
+              "evidenceIds": [
+                "EVD-order-status-callback"
+              ],
+              "id": "PF-order-status-event-detail",
+              "name": "detail",
+              "number": {
+                "state": "known",
+                "value": 4
+              },
+              "presenceSemantics": {
+                "state": "known",
+                "value": "Optional; absence means the server supplied no detail."
+              },
+              "protobufType": {
+                "state": "known",
+                "value": "string"
+              },
+              "riskIds": [],
+              "sourceFieldIds": [
+                "FLD-status-callback-detail"
+              ],
+              "validationRules": [
+                "Must never contain exception text, stack traces, or secrets."
+              ]
+            }
+          ],
+          "id": "MSG-order-status-event",
+          "name": "OrderStatusEvent",
+          "polymorphismPolicy": {
+            "reason": "The callback payload declares no KnownType and is not inherited.",
+            "state": "not-applicable"
+          },
+          "reservedNames": [],
+          "reservedNumbers": [],
+          "sourceContractIds": [
+            "DC-order-status-callback-payload"
+          ]
+        }
+      ],
+      "protoFile": "src/Contoso.Orders.Grpc/Protos/order_service_v1.proto",
+      "protoPackage": {
+        "state": "known",
+        "value": "contoso.orders.v1"
+      },
+      "riskIds": [
+        "RSK-duplex-callback",
+        "RSK-order-total-decimal"
+      ],
+      "rpcs": [
+        {
+          "authorizationPolicy": {
+            "state": "known",
+            "value": "Requires the orders.write policy (scope orders:write); the default policy denies unauthenticated calls."
+          },
+          "deadlinePolicy": {
+            "state": "known",
+            "value": "Client deadline 30s, replacing the 60s wsHttpBinding sendTimeout; the server observes the CancellationToken and abandons work on cancellation."
+          },
+          "decisionIds": [
+            "DEC-idempotent-submit-order"
+          ],
+          "errorPolicy": {
+            "state": "known",
+            "value": "OrderValidationFault maps to INVALID_ARGUMENT with an OrderValidationDetail message; an unknown customer maps to NOT_FOUND; unexpected failures map to INTERNAL with a correlation id and no exception text."
+          },
+          "evidenceIds": [
+            "EVD-order-service-contract",
+            "EVD-order-validation-fault"
+          ],
+          "id": "RPC-order-service-submit-order",
+          "idempotencyPolicy": {
+            "state": "known",
+            "value": "Idempotent by idempotency_key; the server deduplicates for 24 hours and returns the original confirmation."
+          },
+          "lifecycleNotes": [],
+          "name": "SubmitOrder",
+          "requestMessage": {
+            "state": "known",
+            "value": "SubmitOrderRequest"
+          },
+          "responseMessage": {
+            "state": "known",
+            "value": "SubmitOrderResponse"
+          },
+          "riskIds": [
+            "RSK-order-total-decimal"
+          ],
+          "shape": "unary",
+          "sourceOperationIds": [
+            "OP-order-service-submit-order"
+          ]
+        },
+        {
+          "authorizationPolicy": {
+            "state": "known",
+            "value": "Requires the orders.read policy; the caller must be authorized for the requested order at stream start and on every re-subscription."
+          },
+          "deadlinePolicy": {
+            "state": "known",
+            "value": "No call deadline; the stream ends on completion, client cancellation, or the 30-minute server-side maximum stream lifetime."
+          },
+          "decisionIds": [
+            "DEC-duplex-to-server-streaming"
+          ],
+          "errorPolicy": {
+            "state": "known",
+            "value": "An unknown order maps to NOT_FOUND before the first event; mid-stream failures terminate with UNAVAILABLE and the client re-subscribes."
+          },
+          "evidenceIds": [
+            "EVD-order-service-contract",
+            "EVD-order-status-callback"
+          ],
+          "id": "RPC-order-service-subscribe-order-status",
+          "idempotencyPolicy": {
+            "state": "known",
+            "value": "Read-only and safely repeatable; re-subscription replays events after occurred_at rather than resuming a session."
+          },
+          "lifecycleNotes": [
+            "Replaces the WCF duplex callback: the client initiates the stream, so the server can no longer dial back to an idle client.",
+            "Events are ordered per order_id; the client deduplicates by occurred_at after a reconnect.",
+            "The server applies backpressure by awaiting the response writer; a persistently slow client terminates with RESOURCE_EXHAUSTED.",
+            "Client disconnect cancels the CancellationToken and releases the subscription; there is no WCF session to resume."
+          ],
+          "name": "SubscribeOrderStatus",
+          "requestMessage": {
+            "state": "known",
+            "value": "SubscribeOrderStatusRequest"
+          },
+          "responseMessage": {
+            "state": "known",
+            "value": "OrderStatusEvent"
+          },
+          "riskIds": [
+            "RSK-duplex-callback"
+          ],
+          "shape": "server-streaming",
+          "sourceOperationIds": [
+            "OP-order-service-subscribe-order-status"
+          ]
+        }
+      ],
+      "serviceId": "SVC-order-service",
+      "sourceOperationIds": [
+        "OP-order-service-submit-order",
+        "OP-order-service-subscribe-order-status"
+      ],
+      "title": "Order intake and status streaming contract"
+    }
+  ],
+  "decisionLogId": "DLOG-contoso-orders",
+  "generation": {
+    "generatedAt": "2026-07-30T00:00:00Z",
+    "generator": "author-migration-specs",
+    "generatorVersion": "1.0.0",
+    "mode": "full",
+    "sourceDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "sourceRevision": {
+      "state": "known",
+      "value": "example-fixture"
+    }
+  },
+  "inventoryId": "INV-contoso-orders",
+  "roadmap": {
+    "phases": [
+      {
+        "dependsOnPhaseIds": [],
+        "exitCriteria": [
+          {
+            "evidenceRequired": "Build output showing the shared and host projects compiling from a clean clone.",
+            "id": "AC-foundation-contracts-build",
+            "statement": "Shared Protobuf conventions, common types, and the gRPC host bootstrap build and start.",
+            "validationIds": [
+              "VAL-foundation-build",
+              "VAL-host-health-probe"
+            ]
+          }
+        ],
+        "id": "PHS-foundation",
+        "integrationCheckpoint": true,
+        "objective": "Establish proto layout, shared types, host bootstrap, and cross-cutting policies before any service slice starts.",
+        "sequence": 0,
+        "title": "Shared foundation",
+        "workPackageIds": [
+          "WP-foundation-host-bootstrap",
+          "WP-foundation-proto-conventions"
+        ]
+      },
+      {
+        "dependsOnPhaseIds": [
+          "PHS-foundation"
+        ],
+        "exitCriteria": [
+          {
+            "evidenceRequired": "Test run output covering unary, streaming, fault, authorization, deadline, and decimal edge cases.",
+            "id": "AC-pilot-parity-tests",
+            "statement": "The order service answers both RPCs with the specified contract, status codes, and authorization behavior.",
+            "validationIds": [
+              "VAL-order-service-tests"
+            ]
+          }
+        ],
+        "id": "PHS-pilot-order-service",
+        "integrationCheckpoint": true,
+        "objective": "Migrate the pilot order service contract and implementation with parity tests.",
+        "sequence": 1,
+        "title": "Pilot service migration",
+        "workPackageIds": [
+          "WP-order-service-contract",
+          "WP-order-service-server"
+        ]
+      },
+      {
+        "dependsOnPhaseIds": [
+          "PHS-pilot-order-service"
+        ],
+        "exitCriteria": [
+          {
+            "evidenceRequired": "Routing configuration review plus request traces showing each consumer class reaching its intended stack.",
+            "id": "AC-coexistence-routing",
+            "statement": "Internal consumers reach the gRPC endpoint while external partners keep a working legacy path.",
+            "validationIds": [
+              "VAL-coexistence-routing"
+            ]
+          }
+        ],
+        "id": "PHS-coexistence-and-cutover",
+        "integrationCheckpoint": true,
+        "objective": "Run both stacks side by side and cut internal consumers over once the external consumer decision is approved.",
+        "sequence": 2,
+        "title": "Coexistence and consumer cutover",
+        "workPackageIds": [
+          "WP-coexistence-routing"
+        ]
+      }
+    ],
+    "pilotServiceId": {
+      "state": "known",
+      "value": "SVC-order-service"
+    },
+    "retirementCriteria": [
+      {
+        "evidenceRequired": "Independent validation report covering contract, behavior, fault, security, serialization, and streaming parity.",
+        "id": "AC-retirement-parity-evidence",
+        "statement": "Parity evidence for every in-scope operation is produced by the validation stage, not by static analysis.",
+        "validationIds": [
+          "VAL-retirement-parity-review"
+        ]
+      },
+      {
+        "evidenceRequired": "Endpoint traffic metrics for the observation window plus the approved consumer cutover decision.",
+        "id": "AC-retirement-zero-legacy-traffic",
+        "statement": "The legacy WCF endpoint serves zero production traffic for 14 consecutive days and every consumer is cut over or waived by an approved decision.",
+        "validationIds": [
+          "VAL-retirement-traffic-review"
+        ]
+      }
+    ],
+    "strategy": "Incremental: build the shared foundation sequentially, migrate the order service as the pilot slice, run WCF and gRPC side by side, then cut consumers over and retire WCF only after independent parity evidence and explicit approval."
+  },
+  "schemaVersion": "1.0.0",
+  "targetArchitecture": {
+    "sections": [
+      {
+        "decisionIds": [
+          "DEC-target-runtime"
+        ],
+        "design": ".NET 10 LTS with Grpc.AspNetCore on the server and Grpc.Net.Client for .NET consumers; code generation runs through the Grpc.Tools MSBuild integration so generated code is never checked in.",
+        "evidenceIds": [
+          "EVD-target-runtime-confirmation"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "target-runtime"
+      },
+      {
+        "decisionIds": [
+          "DEC-hosting-platform"
+        ],
+        "design": "The Windows Service host is replaced by an ASP.NET Core host on Kestrel serving HTTP/2 over TLS on 8443, with a separate HTTP/1.1 port for health and metrics. IIS is not used because it cannot serve gRPC reliably.",
+        "evidenceIds": [
+          "EVD-order-service-binding"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "hosting"
+      },
+      {
+        "decisionIds": [
+          "DEC-service-boundaries"
+        ],
+        "design": "IOrderService becomes one gRPC service, contoso.orders.v1.OrderService, in one deployment unit. PerSession instancing is replaced by stateless scoped services plus a distributed subscription registry keyed by order_id, so no client affinity is required and duplex session state disappears.",
+        "evidenceIds": [
+          "EVD-order-service-contract"
+        ],
+        "questionIds": [],
+        "riskIds": [
+          "RSK-duplex-callback"
+        ],
+        "state": "proposed",
+        "topic": "service-boundaries"
+      },
+      {
+        "decisionIds": [
+          "DEC-protobuf-versioning"
+        ],
+        "design": "Package contoso.orders.v1 lives in src/Contoso.Orders.Grpc/Protos/order_service_v1.proto and shared types in src/Contoso.Contracts.Protos/common_v1.proto (contoso.common.v1). Field numbers are assigned once, removed fields stay reserved by number and name, 19000-19999 is forbidden, and a breaking change requires contoso.orders.v2 registered alongside v1. A single integration owner holds all shared proto files.",
+        "evidenceIds": [
+          "EVD-order-service-contract"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "protobuf-versioning"
+      },
+      {
+        "decisionIds": [
+          "DEC-decimal-representation"
+        ],
+        "design": "decimal maps to contoso.common.v1.DecimalValue (int64 units plus int32 nanos); DateTime and DateTimeOffset map to google.protobuf.Timestamp in UTC and TimeSpan to Duration; Guid maps to a canonical lowercase string; enums gain an _UNSPECIFIED zero member and unknown values are surfaced; nullable values use proto3 optional; collections map to repeated or map with null and empty treated identically.",
+        "evidenceIds": [
+          "EVD-order-request-contract"
+        ],
+        "questionIds": [],
+        "riskIds": [
+          "RSK-order-total-decimal"
+        ],
+        "state": "proposed",
+        "topic": "data-types"
+      },
+      {
+        "decisionIds": [
+          "DEC-error-model"
+        ],
+        "design": "Typed faults map to gRPC status codes with google.rpc.Status details: OrderValidationFault to INVALID_ARGUMENT with OrderValidationDetail, missing entities to NOT_FOUND, authorization failures to PERMISSION_DENIED, and unexpected failures to INTERNAL with a correlation id only. A server interceptor replaces IErrorHandler and guarantees that no exception text, stack trace, or secret leaves the process.",
+        "evidenceIds": [
+          "EVD-order-validation-fault"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "errors"
+      },
+      {
+        "decisionIds": [
+          "DEC-transport-security"
+        ],
+        "design": "wsHttpBinding message security is replaced by TLS 1.3 transport security with OIDC bearer tokens issued by the corporate identity provider; certificates are provisioned from the platform secret store by reference and rotated automatically. Message-level signing and WS-* headers have no gRPC equivalent and are dropped deliberately.",
+        "evidenceIds": [
+          "EVD-order-service-binding"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "security"
+      },
+      {
+        "decisionIds": [
+          "DEC-authorization-model"
+        ],
+        "design": "ASP.NET Core authorization replaces PrincipalPermission: the default policy denies unauthenticated calls, orders.write guards SubmitOrder, orders.read guards SubscribeOrderStatus, and per-order data scoping is enforced in the service implementation and proved by tests.",
+        "evidenceIds": [
+          "EVD-order-service-binding"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "authorization"
+      },
+      {
+        "decisionIds": [
+          "DEC-idempotent-submit-order"
+        ],
+        "design": "WCF timeouts become client deadlines (30s for unary calls) with server-side CancellationToken propagation. SubmitOrder is idempotent by idempotency_key and may be retried on UNAVAILABLE and DEADLINE_EXCEEDED with exponential backoff and at most three attempts; streaming calls are not retried automatically. The service declares no one-way operations, so no acknowledged-delivery redesign is required.",
+        "evidenceIds": [
+          "EVD-order-service-binding"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "deadlines-retries"
+      },
+      {
+        "decisionIds": [
+          "DEC-observability"
+        ],
+        "design": "OpenTelemetry traces and metrics for server and client replace WCF message inspectors and diagnostic tracing; structured logs carry a correlation id propagated in request metadata; RPC rate, error, duration, and payload size are recorded per method for parity comparison, and payload logging is redacted by default.",
+        "evidenceIds": [
+          "EVD-order-service-binding"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "observability"
+      },
+      {
+        "decisionIds": [
+          "DEC-health-checks"
+        ],
+        "design": "The standard grpc.health.v1.Health service reports per-service status; readiness probes the orders database and the identity provider, liveness stays process-local, and shutdown drains in-flight unary calls and closes status streams with OK before the host exits.",
+        "evidenceIds": [
+          "EVD-order-service-binding"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "health-checks"
+      },
+      {
+        "decisionIds": [
+          "DEC-hosting-platform"
+        ],
+        "design": "The service deploys as a container behind an HTTP/2-aware load balancer with client-side load balancing for internal callers; TLS material comes from the platform secret store; rollout is canary with automatic rollback on error-rate regression; no database migration is required for the pilot slice, so both stacks read and write the same additive schema.",
+        "evidenceIds": [
+          "EVD-order-service-binding"
+        ],
+        "questionIds": [],
+        "riskIds": [],
+        "state": "proposed",
+        "topic": "deployment"
+      },
+      {
+        "decisionIds": [],
+        "design": null,
+        "evidenceIds": [
+          "EVD-external-partner-endpoint"
+        ],
+        "questionIds": [
+          "QST-external-consumer-upgrade-control"
+        ],
+        "riskIds": [
+          "RSK-external-soap-consumers"
+        ],
+        "state": "unresolved",
+        "topic": "coexistence"
+      },
+      {
+        "decisionIds": [],
+        "design": null,
+        "evidenceIds": [
+          "EVD-external-partner-endpoint"
+        ],
+        "questionIds": [
+          "QST-external-consumer-upgrade-control"
+        ],
+        "riskIds": [
+          "RSK-external-soap-consumers"
+        ],
+        "state": "unresolved",
+        "topic": "consumer-cutover"
+      },
+      {
+        "decisionIds": [],
+        "design": "WCF retirement requires every in-scope operation validated by the parity stage; zero legacy traffic for 14 consecutive days measured at the host; every consumer cut over or waived by an approved decision; rollback rehearsed; alerts, dashboards, and runbooks accepted; coexistence components removed or given a dated removal plan; and explicit human approval of the retirement decision. No gate may be satisfied by static analysis.",
+        "evidenceIds": [
+          "EVD-external-partner-endpoint"
+        ],
+        "questionIds": [
+          "QST-external-consumer-upgrade-control"
+        ],
+        "riskIds": [
+          "RSK-external-soap-consumers"
+        ],
+        "state": "proposed",
+        "topic": "retirement"
+      }
+    ],
+    "summary": "A single stateless gRPC service on .NET 10 replaces the WCF order host. The duplex status callback becomes a server-streaming RPC, decimal totals use a shared DecimalValue message, and message-level WS-* security is replaced by TLS plus OIDC bearer tokens. The WCF endpoint stays routable for external partners until their cutover decision is approved.",
+    "topologyEdges": [
+      {
+        "coexistenceOnly": false,
+        "from": "internal-portal",
+        "protocol": "gRPC over HTTP/2 with TLS",
+        "purpose": "Submit orders and subscribe to order status events.",
+        "to": "grpc-order-service"
+      },
+      {
+        "coexistenceOnly": true,
+        "from": "external-partner",
+        "protocol": "SOAP over HTTPS",
+        "purpose": "Retained partner traffic until the consumer cutover decision is approved.",
+        "to": "wcf-order-service"
+      },
+      {
+        "coexistenceOnly": false,
+        "from": "grpc-order-service",
+        "protocol": "TDS",
+        "purpose": "Order persistence and idempotency-key deduplication.",
+        "to": "orders-db"
+      },
+      {
+        "coexistenceOnly": true,
+        "from": "wcf-order-service",
+        "protocol": "TDS",
+        "purpose": "Shared order persistence during the coexistence window; all schema changes stay additive.",
+        "to": "orders-db"
+      },
+      {
+        "coexistenceOnly": false,
+        "from": "grpc-order-service",
+        "protocol": "OIDC over HTTPS",
+        "purpose": "Bearer token validation and claim retrieval.",
+        "to": "identity-provider"
+      },
+      {
+        "coexistenceOnly": false,
+        "from": "grpc-order-service",
+        "protocol": "OTLP",
+        "purpose": "Traces and metrics used for parity comparison.",
+        "to": "otel-collector"
+      }
+    ],
+    "topologyNodes": [
+      {
+        "id": "external-partner",
+        "kind": "consumer",
+        "name": "External partner integrations",
+        "sourceIds": [
+          "CON-external-partner"
+        ]
+      },
+      {
+        "id": "grpc-order-service",
+        "kind": "grpc-service",
+        "name": "contoso.orders.v1.OrderService",
+        "sourceIds": [
+          "SVC-order-service"
+        ]
+      },
+      {
+        "id": "identity-provider",
+        "kind": "identity-provider",
+        "name": "Corporate OIDC provider",
+        "sourceIds": [
+          "DEP-identity-provider"
+        ]
+      },
+      {
+        "id": "internal-portal",
+        "kind": "consumer",
+        "name": "Contoso order portal",
+        "sourceIds": [
+          "CON-order-portal"
+        ]
+      },
+      {
+        "id": "orders-db",
+        "kind": "data-store",
+        "name": "Orders SQL database",
+        "sourceIds": [
+          "DEP-orders-sql"
+        ]
+      },
+      {
+        "id": "otel-collector",
+        "kind": "observability",
+        "name": "OpenTelemetry collector",
+        "sourceIds": [
+          "DEP-observability"
+        ]
+      },
+      {
+        "id": "wcf-order-service",
+        "kind": "wcf-service",
+        "name": "Contoso.Orders IOrderService (legacy)",
+        "sourceIds": [
+          "SVC-order-service"
+        ]
+      }
+    ]
+  },
+  "traceLinks": [
+    {
+      "evidenceIds": [
+        "EVD-order-status-callback"
+      ],
+      "from": {
+        "artifactType": "inventory",
+        "id": "OP-order-service-subscribe-order-status"
+      },
+      "id": "TRC-duplex-operation-raises-risk",
+      "relation": "raises",
+      "state": "active",
+      "to": {
+        "artifactType": "inventory",
+        "id": "RSK-duplex-callback"
+      }
+    },
+    {
+      "evidenceIds": [
+        "EVD-order-status-callback"
+      ],
+      "from": {
+        "artifactType": "inventory",
+        "id": "RSK-duplex-callback"
+      },
+      "id": "TRC-duplex-risk-resolved-by-decision",
+      "relation": "resolved-by",
+      "state": "active",
+      "to": {
+        "artifactType": "decision-log",
+        "id": "DEC-duplex-to-server-streaming"
+      }
+    },
+    {
+      "evidenceIds": [
+        "EVD-order-service-contract"
+      ],
+      "from": {
+        "artifactType": "inventory",
+        "id": "SVC-order-service"
+      },
+      "id": "TRC-order-service-specified-by-spec",
+      "relation": "specified-by",
+      "state": "active",
+      "to": {
+        "artifactType": "migration-spec",
+        "id": "SPEC-order-service"
+      }
+    },
+    {
+      "evidenceIds": [
+        "EVD-external-partner-endpoint"
+      ],
+      "from": {
+        "artifactType": "inventory",
+        "id": "RSK-external-soap-consumers"
+      },
+      "id": "TRC-external-consumers-block-coexistence",
+      "relation": "blocks",
+      "state": "unresolved",
+      "to": {
+        "artifactType": "migration-spec",
+        "id": "WP-coexistence-routing"
+      }
+    }
+  ],
+  "workPackages": [
+    {
+      "acceptanceCriteria": [
+        {
+          "evidenceRequired": "Build log showing the shared proto compiling and generated types available to referencing projects.",
+          "id": "AC-foundation-proto-builds",
+          "statement": "The shared contoso.common.v1 proto with DecimalValue compiles and is consumable by service projects.",
+          "validationIds": [
+            "VAL-foundation-build"
+          ]
+        },
+        {
+          "evidenceRequired": "Review record confirming the documented policy matches the checked-in layout.",
+          "id": "AC-foundation-numbering-policy",
+          "statement": "The repository documents package naming, file layout, field numbering, and reservation rules that later packages must follow.",
+          "validationIds": [
+            "VAL-foundation-policy-review"
+          ]
+        }
+      ],
+      "approval": {
+        "state": "draft"
+      },
+      "coexistence": {
+        "durationOrExitCondition": {
+          "reason": "This package exposes no runtime surface.",
+          "state": "not-applicable"
+        },
+        "legacyEndpointRetained": {
+          "state": "known",
+          "value": true
+        },
+        "required": {
+          "state": "known",
+          "value": false
+        },
+        "strategy": {
+          "reason": "Contract scaffolding only; no traffic is served.",
+          "state": "not-applicable"
+        },
+        "trafficControl": {
+          "reason": "No traffic is routed by this package.",
+          "state": "not-applicable"
+        },
+        "validationIds": []
+      },
+      "decisionIds": [
+        "DEC-decimal-representation",
+        "DEC-protobuf-versioning"
+      ],
+      "deliverables": [
+        {
+          "action": "create",
+          "description": "Shared contoso.common.v1 messages including DecimalValue.",
+          "path": "src/Contoso.Contracts.Protos/common_v1.proto"
+        },
+        {
+          "action": "create",
+          "description": "Project that compiles the shared protos and exposes generated types.",
+          "path": "src/Contoso.Contracts.Protos/Contoso.Contracts.Protos.csproj"
+        }
+      ],
+      "dependencies": [],
+      "evidenceIds": [
+        "EVD-order-request-contract"
+      ],
+      "fleet": {
+        "conflictsWithWorkPackageIds": [],
+        "fileOwnership": [
+          {
+            "mode": "exclusive-write",
+            "path": "src/Contoso.Contracts.Protos",
+            "reason": "Shared contract surface held by a single integration owner."
+          }
+        ],
+        "parallelGroup": {
+          "reason": "Sequential foundation work is not assigned to a parallel group.",
+          "state": "not-applicable"
+        },
+        "rationale": "Shared Protobuf conventions and common types are consumed by every later package and must not be edited concurrently.",
+        "suitability": "sequential",
+        "wave": {
+          "state": "known",
+          "value": 1
+        }
+      },
+      "id": "WP-foundation-proto-conventions",
+      "integrationCheckpoints": [
+        "Foundation checkpoint: shared protos build and the numbering policy is published before any service contract starts."
+      ],
+      "nonGoals": [
+        "Do not define service-specific messages or RPCs.",
+        "Do not implement service logic or hosting."
+      ],
+      "objective": "Establish the Protobuf package layout, versioning policy, field numbering and reservation rules, and shared common types.",
+      "riskIds": [
+        "RSK-order-total-decimal"
+      ],
+      "rollback": {
+        "dataImpact": {
+          "state": "known",
+          "value": "None; no runtime data is touched."
+        },
+        "owner": {
+          "state": "known",
+          "value": "Platform contracts owner"
+        },
+        "steps": [
+          "Revert the contracts project and shared proto commit.",
+          "Rebuild the solution to confirm no downstream project depends on the reverted types."
+        ],
+        "strategy": {
+          "state": "known",
+          "value": "Revert the commit; this package deploys nothing."
+        },
+        "triggers": [
+          "The shared decimal representation is rejected during review."
+        ],
+        "validationIds": [
+          "VAL-foundation-build"
+        ]
+      },
+      "scope": [
+        "Create the shared proto project and the contoso.common.v1 package.",
+        "Define DecimalValue and document the decimal conversion and rounding rules.",
+        "Document package naming, file layout, import rules, and generated-code ownership.",
+        "Document the field numbering and reservation policy referenced by every service contract."
+      ],
+      "sourceIds": [
+        "SVC-order-service"
+      ],
+      "specIds": [
+        "SPEC-order-service"
+      ],
+      "status": "ready-for-review",
+      "title": "Shared Protobuf conventions and common types",
+      "validation": [
+        {
+          "command": "dotnet build src/Contoso.Contracts.Protos/Contoso.Contracts.Protos.csproj -c Release",
+          "evidenceIds": [],
+          "expectedResult": "Build succeeds and generated types for contoso.common.v1 are produced.",
+          "id": "VAL-foundation-build",
+          "kind": "build",
+          "status": "not-run",
+          "workingDirectory": "."
+        },
+        {
+          "evidenceIds": [],
+          "expectedResult": "A reviewer confirms the documented numbering, reservation, and versioning policy matches the checked-in proto layout.",
+          "id": "VAL-foundation-policy-review",
+          "kind": "manual",
+          "status": "not-run"
+        }
+      ]
+    },
+    {
+      "acceptanceCriteria": [
+        {
+          "evidenceRequired": "Startup log plus a health probe response from the running host.",
+          "id": "AC-host-serves-http2",
+          "statement": "The host starts, serves HTTP/2 over TLS, and answers the gRPC health check.",
+          "validationIds": [
+            "VAL-host-build",
+            "VAL-host-health-probe"
+          ]
+        }
+      ],
+      "approval": {
+        "state": "draft"
+      },
+      "coexistence": {
+        "durationOrExitCondition": {
+          "state": "known",
+          "value": "The WCF host keeps serving all traffic until the pilot service is validated."
+        },
+        "legacyEndpointRetained": {
+          "state": "known",
+          "value": true
+        },
+        "required": {
+          "state": "known",
+          "value": true
+        },
+        "strategy": {
+          "state": "known",
+          "value": "The new host is deployed alongside the WCF host and receives no production traffic until cutover."
+        },
+        "trafficControl": {
+          "state": "known",
+          "value": "Load balancer routing; the gRPC listener is registered but not advertised to consumers."
+        },
+        "validationIds": [
+          "VAL-host-health-probe"
+        ]
+      },
+      "decisionIds": [
+        "DEC-authorization-model",
+        "DEC-error-model",
+        "DEC-health-checks",
+        "DEC-hosting-platform",
+        "DEC-observability",
+        "DEC-transport-security"
+      ],
+      "deliverables": [
+        {
+          "action": "create",
+          "description": "ASP.NET Core gRPC host with Kestrel HTTP/2, TLS, authentication, authorization policies, interceptors, telemetry, and health checks.",
+          "path": "src/Contoso.Orders.Grpc/Program.cs"
+        },
+        {
+          "action": "create",
+          "description": "Host project referencing the shared contracts project.",
+          "path": "src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj"
+        }
+      ],
+      "dependencies": [
+        {
+          "reason": "The host references the shared contracts project and the documented proto layout.",
+          "state": "pending",
+          "type": "hard",
+          "workPackageId": "WP-foundation-proto-conventions"
+        }
+      ],
+      "evidenceIds": [
+        "EVD-order-service-binding"
+      ],
+      "fleet": {
+        "conflictsWithWorkPackageIds": [],
+        "fileOwnership": [
+          {
+            "mode": "exclusive-write",
+            "path": "src/Contoso.Orders.Grpc/Program.cs",
+            "reason": "Host bootstrap and DI composition have one owner."
+          },
+          {
+            "mode": "shared-read",
+            "path": "src/Contoso.Contracts.Protos",
+            "reason": "Shared contracts are consumed, never modified here."
+          }
+        ],
+        "parallelGroup": {
+          "reason": "Host bootstrap and cross-cutting policies are sequential.",
+          "state": "not-applicable"
+        },
+        "rationale": "Startup, DI registration, interceptors, and authorization policies form a single shared surface.",
+        "suitability": "sequential",
+        "wave": {
+          "state": "known",
+          "value": 2
+        }
+      },
+      "id": "WP-foundation-host-bootstrap",
+      "integrationCheckpoints": [
+        "Foundation checkpoint: the host builds, starts, and reports healthy before service slices register endpoints."
+      ],
+      "nonGoals": [
+        "Do not implement the order service RPCs.",
+        "Do not change WCF hosting or routing."
+      ],
+      "objective": "Stand up the ASP.NET Core gRPC host with transport security, authentication, authorization policies, error mapping, telemetry, and health checks.",
+      "riskIds": [],
+      "rollback": {
+        "dataImpact": {
+          "state": "known",
+          "value": "None; the host serves no production traffic yet."
+        },
+        "owner": {
+          "state": "known",
+          "value": "Platform hosting owner"
+        },
+        "steps": [
+          "Stop and remove the new host deployment.",
+          "Confirm the WCF host still serves all traffic."
+        ],
+        "strategy": {
+          "state": "known",
+          "value": "Remove the new deployment; the WCF host is unaffected."
+        },
+        "triggers": [
+          "TLS or authentication configuration fails in a shared environment."
+        ],
+        "validationIds": [
+          "VAL-host-health-probe"
+        ]
+      },
+      "scope": [
+        "Create the gRPC host project with Kestrel HTTP/2 and TLS configuration.",
+        "Register authentication, authorization policies, and the error-mapping interceptor.",
+        "Register OpenTelemetry tracing and metrics and the gRPC health service."
+      ],
+      "sourceIds": [
+        "HOST-order-service-windows-service"
+      ],
+      "specIds": [
+        "SPEC-order-service"
+      ],
+      "status": "ready-for-review",
+      "title": "gRPC host bootstrap and cross-cutting policies",
+      "validation": [
+        {
+          "command": "dotnet build src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release",
+          "evidenceIds": [],
+          "expectedResult": "Build succeeds with no new warnings from the host project.",
+          "id": "VAL-host-build",
+          "kind": "build",
+          "status": "not-run",
+          "workingDirectory": "."
+        },
+        {
+          "command": "dotnet run --project src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release -- --healthcheck",
+          "evidenceIds": [],
+          "expectedResult": "The host reports SERVING for contoso.orders.v1.OrderService and exits zero.",
+          "id": "VAL-host-health-probe",
+          "kind": "operational",
+          "status": "not-run",
+          "workingDirectory": "."
+        }
+      ]
+    },
+    {
+      "acceptanceCriteria": [
+        {
+          "evidenceRequired": "Build log showing generated client and server stubs for both RPCs.",
+          "id": "AC-order-proto-matches-spec",
+          "statement": "order_service_v1.proto matches SPEC-order-service including RPC shapes, field numbers, and reservations.",
+          "validationIds": [
+            "VAL-order-contract-build",
+            "VAL-order-contract-review"
+          ]
+        }
+      ],
+      "approval": {
+        "state": "draft"
+      },
+      "coexistence": {
+        "durationOrExitCondition": {
+          "state": "known",
+          "value": "Additive-only changes until the WCF endpoint is retired."
+        },
+        "legacyEndpointRetained": {
+          "state": "known",
+          "value": true
+        },
+        "required": {
+          "state": "known",
+          "value": true
+        },
+        "strategy": {
+          "state": "known",
+          "value": "The proto stays additive-only while the WCF contract remains in production."
+        },
+        "trafficControl": {
+          "reason": "A contract definition serves no traffic.",
+          "state": "not-applicable"
+        },
+        "validationIds": [
+          "VAL-order-contract-review"
+        ]
+      },
+      "decisionIds": [
+        "DEC-decimal-representation",
+        "DEC-duplex-to-server-streaming",
+        "DEC-protobuf-versioning"
+      ],
+      "deliverables": [
+        {
+          "action": "create",
+          "description": "Order service proto with SubmitOrder (unary), SubscribeOrderStatus (server streaming), messages, enums, and reservations.",
+          "path": "src/Contoso.Orders.Grpc/Protos/order_service_v1.proto"
+        }
+      ],
+      "dependencies": [
+        {
+          "reason": "Imports contoso.common.v1.DecimalValue and follows the published numbering policy.",
+          "state": "pending",
+          "type": "hard",
+          "workPackageId": "WP-foundation-proto-conventions"
+        }
+      ],
+      "evidenceIds": [
+        "EVD-order-request-contract",
+        "EVD-order-service-contract"
+      ],
+      "fleet": {
+        "conflictsWithWorkPackageIds": [],
+        "fileOwnership": [
+          {
+            "mode": "exclusive-write",
+            "path": "src/Contoso.Orders.Grpc/Protos/order_service_v1.proto",
+            "reason": "Only this package defines the order service contract."
+          },
+          {
+            "mode": "shared-read",
+            "path": "src/Contoso.Contracts.Protos/common_v1.proto",
+            "reason": "Shared types are imported, not modified."
+          }
+        ],
+        "parallelGroup": {
+          "state": "known",
+          "value": "contracts"
+        },
+        "rationale": "The service proto is a bounded file owned exclusively by this package and can run beside other service contracts.",
+        "suitability": "eligible",
+        "wave": {
+          "state": "known",
+          "value": 2
+        }
+      },
+      "id": "WP-order-service-contract",
+      "integrationCheckpoints": [
+        "Contract checkpoint: generated stubs compile and field numbers match the approved specification."
+      ],
+      "nonGoals": [
+        "Do not implement the service.",
+        "Do not modify shared proto contracts."
+      ],
+      "objective": "Author the order service Protobuf contract exactly as specified, including stable field numbers and reservations.",
+      "riskIds": [
+        "RSK-duplex-callback",
+        "RSK-order-total-decimal"
+      ],
+      "rollback": {
+        "dataImpact": {
+          "state": "known",
+          "value": "None; no runtime behavior changes."
+        },
+        "owner": {
+          "state": "known",
+          "value": "Order service owner"
+        },
+        "steps": [
+          "Revert the proto file to the previous approved revision.",
+          "Rebuild to confirm no generated code remains referenced."
+        ],
+        "strategy": {
+          "state": "known",
+          "value": "Revert the proto commit; no deployment is affected."
+        },
+        "triggers": [
+          "Field numbering or reservations diverge from the approved specification."
+        ],
+        "validationIds": [
+          "VAL-order-contract-build"
+        ]
+      },
+      "scope": [
+        "Define contoso.orders.v1.OrderService with SubmitOrder and SubscribeOrderStatus.",
+        "Define SubmitOrderRequest, OrderItem, SubmitOrderResponse, SubscribeOrderStatusRequest, OrderStatusEvent, and OrderStatus.",
+        "Reserve field number 4 and the name legacy_customer_ref in SubmitOrderRequest."
+      ],
+      "sourceIds": [
+        "SVC-order-service"
+      ],
+      "specIds": [
+        "SPEC-order-service"
+      ],
+      "status": "ready-for-review",
+      "title": "Order service Protobuf contract",
+      "validation": [
+        {
+          "command": "dotnet build src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release",
+          "evidenceIds": [],
+          "expectedResult": "Proto compilation succeeds and generates both the service base and the client stub.",
+          "id": "VAL-order-contract-build",
+          "kind": "build",
+          "status": "not-run",
+          "workingDirectory": "."
+        },
+        {
+          "evidenceIds": [],
+          "expectedResult": "A reviewer confirms every field number, reservation, cardinality, and RPC shape matches SPEC-order-service.",
+          "id": "VAL-order-contract-review",
+          "kind": "manual",
+          "status": "not-run"
+        }
+      ]
+    },
+    {
+      "acceptanceCriteria": [
+        {
+          "evidenceRequired": "Test output covering success, validation failure, unauthorized access, cancellation, and stream termination.",
+          "id": "AC-order-service-behavior",
+          "statement": "Both RPCs return the specified messages, status codes, and error details and honor authorization and deadlines.",
+          "validationIds": [
+            "VAL-order-service-build",
+            "VAL-order-service-tests"
+          ]
+        },
+        {
+          "evidenceRequired": "Test output showing a repeated submission with the same idempotency_key returning the original confirmation.",
+          "id": "AC-order-service-idempotency",
+          "statement": "SubmitOrder deduplicates repeated calls that carry the same idempotency_key.",
+          "validationIds": [
+            "VAL-order-service-tests"
+          ]
+        }
+      ],
+      "approval": {
+        "state": "draft"
+      },
+      "coexistence": {
+        "durationOrExitCondition": {
+          "state": "known",
+          "value": "Until the consumer cutover decision is approved and internal consumers are migrated."
+        },
+        "legacyEndpointRetained": {
+          "state": "known",
+          "value": true
+        },
+        "required": {
+          "state": "known",
+          "value": true
+        },
+        "strategy": {
+          "state": "known",
+          "value": "The gRPC implementation delegates to the existing order domain services so both stacks share behavior and data."
+        },
+        "trafficControl": {
+          "state": "known",
+          "value": "No production traffic until cutover; internal test clients only."
+        },
+        "validationIds": [
+          "VAL-order-service-tests"
+        ]
+      },
+      "decisionIds": [
+        "DEC-authorization-model",
+        "DEC-duplex-to-server-streaming",
+        "DEC-error-model",
+        "DEC-idempotent-submit-order"
+      ],
+      "deliverables": [
+        {
+          "action": "create",
+          "description": "OrderService implementation delegating to existing domain services, with conversion, validation, error mapping, and streaming lifecycle handling.",
+          "path": "src/Contoso.Orders.Grpc/Services/OrderGrpcService.cs"
+        },
+        {
+          "action": "create",
+          "description": "Subscription registry replacing WCF per-session callback state.",
+          "path": "src/Contoso.Orders.Grpc/Services/OrderStatusSubscriptionRegistry.cs"
+        },
+        {
+          "action": "verify",
+          "description": "Existing order domain logic is reused unchanged.",
+          "path": "src/Contoso.Orders/OrderService.cs"
+        }
+      ],
+      "dependencies": [
+        {
+          "reason": "Implements the generated service base from the order contract.",
+          "state": "pending",
+          "type": "hard",
+          "workPackageId": "WP-order-service-contract"
+        },
+        {
+          "reason": "Requires the host, authorization policies, and error interceptor.",
+          "state": "pending",
+          "type": "hard",
+          "workPackageId": "WP-foundation-host-bootstrap"
+        }
+      ],
+      "evidenceIds": [
+        "EVD-order-service-contract",
+        "EVD-order-status-callback"
+      ],
+      "fleet": {
+        "conflictsWithWorkPackageIds": [],
+        "fileOwnership": [
+          {
+            "mode": "exclusive-write",
+            "path": "src/Contoso.Orders.Grpc/Services",
+            "reason": "Only this package implements the order service."
+          },
+          {
+            "mode": "shared-read",
+            "path": "src/Contoso.Orders",
+            "reason": "Existing domain logic is reused, not modified."
+          }
+        ],
+        "parallelGroup": {
+          "state": "known",
+          "value": "services"
+        },
+        "rationale": "Implementation is confined to one service folder and can run beside other service slices once the foundation is complete.",
+        "suitability": "eligible",
+        "wave": {
+          "state": "known",
+          "value": 3
+        }
+      },
+      "id": "WP-order-service-server",
+      "integrationCheckpoints": [
+        "Service checkpoint: the host registers the service, the solution builds, and the service test suite passes."
+      ],
+      "nonGoals": [
+        "Do not modify existing WCF service code or configuration.",
+        "Do not change the shared proto contracts or host bootstrap.",
+        "Do not migrate consumers or route production traffic."
+      ],
+      "objective": "Implement the gRPC order service over the existing domain logic, including the streaming replacement for the duplex callback.",
+      "riskIds": [
+        "RSK-duplex-callback"
+      ],
+      "rollback": {
+        "dataImpact": {
+          "state": "known",
+          "value": "None; the implementation is not receiving production traffic."
+        },
+        "owner": {
+          "state": "known",
+          "value": "Order service owner"
+        },
+        "steps": [
+          "Unregister the service endpoint from the host.",
+          "Revert the service implementation commit.",
+          "Confirm the WCF endpoint still serves all consumers."
+        ],
+        "strategy": {
+          "state": "known",
+          "value": "Revert the implementation and unregister the endpoint; WCF continues to serve traffic."
+        },
+        "triggers": [
+          "Streaming subscriptions leak resources under load.",
+          "Fault mapping regressions are found during validation."
+        ],
+        "validationIds": [
+          "VAL-order-service-tests"
+        ]
+      },
+      "scope": [
+        "Implement SubmitOrder including idempotency-key deduplication and fault-to-status mapping.",
+        "Implement SubscribeOrderStatus as a server stream with cancellation, ordering, and backpressure handling.",
+        "Implement request and response conversion for decimal, timestamp, GUID, and enum values.",
+        "Register the service with the host and apply the authorization policies."
+      ],
+      "sourceIds": [
+        "OP-order-service-submit-order",
+        "OP-order-service-subscribe-order-status",
+        "SVC-order-service"
+      ],
+      "specIds": [
+        "SPEC-order-service"
+      ],
+      "status": "ready-for-review",
+      "title": "Order service gRPC implementation",
+      "validation": [
+        {
+          "command": "dotnet build src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release",
+          "evidenceIds": [],
+          "expectedResult": "Build succeeds.",
+          "id": "VAL-order-service-build",
+          "kind": "build",
+          "status": "not-run",
+          "workingDirectory": "."
+        },
+        {
+          "command": "dotnet test tests/Contoso.Orders.Grpc.Tests/Contoso.Orders.Grpc.Tests.csproj",
+          "evidenceIds": [],
+          "expectedResult": "All order service tests pass, including fault mapping, authorization, deadline, idempotency, and streaming lifecycle cases.",
+          "id": "VAL-order-service-tests",
+          "kind": "test",
+          "status": "not-run",
+          "workingDirectory": "."
+        }
+      ]
+    },
+    {
+      "acceptanceCriteria": [
+        {
+          "evidenceRequired": "Approved decision record resolving QST-external-consumer-upgrade-control.",
+          "id": "AC-coexistence-decision-approved",
+          "statement": "The external consumer upgrade-control decision is approved before any routing change is implemented.",
+          "validationIds": [
+            "VAL-coexistence-decision-review"
+          ]
+        },
+        {
+          "evidenceRequired": "Routing configuration review and per-consumer request traces.",
+          "id": "AC-coexistence-routing-correct",
+          "statement": "Internal consumers reach the gRPC endpoint and external partners keep a working legacy path with no request loss.",
+          "validationIds": [
+            "VAL-coexistence-routing"
+          ]
+        }
+      ],
+      "approval": {
+        "state": "draft"
+      },
+      "coexistence": {
+        "durationOrExitCondition": {
+          "questionIds": [
+            "QST-external-consumer-upgrade-control"
+          ],
+          "reason": "The coexistence window depends on external partner upgrade control.",
+          "state": "unknown"
+        },
+        "legacyEndpointRetained": {
+          "state": "known",
+          "value": true
+        },
+        "required": {
+          "state": "known",
+          "value": true
+        },
+        "strategy": {
+          "questionIds": [
+            "QST-external-consumer-upgrade-control"
+          ],
+          "reason": "Side-by-side endpoints, a reverse proxy, or a SOAP adapter cannot be selected until the external consumer decision is approved.",
+          "state": "unknown"
+        },
+        "trafficControl": {
+          "questionIds": [
+            "QST-external-consumer-upgrade-control"
+          ],
+          "reason": "The traffic-shifting mechanism depends on the selected coexistence topology.",
+          "state": "unknown"
+        },
+        "validationIds": [
+          "VAL-coexistence-routing"
+        ]
+      },
+      "decisionIds": [],
+      "deliverables": [
+        {
+          "action": "modify",
+          "description": "Routing rules directing internal consumers to gRPC while external partners continue to reach the WCF endpoint.",
+          "path": "deploy/routing/orders.yaml"
+        }
+      ],
+      "dependencies": [
+        {
+          "reason": "Routing can only be reconciled once the host is deployable.",
+          "state": "pending",
+          "type": "integration",
+          "workPackageId": "WP-foundation-host-bootstrap"
+        },
+        {
+          "reason": "Traffic may only shift after the service implementation is validated.",
+          "state": "pending",
+          "type": "hard",
+          "workPackageId": "WP-order-service-server"
+        }
+      ],
+      "evidenceIds": [
+        "EVD-external-partner-endpoint"
+      ],
+      "fleet": {
+        "conflictsWithWorkPackageIds": [],
+        "fileOwnership": [],
+        "parallelGroup": {
+          "questionIds": [
+            "QST-external-consumer-upgrade-control"
+          ],
+          "reason": "Parallel grouping cannot be assigned while the coexistence topology is unresolved.",
+          "state": "unknown"
+        },
+        "rationale": "The coexistence topology is unresolved, so neither ownership nor parallel safety can be established; the package is not executable yet.",
+        "suitability": "unknown",
+        "wave": {
+          "questionIds": [
+            "QST-external-consumer-upgrade-control"
+          ],
+          "reason": "Wave assignment depends on the unresolved coexistence topology.",
+          "state": "unknown"
+        }
+      },
+      "id": "WP-coexistence-routing",
+      "integrationCheckpoints": [
+        "Cutover checkpoint: routing, monitoring, and rollback triggers are reviewed together before any traffic shift."
+      ],
+      "nonGoals": [
+        "Do not retire the WCF endpoint.",
+        "Do not change service contracts or implementations."
+      ],
+      "objective": "Route internal consumers to gRPC while keeping external partner traffic on the legacy endpoint until its cutover decision is approved.",
+      "riskIds": [
+        "RSK-external-soap-consumers"
+      ],
+      "rollback": {
+        "dataImpact": {
+          "state": "known",
+          "value": "None; both stacks share the same additive data schema."
+        },
+        "owner": {
+          "state": "known",
+          "value": "Platform operations owner"
+        },
+        "steps": [
+          "Restore the previous routing configuration.",
+          "Confirm every consumer class reaches the WCF endpoint.",
+          "Record the failure and reopen the coexistence decision."
+        ],
+        "strategy": {
+          "state": "known",
+          "value": "Revert routing so all traffic returns to the WCF endpoint."
+        },
+        "triggers": [
+          "Error rate or latency regression after a traffic shift.",
+          "Any external partner request failing on the retained path."
+        ],
+        "validationIds": [
+          "VAL-coexistence-routing"
+        ]
+      },
+      "scope": [
+        "Implement the approved coexistence topology once the external consumer decision is resolved.",
+        "Define traffic control, monitoring, and the rollback trigger for the shift.",
+        "Record the coexistence exit condition and its owner."
+      ],
+      "sourceIds": [
+        "CON-external-partner",
+        "CON-order-portal"
+      ],
+      "specIds": [
+        "SPEC-order-service"
+      ],
+      "status": "draft",
+      "title": "Coexistence routing and internal consumer cutover",
+      "validation": [
+        {
+          "evidenceIds": [],
+          "expectedResult": "The decision log contains an approved decision resolving QST-external-consumer-upgrade-control.",
+          "id": "VAL-coexistence-decision-review",
+          "kind": "manual",
+          "status": "not-run"
+        },
+        {
+          "evidenceIds": [],
+          "expectedResult": "Each consumer class reaches its intended stack with no failed requests during the observation window.",
+          "id": "VAL-coexistence-routing",
+          "kind": "manual",
+          "status": "not-run"
+        }
+      ]
+    }
+  ]
+}

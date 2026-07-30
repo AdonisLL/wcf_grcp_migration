@@ -1,0 +1,356 @@
+{
+  "schemaVersion": "1.0.0",
+  "artifactType": "issue-set",
+  "artifactId": "ISET-contoso-orders",
+  "generation": {
+    "generator": "publish-migration-issues",
+    "generatorVersion": "0.1.0",
+    "generatedAt": "2026-07-30T16:05:00Z",
+    "sourceRevision": {
+      "state": "known",
+      "value": "refs/heads/main"
+    },
+    "sourceDigest": "sha256:0edf989a315d5713fea6fbc2efb1447da01b5fad5a38de825f59bac923d15640",
+    "mode": "incremental"
+  },
+  "approval": {
+    "state": "approved",
+    "approvedAt": "2026-07-30T16:02:00Z",
+    "approvedBy": [
+      "migration-architecture-review-board"
+    ],
+    "note": "Approved issue publication preview for the Contoso Orders migration."
+  },
+  "citations": [
+    {
+      "id": "EVD-order-service-contract",
+      "kind": "code",
+      "claim": "IOrderService declares SubmitOrder and SubscribeOrderStatus with a duplex callback contract.",
+      "locator": "src/Contoso.Orders/IOrderService.cs#L14-L58",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-order-request-contract",
+      "kind": "code",
+      "claim": "OrderRequest carries a decimal TotalAmount and a nullable RequestedDeliveryDate.",
+      "locator": "src/Contoso.Orders/Contracts/OrderRequest.cs#L10-L44",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-order-service-binding",
+      "kind": "configuration",
+      "claim": "The order endpoint uses wsHttpBinding with message security and a 60-second send timeout.",
+      "locator": "src/Contoso.Orders.Host/app.config#L22-L64",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-order-status-callback",
+      "kind": "code",
+      "claim": "IOrderStatusCallback pushes status changes to connected clients.",
+      "locator": "src/Contoso.Orders/IOrderStatusCallback.cs#L8-L19",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-external-partner-endpoint",
+      "kind": "configuration",
+      "claim": "An external partner endpoint is exposed separately from the internal endpoint.",
+      "locator": "src/Contoso.Orders.Host/web.config#L88-L96",
+      "confidence": "medium"
+    }
+  ],
+  "traceLinks": [
+    {
+      "id": "TRC-wp-foundation-proto-published-as-issue",
+      "from": {
+        "artifactType": "migration-spec",
+        "id": "WP-foundation-proto-conventions"
+      },
+      "relation": "published-as",
+      "to": {
+        "artifactType": "issue-set",
+        "id": "ISSUE-foundation-proto-conventions"
+      },
+      "state": "active",
+      "evidenceIds": [
+        "EVD-order-request-contract"
+      ]
+    },
+    {
+      "id": "TRC-wp-foundation-host-published-as-issue",
+      "from": {
+        "artifactType": "migration-spec",
+        "id": "WP-foundation-host-bootstrap"
+      },
+      "relation": "published-as",
+      "to": {
+        "artifactType": "issue-set",
+        "id": "ISSUE-foundation-host-bootstrap"
+      },
+      "state": "active",
+      "evidenceIds": [
+        "EVD-order-service-binding"
+      ]
+    },
+    {
+      "id": "TRC-wp-order-contract-published-as-issue",
+      "from": {
+        "artifactType": "migration-spec",
+        "id": "WP-order-service-contract"
+      },
+      "relation": "published-as",
+      "to": {
+        "artifactType": "issue-set",
+        "id": "ISSUE-order-service-contract"
+      },
+      "state": "active",
+      "evidenceIds": [
+        "EVD-order-service-contract"
+      ]
+    },
+    {
+      "id": "TRC-wp-order-server-published-as-issue",
+      "from": {
+        "artifactType": "migration-spec",
+        "id": "WP-order-service-server"
+      },
+      "relation": "published-as",
+      "to": {
+        "artifactType": "issue-set",
+        "id": "ISSUE-order-service-server"
+      },
+      "state": "active",
+      "evidenceIds": [
+        "EVD-order-status-callback"
+      ]
+    }
+  ],
+  "migrationSpecId": "MSPEC-contoso-orders",
+  "targetRepository": {
+    "state": "known",
+    "value": "contoso/orders-migration"
+  },
+  "publication": {
+    "state": "approved",
+    "previewedAt": "2026-07-30T16:00:00Z",
+    "previewDigest": "sha256:9bf8e57388bc00291286988930084c44d28698e145e5eed302b8f15189d1d164",
+    "approvedAt": "2026-07-30T16:02:30Z",
+    "approvedBy": "release-manager"
+  },
+  "labels": [
+    {
+      "id": "LBL-area-grpc-migration",
+      "name": "area:grpc-migration",
+      "color": "1D76DB",
+      "description": "Tracks WCF-to-gRPC migration work",
+      "createIfMissing": true
+    },
+    {
+      "id": "LBL-phase-foundation",
+      "name": "phase:foundation",
+      "color": "5319E7",
+      "description": "Foundation migration work",
+      "createIfMissing": true
+    },
+    {
+      "id": "LBL-phase-service",
+      "name": "phase:service",
+      "color": "0E8A16",
+      "description": "Service-slice migration work",
+      "createIfMissing": true
+    },
+    {
+      "id": "LBL-service-orders",
+      "name": "service:orders",
+      "color": "FBCA04",
+      "description": "Order service migration scope",
+      "createIfMissing": true
+    },
+    {
+      "id": "LBL-fleet-sequential",
+      "name": "fleet:sequential",
+      "color": "B60205",
+      "description": "Sequential migration package",
+      "createIfMissing": true
+    },
+    {
+      "id": "LBL-fleet-eligible",
+      "name": "fleet:eligible",
+      "color": "0052CC",
+      "description": "Parallel-safe migration package",
+      "createIfMissing": true
+    }
+  ],
+  "issues": [
+    {
+      "id": "ISSUE-foundation-proto-conventions",
+      "workPackageId": "WP-foundation-proto-conventions",
+      "state": "published",
+      "title": "[WP-foundation-proto-conventions] Shared Protobuf conventions and common types",
+      "body": "<!--\nwcf-to-grpc.issue:\n  issue_id: ISSUE-foundation-proto-conventions\n  work_package_id: WP-foundation-proto-conventions\n  migration_spec_id: MSPEC-contoso-orders\n  issue_set_id: ISET-contoso-orders\n-->\n\n# [WP-foundation-proto-conventions] Shared Protobuf conventions and common types\n\n## Publication metadata\n\n- Stable issue ID: `ISSUE-foundation-proto-conventions`\n- Work package ID: `WP-foundation-proto-conventions`\n- Migration spec ID: `MSPEC-contoso-orders`\n- Issue set ID: `ISET-contoso-orders`\n- Target repository: `contoso/orders-migration`\n- Labels: `area:grpc-migration`, `phase:foundation`, `service:orders`, `fleet:sequential`\n- Assignees: `platform-contracts-owner`\n- Work-package approval: `approved`\n\n## Objective\n\nEstablish the Protobuf package layout, versioning policy, field numbering and reservation rules, and shared common types.\n\n## Scope\n\n- Create the shared proto project and the contoso.common.v1 package.\n- Define DecimalValue and document decimal conversion and rounding rules.\n- Document package naming, file layout, import rules, and generated-code ownership.\n- Publish the field numbering and reservation policy used by later service contracts.\n\n## Non-goals\n\n- Do not define service-specific RPCs or messages.\n- Do not implement runtime service logic or hosting.\n\n## Deliverables\n\n| Path | Action | Description |\n|---|---|---|\n| `src/Contoso.Contracts.Protos/common_v1.proto` | create | Shared contoso.common.v1 messages including DecimalValue. |\n| `src/Contoso.Contracts.Protos/Contoso.Contracts.Protos.csproj` | create | Project that compiles shared protos and exposes generated types. |\n\n## Traceability\n\n- Source IDs: `SVC-order-service`\n- Contract specifications: `SPEC-order-service`\n- Decisions: `DEC-decimal-representation`, `DEC-protobuf-versioning`\n- Risks: `RSK-order-total-decimal`\n- Evidence IDs: `EVD-order-request-contract`\n- Acceptance IDs: `AC-foundation-proto-builds`, `AC-foundation-numbering-policy`\n- Validation IDs: `VAL-foundation-build`, `VAL-foundation-policy-review`\n\n## Dependencies\n\n| Work package | Stable issue ID | Type | Reason | Current link |\n|---|---|---|---|---|\n| None | n/a | n/a | No upstream work packages. | n/a |\n\n## Fleet suitability and file ownership\n\n- Fleet suitability: **sequential**\n- Rationale: Shared Protobuf conventions are a single integration-owned surface for every later package.\n- Wave: 1\n- Parallel group: not-applicable\n\n| Path | Ownership mode |\n|---|---|\n| `src/Contoso.Contracts.Protos` | exclusive-write |\n\n## Acceptance criteria\n\n| ID | Observable result | Required evidence | Validation IDs |\n|---|---|---|---|\n| `AC-foundation-proto-builds` | The shared contoso.common.v1 proto compiles and is consumable by service projects. | Build log showing the shared proto compiling and generated types available to referencing projects. | `VAL-foundation-build` |\n| `AC-foundation-numbering-policy` | The repository documents package naming, file layout, field numbering, and reservation rules. | Review record confirming the documented policy matches the checked-in layout. | `VAL-foundation-policy-review` |\n\n## Validation\n\n| Validation ID | Kind | Working directory | Command/check | Expected result | Status |\n|---|---|---|---|---|---|\n| `VAL-foundation-build` | build | `.` | dotnet build src/Contoso.Contracts.Protos/Contoso.Contracts.Protos.csproj -c Release | Build succeeds and generated types for contoso.common.v1 are produced. | not-run |\n| `VAL-foundation-policy-review` | manual | `.` | Manual review | A reviewer confirms the documented numbering, reservation, and versioning policy matches the checked-in proto layout. | not-run |\n\n## Coexistence and rollback\n\n### Coexistence\n\n- Required: No\n- Strategy: Not applicable; contract scaffolding only.\n- Traffic control: Not applicable; no traffic is routed by this package.\n- Exit condition: No runtime surface is exposed by this package.\n- Legacy endpoint retained: Yes\n\n### Rollback\n\n- Strategy: Revert the shared contracts commit; this package deploys nothing.\n- Triggers: The shared decimal representation is rejected during review.\n- Data impact: None; no runtime data is touched.\n- Owner: Platform contracts owner\n- Validation IDs: `VAL-foundation-build`\n\nOrdered steps:\n\n- Revert the contracts project and shared proto commit.\n- Rebuild the solution to confirm no downstream project depends on the reverted types.\n\n## Integration checkpoints\n\n- Foundation checkpoint: shared protos build and the numbering policy is published before any service contract starts.\n\n## Source evidence\n\n| Evidence ID | Claim | Locator |\n|---|---|---|\n| `EVD-order-request-contract` | OrderRequest carries a decimal TotalAmount and a nullable RequestedDeliveryDate. | `src/Contoso.Orders/Contracts/OrderRequest.cs#L10-L44` |",
+      "labelIds": [
+        "LBL-area-grpc-migration",
+        "LBL-phase-foundation",
+        "LBL-service-orders",
+        "LBL-fleet-sequential"
+      ],
+      "assignees": [
+        "platform-contracts-owner"
+      ],
+      "dependsOnIssueIds": [],
+      "dependsOnWorkPackageIds": [],
+      "sourceAcceptanceCriterionIds": [
+        "AC-foundation-proto-builds",
+        "AC-foundation-numbering-policy"
+      ],
+      "sourceValidationIds": [
+        "VAL-foundation-build",
+        "VAL-foundation-policy-review"
+      ],
+      "fleetSuitability": "sequential",
+      "fileOwnership": [
+        {
+          "path": "src/Contoso.Contracts.Protos",
+          "mode": "exclusive-write"
+        }
+      ],
+      "github": {
+        "repository": "contoso/orders-migration",
+        "number": 101,
+        "url": "https://github.com/contoso/orders-migration/issues/101",
+        "publishedBodyDigest": "sha256:c90269ce5cea6990cb86ed6f2fe3289f5cfcfc72843a1c392457a9c73a291abc"
+      }
+    },
+    {
+      "id": "ISSUE-foundation-host-bootstrap",
+      "workPackageId": "WP-foundation-host-bootstrap",
+      "state": "published",
+      "title": "[WP-foundation-host-bootstrap] gRPC host bootstrap and cross-cutting policies",
+      "body": "<!--\nwcf-to-grpc.issue:\n  issue_id: ISSUE-foundation-host-bootstrap\n  work_package_id: WP-foundation-host-bootstrap\n  migration_spec_id: MSPEC-contoso-orders\n  issue_set_id: ISET-contoso-orders\n-->\n\n# [WP-foundation-host-bootstrap] gRPC host bootstrap and cross-cutting policies\n\n## Publication metadata\n\n- Stable issue ID: `ISSUE-foundation-host-bootstrap`\n- Work package ID: `WP-foundation-host-bootstrap`\n- Migration spec ID: `MSPEC-contoso-orders`\n- Issue set ID: `ISET-contoso-orders`\n- Target repository: `contoso/orders-migration`\n- Labels: `area:grpc-migration`, `phase:foundation`, `service:orders`, `fleet:sequential`\n- Assignees: `platform-hosting-owner`\n- Work-package approval: `approved`\n\n## Objective\n\nStand up the ASP.NET Core gRPC host with transport security, authentication, authorization policies, error mapping, telemetry, and health checks.\n\n## Scope\n\n- Create the gRPC host project with Kestrel HTTP/2 and TLS configuration.\n- Register authentication, authorization policies, and the error-mapping interceptor.\n- Register OpenTelemetry tracing and metrics and the gRPC health service.\n\n## Non-goals\n\n- Do not implement the order service RPCs.\n- Do not change WCF hosting or routing.\n\n## Deliverables\n\n| Path | Action | Description |\n|---|---|---|\n| `src/Contoso.Orders.Grpc/Program.cs` | create | ASP.NET Core gRPC host with Kestrel HTTP/2, TLS, authn/authz, telemetry, and health checks. |\n| `src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj` | create | Host project referencing the shared contracts project. |\n\n## Traceability\n\n- Source IDs: `HOST-order-service-windows-service`\n- Contract specifications: `SPEC-order-service`\n- Decisions: `DEC-authorization-model`, `DEC-error-model`, `DEC-health-checks`, `DEC-hosting-platform`, `DEC-observability`, `DEC-transport-security`\n- Risks: None\n- Evidence IDs: `EVD-order-service-binding`\n- Acceptance IDs: `AC-host-serves-http2`\n- Validation IDs: `VAL-host-build`, `VAL-host-health-probe`\n\n## Dependencies\n\n| Work package | Stable issue ID | Type | Reason | Current link |\n|---|---|---|---|---|\n| `WP-foundation-proto-conventions` | `ISSUE-foundation-proto-conventions` | hard | The host references the shared contracts project and the published proto layout. | #101 |\n\n## Fleet suitability and file ownership\n\n- Fleet suitability: **sequential**\n- Rationale: Startup, DI registration, interceptors, and authorization policies form one shared hosting surface.\n- Wave: 2\n- Parallel group: not-applicable\n\n| Path | Ownership mode |\n|---|---|\n| `src/Contoso.Orders.Grpc/Program.cs` | exclusive-write |\n| `src/Contoso.Contracts.Protos` | shared-read |\n\n## Acceptance criteria\n\n| ID | Observable result | Required evidence | Validation IDs |\n|---|---|---|---|\n| `AC-host-serves-http2` | The host starts, serves HTTP/2 over TLS, and answers the gRPC health check. | Startup log plus a health probe response from the running host. | `VAL-host-build`, `VAL-host-health-probe` |\n\n## Validation\n\n| Validation ID | Kind | Working directory | Command/check | Expected result | Status |\n|---|---|---|---|---|---|\n| `VAL-host-build` | build | `.` | dotnet build src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release | Build succeeds with no new warnings from the host project. | not-run |\n| `VAL-host-health-probe` | operational | `.` | dotnet run --project src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release -- --healthcheck | The host reports SERVING for contoso.orders.v1.OrderService and exits zero. | not-run |\n\n## Coexistence and rollback\n\n### Coexistence\n\n- Required: Yes\n- Strategy: Deploy the new host alongside the WCF host and keep it off production traffic until cutover.\n- Traffic control: Load-balancer routing; the gRPC listener is registered but not advertised to consumers.\n- Exit condition: The WCF host keeps serving all traffic until the pilot service is validated.\n- Legacy endpoint retained: Yes\n\n### Rollback\n\n- Strategy: Remove the new deployment; the WCF host is unaffected.\n- Triggers: TLS or authentication configuration fails in a shared environment.\n- Data impact: None; the host serves no production traffic yet.\n- Owner: Platform hosting owner\n- Validation IDs: `VAL-host-health-probe`\n\nOrdered steps:\n\n- Stop and remove the new host deployment.\n- Confirm the WCF host still serves all traffic.\n\n## Integration checkpoints\n\n- Foundation checkpoint: the host builds, starts, and reports healthy before service slices register endpoints.\n\n## Source evidence\n\n| Evidence ID | Claim | Locator |\n|---|---|---|\n| `EVD-order-service-binding` | The order endpoint uses wsHttpBinding with message security and a 60-second send timeout. | `src/Contoso.Orders.Host/app.config#L22-L64` |",
+      "labelIds": [
+        "LBL-area-grpc-migration",
+        "LBL-phase-foundation",
+        "LBL-service-orders",
+        "LBL-fleet-sequential"
+      ],
+      "assignees": [
+        "platform-hosting-owner"
+      ],
+      "dependsOnIssueIds": [
+        "ISSUE-foundation-proto-conventions"
+      ],
+      "dependsOnWorkPackageIds": [
+        "WP-foundation-proto-conventions"
+      ],
+      "sourceAcceptanceCriterionIds": [
+        "AC-host-serves-http2"
+      ],
+      "sourceValidationIds": [
+        "VAL-host-build",
+        "VAL-host-health-probe"
+      ],
+      "fleetSuitability": "sequential",
+      "fileOwnership": [
+        {
+          "path": "src/Contoso.Orders.Grpc/Program.cs",
+          "mode": "exclusive-write"
+        },
+        {
+          "path": "src/Contoso.Contracts.Protos",
+          "mode": "shared-read"
+        }
+      ],
+      "github": {
+        "repository": "contoso/orders-migration",
+        "number": 118,
+        "url": "https://github.com/contoso/orders-migration/issues/118",
+        "publishedBodyDigest": "sha256:84b8d51f5c9038a3b0cb0caa10a23c8167dff31b740a07a46f1359394eb75d24"
+      }
+    },
+    {
+      "id": "ISSUE-order-service-contract",
+      "workPackageId": "WP-order-service-contract",
+      "state": "ready",
+      "title": "[WP-order-service-contract] Order service Protobuf contract",
+      "body": "<!--\nwcf-to-grpc.issue:\n  issue_id: ISSUE-order-service-contract\n  work_package_id: WP-order-service-contract\n  migration_spec_id: MSPEC-contoso-orders\n  issue_set_id: ISET-contoso-orders\n-->\n\n# [WP-order-service-contract] Order service Protobuf contract\n\n## Publication metadata\n\n- Stable issue ID: `ISSUE-order-service-contract`\n- Work package ID: `WP-order-service-contract`\n- Migration spec ID: `MSPEC-contoso-orders`\n- Issue set ID: `ISET-contoso-orders`\n- Target repository: `contoso/orders-migration`\n- Labels: `area:grpc-migration`, `phase:service`, `service:orders`, `fleet:eligible`\n- Assignees: `orders-contract-owner`\n- Work-package approval: `approved`\n\n## Objective\n\nAuthor the order service Protobuf contract exactly as specified, including stable field numbers and reservations.\n\n## Scope\n\n- Define contoso.orders.v1.OrderService with SubmitOrder and SubscribeOrderStatus.\n- Define the service messages, enums, and reservations from SPEC-order-service.\n- Reserve field number 4 and the name legacy_customer_ref in SubmitOrderRequest.\n\n## Non-goals\n\n- Do not implement the service.\n- Do not modify shared proto contracts.\n\n## Deliverables\n\n| Path | Action | Description |\n|---|---|---|\n| `src/Contoso.Orders.Grpc/Protos/order_service_v1.proto` | create | Order service proto with unary and server-streaming RPCs, messages, enums, and reservations. |\n\n## Traceability\n\n- Source IDs: `SVC-order-service`\n- Contract specifications: `SPEC-order-service`\n- Decisions: `DEC-decimal-representation`, `DEC-duplex-to-server-streaming`, `DEC-protobuf-versioning`\n- Risks: `RSK-duplex-callback`, `RSK-order-total-decimal`\n- Evidence IDs: `EVD-order-request-contract`, `EVD-order-service-contract`\n- Acceptance IDs: `AC-order-proto-matches-spec`\n- Validation IDs: `VAL-order-contract-build`, `VAL-order-contract-review`\n\n## Dependencies\n\n| Work package | Stable issue ID | Type | Reason | Current link |\n|---|---|---|---|---|\n| `WP-foundation-proto-conventions` | `ISSUE-foundation-proto-conventions` | hard | Imports contoso.common.v1.DecimalValue and follows the published numbering policy. | pending dependency-link patch for ISSUE-foundation-proto-conventions |\n\n## Fleet suitability and file ownership\n\n- Fleet suitability: **eligible**\n- Rationale: The service proto is a bounded file owned exclusively by this package and can run beside other service contracts.\n- Wave: 2\n- Parallel group: contracts\n\n| Path | Ownership mode |\n|---|---|\n| `src/Contoso.Orders.Grpc/Protos/order_service_v1.proto` | exclusive-write |\n| `src/Contoso.Contracts.Protos/common_v1.proto` | shared-read |\n\n## Acceptance criteria\n\n| ID | Observable result | Required evidence | Validation IDs |\n|---|---|---|---|\n| `AC-order-proto-matches-spec` | order_service_v1.proto matches SPEC-order-service including RPC shapes, field numbers, and reservations. | Build log showing generated client and server stubs for both RPCs. | `VAL-order-contract-build`, `VAL-order-contract-review` |\n\n## Validation\n\n| Validation ID | Kind | Working directory | Command/check | Expected result | Status |\n|---|---|---|---|---|---|\n| `VAL-order-contract-build` | build | `.` | dotnet build src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release | Proto compilation succeeds and generates both the service base and the client stub. | not-run |\n| `VAL-order-contract-review` | manual | `.` | Manual review | A reviewer confirms every field number, reservation, cardinality, and RPC shape matches SPEC-order-service. | not-run |\n\n## Coexistence and rollback\n\n### Coexistence\n\n- Required: Yes\n- Strategy: Keep the proto additive-only while the WCF contract remains in production.\n- Traffic control: Not applicable; a contract definition serves no traffic.\n- Exit condition: Additive-only changes until the WCF endpoint is retired.\n- Legacy endpoint retained: Yes\n\n### Rollback\n\n- Strategy: Revert the proto commit; no deployment is affected.\n- Triggers: Field numbering or reservations diverge from the approved specification.\n- Data impact: None; no runtime behavior changes.\n- Owner: Order service owner\n- Validation IDs: `VAL-order-contract-build`\n\nOrdered steps:\n\n- Revert the proto file to the previous approved revision.\n- Rebuild to confirm no generated code remains referenced.\n\n## Integration checkpoints\n\n- Contract checkpoint: generated stubs compile and field numbers match the approved specification.\n\n## Source evidence\n\n| Evidence ID | Claim | Locator |\n|---|---|---|\n| `EVD-order-request-contract` | OrderRequest carries a decimal TotalAmount and a nullable RequestedDeliveryDate. | `src/Contoso.Orders/Contracts/OrderRequest.cs#L10-L44` |\n| `EVD-order-service-contract` | IOrderService declares SubmitOrder and SubscribeOrderStatus with a duplex callback contract. | `src/Contoso.Orders/IOrderService.cs#L14-L58` |",
+      "labelIds": [
+        "LBL-area-grpc-migration",
+        "LBL-phase-service",
+        "LBL-service-orders",
+        "LBL-fleet-eligible"
+      ],
+      "assignees": [
+        "orders-contract-owner"
+      ],
+      "dependsOnIssueIds": [
+        "ISSUE-foundation-proto-conventions"
+      ],
+      "dependsOnWorkPackageIds": [
+        "WP-foundation-proto-conventions"
+      ],
+      "sourceAcceptanceCriterionIds": [
+        "AC-order-proto-matches-spec"
+      ],
+      "sourceValidationIds": [
+        "VAL-order-contract-build",
+        "VAL-order-contract-review"
+      ],
+      "fleetSuitability": "eligible",
+      "fileOwnership": [
+        {
+          "path": "src/Contoso.Orders.Grpc/Protos/order_service_v1.proto",
+          "mode": "exclusive-write"
+        },
+        {
+          "path": "src/Contoso.Contracts.Protos/common_v1.proto",
+          "mode": "shared-read"
+        }
+      ],
+      "github": null
+    },
+    {
+      "id": "ISSUE-order-service-server",
+      "workPackageId": "WP-order-service-server",
+      "state": "ready",
+      "title": "[WP-order-service-server] Order service gRPC implementation",
+      "body": "<!--\nwcf-to-grpc.issue:\n  issue_id: ISSUE-order-service-server\n  work_package_id: WP-order-service-server\n  migration_spec_id: MSPEC-contoso-orders\n  issue_set_id: ISET-contoso-orders\n-->\n\n# [WP-order-service-server] Order service gRPC implementation\n\n## Publication metadata\n\n- Stable issue ID: `ISSUE-order-service-server`\n- Work package ID: `WP-order-service-server`\n- Migration spec ID: `MSPEC-contoso-orders`\n- Issue set ID: `ISET-contoso-orders`\n- Target repository: `contoso/orders-migration`\n- Labels: `area:grpc-migration`, `phase:service`, `service:orders`, `fleet:eligible`\n- Assignees: `orders-service-owner`\n- Work-package approval: `approved`\n\n## Objective\n\nImplement the gRPC order service over the existing domain logic, including the streaming replacement for the duplex callback.\n\n## Scope\n\n- Implement SubmitOrder including idempotency-key deduplication and fault-to-status mapping.\n- Implement SubscribeOrderStatus as a server stream with cancellation, ordering, and backpressure handling.\n- Implement request and response conversion for decimal, timestamp, GUID, and enum values.\n- Register the service with the host and apply the authorization policies.\n\n## Non-goals\n\n- Do not modify existing WCF service code or configuration.\n- Do not change the shared proto contracts or host bootstrap.\n- Do not migrate consumers or route production traffic.\n\n## Deliverables\n\n| Path | Action | Description |\n|---|---|---|\n| `src/Contoso.Orders.Grpc/Services/OrderGrpcService.cs` | create | OrderService implementation with conversion, validation, error mapping, and streaming lifecycle handling. |\n| `src/Contoso.Orders.Grpc/Services/OrderStatusSubscriptionRegistry.cs` | create | Subscription registry replacing WCF per-session callback state. |\n| `src/Contoso.Orders/OrderService.cs` | verify | Existing order domain logic is reused unchanged. |\n\n## Traceability\n\n- Source IDs: `OP-order-service-submit-order`, `OP-order-service-subscribe-order-status`, `SVC-order-service`\n- Contract specifications: `SPEC-order-service`\n- Decisions: `DEC-authorization-model`, `DEC-duplex-to-server-streaming`, `DEC-error-model`, `DEC-idempotent-submit-order`\n- Risks: `RSK-duplex-callback`\n- Evidence IDs: `EVD-order-service-contract`, `EVD-order-status-callback`\n- Acceptance IDs: `AC-order-service-behavior`, `AC-order-service-idempotency`\n- Validation IDs: `VAL-order-service-build`, `VAL-order-service-tests`\n\n## Dependencies\n\n| Work package | Stable issue ID | Type | Reason | Current link |\n|---|---|---|---|---|\n| `WP-foundation-host-bootstrap` | `ISSUE-foundation-host-bootstrap` | hard | Requires the host, authorization policies, and error interceptor. | #118 |\n| `WP-order-service-contract` | `ISSUE-order-service-contract` | hard | Implements the generated service base from the order contract. | pending dependency-link patch for ISSUE-order-service-contract |\n\n## Fleet suitability and file ownership\n\n- Fleet suitability: **eligible**\n- Rationale: Implementation is confined to one service folder and can run beside other service slices once the foundation is complete.\n- Wave: 3\n- Parallel group: services\n\n| Path | Ownership mode |\n|---|---|\n| `src/Contoso.Orders.Grpc/Services` | exclusive-write |\n| `src/Contoso.Orders` | shared-read |\n\n## Acceptance criteria\n\n| ID | Observable result | Required evidence | Validation IDs |\n|---|---|---|---|\n| `AC-order-service-behavior` | Both RPCs return the specified messages, status codes, and error details and honor authorization and deadlines. | Test output covering success, validation failure, unauthorized access, cancellation, and stream termination. | `VAL-order-service-build`, `VAL-order-service-tests` |\n| `AC-order-service-idempotency` | SubmitOrder deduplicates repeated calls that carry the same idempotency_key. | Test output showing a repeated submission with the same idempotency_key returning the original confirmation. | `VAL-order-service-tests` |\n\n## Validation\n\n| Validation ID | Kind | Working directory | Command/check | Expected result | Status |\n|---|---|---|---|---|---|\n| `VAL-order-service-build` | build | `.` | dotnet build src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release | Build succeeds. | not-run |\n| `VAL-order-service-tests` | test | `.` | dotnet test tests/Contoso.Orders.Grpc.Tests/Contoso.Orders.Grpc.Tests.csproj | All order service tests pass, including fault mapping, authorization, deadline, idempotency, and streaming lifecycle cases. | not-run |\n\n## Coexistence and rollback\n\n### Coexistence\n\n- Required: Yes\n- Strategy: The gRPC implementation delegates to existing order domain services so both stacks share behavior and data.\n- Traffic control: No production traffic until cutover; internal test clients only.\n- Exit condition: Until the consumer cutover decision is approved and internal consumers are migrated.\n- Legacy endpoint retained: Yes\n\n### Rollback\n\n- Strategy: Revert the implementation and unregister the endpoint; WCF continues to serve traffic.\n- Triggers: Streaming subscriptions leak resources under load., Fault mapping regressions are found during validation.\n- Data impact: None; the implementation is not receiving production traffic.\n- Owner: Order service owner\n- Validation IDs: `VAL-order-service-tests`\n\nOrdered steps:\n\n- Unregister the service endpoint from the host.\n- Revert the service implementation commit.\n- Confirm the WCF endpoint still serves all consumers.\n\n## Integration checkpoints\n\n- Service checkpoint: the host registers the service, the solution builds, and the service test suite passes.\n\n## Source evidence\n\n| Evidence ID | Claim | Locator |\n|---|---|---|\n| `EVD-order-service-contract` | IOrderService declares SubmitOrder and SubscribeOrderStatus with a duplex callback contract. | `src/Contoso.Orders/IOrderService.cs#L14-L58` |\n| `EVD-order-status-callback` | IOrderStatusCallback pushes status changes to connected clients. | `src/Contoso.Orders/IOrderStatusCallback.cs#L8-L19` |",
+      "labelIds": [
+        "LBL-area-grpc-migration",
+        "LBL-phase-service",
+        "LBL-service-orders",
+        "LBL-fleet-eligible"
+      ],
+      "assignees": [
+        "orders-service-owner"
+      ],
+      "dependsOnIssueIds": [
+        "ISSUE-foundation-host-bootstrap",
+        "ISSUE-order-service-contract"
+      ],
+      "dependsOnWorkPackageIds": [
+        "WP-foundation-host-bootstrap",
+        "WP-order-service-contract"
+      ],
+      "sourceAcceptanceCriterionIds": [
+        "AC-order-service-behavior",
+        "AC-order-service-idempotency"
+      ],
+      "sourceValidationIds": [
+        "VAL-order-service-build",
+        "VAL-order-service-tests"
+      ],
+      "fleetSuitability": "eligible",
+      "fileOwnership": [
+        {
+          "path": "src/Contoso.Orders.Grpc/Services",
+          "mode": "exclusive-write"
+        },
+        {
+          "path": "src/Contoso.Orders",
+          "mode": "shared-read"
+        }
+      ],
+      "github": null
+    }
+  ]
+}
+

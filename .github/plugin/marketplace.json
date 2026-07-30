@@ -1,0 +1,19 @@
+{
+  "name": "wcf-grpc-marketplace",
+  "metadata": {
+    "description": "Marketplace for Copilot CLI plugins that plan, implement, and validate WCF to gRPC migrations.",
+    "version": "1.0.0"
+  },
+  "owner": {
+    "name": "wcf-to-grpc plugin maintainers",
+    "email": "wcf-to-grpc-maintainers@example.com"
+  },
+  "plugins": [
+    {
+      "name": "wcf-to-grpc",
+      "description": "Orchestrated WCF to gRPC migration workflow: read-only inventory, decision interview, mapping, specification authoring, confirmation-gated issue publication, fleet-ready implementation, and independent parity validation.",
+      "version": "1.0.0",
+      "source": "./plugins/wcf-to-grpc"
+    }
+  ]
+}

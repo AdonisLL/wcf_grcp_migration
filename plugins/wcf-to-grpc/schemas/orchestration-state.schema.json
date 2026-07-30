@@ -1,0 +1,622 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./orchestration-state.schema.json",
+  "title": "WCF to gRPC orchestration state",
+  "description": "Resumable run state owned by the WCF Migration Orchestrator. It records stage progress, artifact states, gate outcomes, wave dispatch, and the single next required action. It records observed approvals; it never grants them.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "artifactType": {
+      "const": "orchestration-state"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^ORUN-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "generation": {
+      "$ref": "./common.schema.json#/$defs/generation"
+    },
+    "repository": {
+      "$ref": "#/$defs/repository"
+    },
+    "outputDirectory": {
+      "$ref": "./common.schema.json#/$defs/relativePath"
+    },
+    "targetRuntime": {
+      "$ref": "./common.schema.json#/$defs/resolvedString"
+    },
+    "permissions": {
+      "$ref": "#/$defs/permissions"
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stage"
+      },
+      "minItems": 1
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifactState"
+      }
+    },
+    "blockingItems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blockingItem"
+      }
+    },
+    "waves": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/wave"
+      }
+    },
+    "validationRuns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/validationRun"
+      }
+    },
+    "approvalsObserved": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/approvalObservation"
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/observation"
+      }
+    },
+    "nextRequiredAction": {
+      "$ref": "#/$defs/nextRequiredAction"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "artifactType",
+    "runId",
+    "generation",
+    "repository",
+    "outputDirectory",
+    "targetRuntime",
+    "permissions",
+    "stages",
+    "artifacts",
+    "blockingItems",
+    "waves",
+    "validationRuns",
+    "approvalsObserved",
+    "observations",
+    "nextRequiredAction"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "repository": {
+      "type": "object",
+      "properties": {
+        "root": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "kind": {
+          "enum": [
+            "service-host",
+            "client-only",
+            "mixed"
+          ]
+        },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1
+            },
+            "includeIds": {
+              "$ref": "./common.schema.json#/$defs/idArray"
+            },
+            "excludeIds": {
+              "$ref": "./common.schema.json#/$defs/idArray"
+            }
+          },
+          "required": [
+            "summary",
+            "includeIds",
+            "excludeIds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "root",
+        "kind",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "object",
+      "description": "Every permission defaults to false until the operator explicitly grants it.",
+      "properties": {
+        "allowNetwork": {
+          "type": "boolean"
+        },
+        "allowGitHubMutation": {
+          "type": "boolean"
+        },
+        "allowHarness": {
+          "type": "boolean"
+        },
+        "allowGoldenTraffic": {
+          "type": "boolean"
+        },
+        "allowLoadTest": {
+          "type": "boolean"
+        },
+        "allowProductionAccess": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "allowNetwork",
+        "allowGitHubMutation",
+        "allowHarness",
+        "allowGoldenTraffic",
+        "allowLoadTest",
+        "allowProductionAccess"
+      ],
+      "additionalProperties": false
+    },
+    "stageName": {
+      "enum": [
+        "intake",
+        "inventory",
+        "interview",
+        "mapping",
+        "specification",
+        "approval",
+        "publication",
+        "implementation",
+        "integration-checkpoints",
+        "validation",
+        "retirement"
+      ]
+    },
+    "stage": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/stageName"
+        },
+        "status": {
+          "enum": [
+            "not-started",
+            "in-progress",
+            "blocked",
+            "complete",
+            "stale",
+            "skipped"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The agent, skill, or human role that owns this stage. The orchestrator never lists itself as the owner of a stage other than intake."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resultSummary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifactPaths": {
+          "type": "array",
+          "items": {
+            "$ref": "./common.schema.json#/$defs/relativePath"
+          },
+          "uniqueItems": true
+        },
+        "blockingItemIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^BLK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "stage",
+        "status",
+        "owner",
+        "updatedAt",
+        "resultSummary",
+        "artifactPaths",
+        "blockingItemIds"
+      ],
+      "additionalProperties": false
+    },
+    "artifactState": {
+      "type": "object",
+      "properties": {
+        "artifact": {
+          "$ref": "./common.schema.json#/$defs/artifactRef"
+        },
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "sourceDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "approvalState": {
+          "enum": [
+            "draft",
+            "review-requested",
+            "approved",
+            "rejected",
+            "superseded",
+            "not-applicable"
+          ]
+        },
+        "freshness": {
+          "enum": [
+            "current",
+            "stale",
+            "missing"
+          ]
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "artifact",
+        "path",
+        "approvalState",
+        "freshness",
+        "observedAt"
+      ],
+      "additionalProperties": false
+    },
+    "blockingItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^BLK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "missing-input",
+            "invalid-input",
+            "stale-artifact",
+            "unresolved-decision",
+            "missing-approval",
+            "missing-confirmation",
+            "ownership-conflict",
+            "dependency-cycle",
+            "unreconciled-checkpoint",
+            "validation-failure",
+            "evidence-gap",
+            "missing-permission",
+            "missing-environment"
+          ]
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stageName"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "requiredIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "whyBlocking": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "blocks",
+        "requiredIds",
+        "whyBlocking",
+        "owner",
+        "nextAction"
+      ],
+      "additionalProperties": false
+    },
+    "wave": {
+      "type": "object",
+      "properties": {
+        "wave": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "phaseId": {
+          "type": "string",
+          "pattern": "^PHS-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "integrationCheckpoint": {
+          "type": "boolean"
+        },
+        "checkpointReportPath": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "checkpointState": {
+          "enum": [
+            "not-required",
+            "pending",
+            "reconciled",
+            "unresolved"
+          ]
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/wavePackage"
+          },
+          "minItems": 1
+        },
+        "ownershipConflicts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "wave",
+        "phaseId",
+        "integrationCheckpoint",
+        "checkpointState",
+        "packages",
+        "ownershipConflicts"
+      ],
+      "additionalProperties": false
+    },
+    "wavePackage": {
+      "type": "object",
+      "properties": {
+        "workPackageId": {
+          "type": "string",
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "dispatchMode": {
+          "enum": [
+            "parallel-eligible",
+            "sequential"
+          ]
+        },
+        "dispatchState": {
+          "enum": [
+            "not-dispatched",
+            "handed-off",
+            "reported",
+            "blocked"
+          ]
+        },
+        "reportPath": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "reportStatus": {
+          "enum": [
+            "completed",
+            "partial",
+            "blocked",
+            "absent"
+          ]
+        },
+        "exclusiveWritePaths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "workPackageId",
+        "dispatchMode",
+        "dispatchState",
+        "reportStatus",
+        "exclusiveWritePaths"
+      ],
+      "additionalProperties": false
+    },
+    "validationRun": {
+      "type": "object",
+      "properties": {
+        "reportId": {
+          "type": "string",
+          "pattern": "^VRPT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "scopeKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "enum": [
+            "gate",
+            "retirement"
+          ]
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "conditional-pass",
+            "fail",
+            "blocked"
+          ]
+        },
+        "reportPath": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "openBlockingFindingIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^VF-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "retirementOutcome": {
+          "enum": [
+            "not-assessed",
+            "retirement-ready",
+            "retirement-not-ready",
+            "retirement-blocked"
+          ]
+        },
+        "validatedRevision": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        }
+      },
+      "required": [
+        "reportId",
+        "scopeKey",
+        "intent",
+        "status",
+        "reportPath",
+        "openBlockingFindingIds",
+        "retirementOutcome",
+        "validatedRevision"
+      ],
+      "additionalProperties": false
+    },
+    "approvalObservation": {
+      "type": "object",
+      "description": "An approval the orchestrator read somewhere else. The orchestrator never writes an approval into an upstream artifact.",
+      "properties": {
+        "subject": {
+          "enum": [
+            "migration-spec",
+            "work-package",
+            "issue-preview",
+            "retirement"
+          ]
+        },
+        "subjectId": {
+          "$ref": "./common.schema.json#/$defs/stableId"
+        },
+        "state": {
+          "enum": [
+            "absent",
+            "review-requested",
+            "approved",
+            "rejected"
+          ]
+        },
+        "recordedIn": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "subject",
+        "subjectId",
+        "state",
+        "recordedIn",
+        "observedAt"
+      ],
+      "additionalProperties": false
+    },
+    "observation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^OBS-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "prompt-injection-attempt",
+            "artifact-conflict",
+            "assumed-default",
+            "refusal"
+          ]
+        },
+        "source": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actionTaken": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "source",
+        "summary",
+        "actionTaken"
+      ],
+      "additionalProperties": false
+    },
+    "nextRequiredAction": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "enum": [
+            "orchestrator",
+            "operator",
+            "reviewer",
+            "wcf-codebase-analyst",
+            "interview-stage",
+            "grpc-migration-architect",
+            "publication-stage",
+            "grpc-migration-implementer",
+            "grpc-parity-validator"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blockingItemIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^BLK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "owner",
+        "action",
+        "blockingItemIds"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

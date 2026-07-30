@@ -1,0 +1,1682 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./migration-spec.schema.json",
+  "title": "WCF to gRPC migration specification and work packages",
+  "description": "Target architecture, per-service Protobuf contract designs, migration roadmap, and dependency-aware implementation work packages.",
+  "allOf": [
+    {
+      "$ref": "./common.schema.json#/$defs/artifactBase"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "const": "migration-spec"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^MSPEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "inventoryId": {
+          "type": "string",
+          "pattern": "^INV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "decisionLogId": {
+          "type": "string",
+          "pattern": "^DLOG-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "assessment": {
+          "$ref": "#/$defs/assessment"
+        },
+        "targetArchitecture": {
+          "$ref": "#/$defs/targetArchitecture"
+        },
+        "contracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contractSpecification"
+          }
+        },
+        "roadmap": {
+          "$ref": "#/$defs/roadmap"
+        },
+        "workPackages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/workPackage"
+          }
+        }
+      },
+      "required": [
+        "inventoryId",
+        "decisionLogId",
+        "assessment",
+        "targetArchitecture",
+        "contracts",
+        "roadmap",
+        "workPackages"
+      ]
+    },
+    {
+      "if": {
+        "properties": {
+          "approval": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "const": "approved"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          }
+        },
+        "required": [
+          "approval"
+        ]
+      },
+      "then": {
+        "properties": {
+          "targetArchitecture": {
+            "properties": {
+              "sections": {
+                "items": {
+                  "properties": {
+                    "state": {
+                      "const": "approved"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "contracts": {
+            "items": {
+              "properties": {
+                "approval": {
+                  "properties": {
+                    "state": {
+                      "const": "approved"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "workPackages": {
+            "items": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "approved",
+                    "in-progress",
+                    "blocked",
+                    "completed"
+                  ]
+                },
+                "approval": {
+                  "properties": {
+                    "state": {
+                      "const": "approved"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "resolvedServiceId": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "known"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          },
+          "required": [
+            "state",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "questionIds": {
+              "$ref": "./common.schema.json#/$defs/questionIdArray"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "not-applicable"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "assessment": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "migrationScope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "complexity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "very-high",
+            "unknown"
+          ]
+        },
+        "serviceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "dependencyIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "unresolvedQuestionIds": {
+          "$ref": "./common.schema.json#/$defs/questionIdArray"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "summary",
+        "migrationScope",
+        "complexity",
+        "serviceIds",
+        "dependencyIds",
+        "riskIds",
+        "unresolvedQuestionIds",
+        "constraints",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "targetArchitecture": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/architectureSection"
+          },
+          "minItems": 15,
+          "maxItems": 15,
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "target-runtime"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "hosting"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "service-boundaries"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "protobuf-versioning"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "data-types"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "errors"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "security"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "authorization"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "deadlines-retries"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "observability"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "health-checks"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "deployment"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "coexistence"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "consumer-cutover"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "topic": {
+                    "const": "retirement"
+                  }
+                },
+                "required": [
+                  "topic"
+                ]
+              }
+            }
+          ]
+        },
+        "topologyNodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/topologyNode"
+          }
+        },
+        "topologyEdges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/topologyEdge"
+          }
+        }
+      },
+      "required": [
+        "summary",
+        "sections",
+        "topologyNodes",
+        "topologyEdges"
+      ],
+      "additionalProperties": false
+    },
+    "architectureSection": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "enum": [
+            "target-runtime",
+            "hosting",
+            "service-boundaries",
+            "protobuf-versioning",
+            "data-types",
+            "errors",
+            "security",
+            "authorization",
+            "deadlines-retries",
+            "observability",
+            "health-checks",
+            "deployment",
+            "coexistence",
+            "consumer-cutover",
+            "retirement"
+          ]
+        },
+        "state": {
+          "enum": [
+            "unresolved",
+            "proposed",
+            "approved"
+          ]
+        },
+        "design": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "questionIds": {
+          "$ref": "./common.schema.json#/$defs/questionIdArray"
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "topic",
+        "state",
+        "design",
+        "decisionIds",
+        "questionIds",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "unresolved"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "design": {
+                "type": "null"
+              },
+              "questionIds": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "design": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "topologyNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "kind": {
+          "enum": [
+            "grpc-service",
+            "wcf-service",
+            "consumer",
+            "proxy",
+            "identity-provider",
+            "data-store",
+            "message-broker",
+            "observability",
+            "other"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "sourceIds"
+      ],
+      "additionalProperties": false
+    },
+    "topologyEdge": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "protocol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coexistenceOnly": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "protocol",
+        "purpose",
+        "coexistenceOnly"
+      ],
+      "additionalProperties": false
+    },
+    "contractSpecification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^SPEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "serviceId": {
+          "type": "string",
+          "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approval": {
+          "$ref": "./common.schema.json#/$defs/approval"
+        },
+        "protoFile": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "protoPackage": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "apiVersion": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "sourceOperationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^OP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "rpcs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rpc"
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/message"
+          }
+        },
+        "compatibilityRules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "serviceId",
+        "title",
+        "approval",
+        "protoFile",
+        "protoPackage",
+        "apiVersion",
+        "sourceOperationIds",
+        "rpcs",
+        "messages",
+        "compatibilityRules",
+        "decisionIds",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "approval": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "const": "approved"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              }
+            },
+            "required": [
+              "approval"
+            ]
+          },
+          "then": {
+            "properties": {
+              "protoPackage": {
+                "properties": {
+                  "state": {
+                    "const": "known"
+                  }
+                }
+              },
+              "apiVersion": {
+                "properties": {
+                  "state": {
+                    "const": "known"
+                  }
+                }
+              },
+              "rpcs": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "shape": {
+                      "not": {
+                        "const": "unknown"
+                      }
+                    },
+                    "requestMessage": {
+                      "properties": {
+                        "state": {
+                          "const": "known"
+                        }
+                      }
+                    },
+                    "responseMessage": {
+                      "properties": {
+                        "state": {
+                          "const": "known"
+                        }
+                      }
+                    },
+                    "deadlinePolicy": {
+                      "properties": {
+                        "state": {
+                          "const": "known"
+                        }
+                      }
+                    },
+                    "idempotencyPolicy": {
+                      "properties": {
+                        "state": {
+                          "const": "known"
+                        }
+                      }
+                    },
+                    "errorPolicy": {
+                      "properties": {
+                        "state": {
+                          "const": "known"
+                        }
+                      }
+                    },
+                    "authorizationPolicy": {
+                      "properties": {
+                        "state": {
+                          "const": "known"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "messages": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "fields": {
+                      "items": {
+                        "properties": {
+                          "number": {
+                            "properties": {
+                              "state": {
+                                "const": "known"
+                              }
+                            }
+                          },
+                          "protobufType": {
+                            "properties": {
+                              "state": {
+                                "const": "known"
+                              }
+                            }
+                          },
+                          "cardinality": {
+                            "not": {
+                              "const": "unknown"
+                            }
+                          },
+                          "presenceSemantics": {
+                            "properties": {
+                              "state": {
+                                "enum": [
+                                  "known",
+                                  "not-applicable"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "rpc": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^RPC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "sourceOperationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^OP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "shape": {
+          "enum": [
+            "unary",
+            "server-streaming",
+            "client-streaming",
+            "bidirectional-streaming",
+            "unknown"
+          ]
+        },
+        "requestMessage": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "responseMessage": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "deadlinePolicy": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "idempotencyPolicy": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "errorPolicy": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "authorizationPolicy": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "lifecycleNotes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sourceOperationIds",
+        "shape",
+        "requestMessage",
+        "responseMessage",
+        "deadlinePolicy",
+        "idempotencyPolicy",
+        "errorPolicy",
+        "authorizationPolicy",
+        "lifecycleNotes",
+        "decisionIds",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^MSG-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "sourceContractIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/protoField"
+          }
+        },
+        "reservedNumbers": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 536870911,
+            "not": {
+              "minimum": 19000,
+              "maximum": 19999
+            }
+          },
+          "uniqueItems": true
+        },
+        "reservedNames": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "polymorphismPolicy": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sourceContractIds",
+        "fields",
+        "reservedNumbers",
+        "reservedNames",
+        "polymorphismPolicy",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "protoField": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^PF-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "number": {
+          "$ref": "./common.schema.json#/$defs/resolvedPositiveInteger"
+        },
+        "protobufType": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "cardinality": {
+          "enum": [
+            "singular",
+            "optional",
+            "repeated",
+            "map",
+            "oneof",
+            "unknown"
+          ]
+        },
+        "sourceFieldIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^FLD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "presenceSemantics": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "conversionRules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "validationRules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "number",
+        "protobufType",
+        "cardinality",
+        "sourceFieldIds",
+        "presenceSemantics",
+        "conversionRules",
+        "validationRules",
+        "decisionIds",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "roadmap": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pilotServiceId": {
+          "$ref": "#/$defs/resolvedServiceId"
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/phase"
+          },
+          "minItems": 1
+        },
+        "retirementCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "./common.schema.json#/$defs/acceptanceCriterion"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "strategy",
+        "pilotServiceId",
+        "phases",
+        "retirementCriteria"
+      ],
+      "additionalProperties": false
+    },
+    "phase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^PHS-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dependsOnPhaseIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^PHS-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "workPackageIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "exitCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "./common.schema.json#/$defs/acceptanceCriterion"
+          },
+          "minItems": 1
+        },
+        "integrationCheckpoint": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "sequence",
+        "title",
+        "objective",
+        "dependsOnPhaseIds",
+        "workPackageIds",
+        "exitCriteria",
+        "integrationCheckpoint"
+      ],
+      "additionalProperties": false
+    },
+    "workPackage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "ready-for-review",
+            "approved",
+            "in-progress",
+            "blocked",
+            "completed",
+            "superseded"
+          ]
+        },
+        "approval": {
+          "$ref": "./common.schema.json#/$defs/approval"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "nonGoals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "sourceIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "specIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^SPEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/workPackageDependency"
+          }
+        },
+        "fleet": {
+          "$ref": "#/$defs/fleetPlan"
+        },
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deliverable"
+          },
+          "minItems": 1
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "./common.schema.json#/$defs/acceptanceCriterion"
+          },
+          "minItems": 1
+        },
+        "validation": {
+          "type": "array",
+          "items": {
+            "$ref": "./common.schema.json#/$defs/validationStep"
+          },
+          "minItems": 1
+        },
+        "rollback": {
+          "$ref": "#/$defs/rollbackPlan"
+        },
+        "coexistence": {
+          "$ref": "#/$defs/coexistencePlan"
+        },
+        "integrationCheckpoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "status",
+        "approval",
+        "objective",
+        "scope",
+        "nonGoals",
+        "sourceIds",
+        "specIds",
+        "decisionIds",
+        "riskIds",
+        "dependencies",
+        "fleet",
+        "deliverables",
+        "acceptanceCriteria",
+        "validation",
+        "rollback",
+        "coexistence",
+        "integrationCheckpoints",
+        "evidenceIds"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "approved",
+                  "in-progress",
+                  "blocked",
+                  "completed"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "approval": {
+                "properties": {
+                  "state": {
+                    "const": "approved"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "workPackageDependency": {
+      "type": "object",
+      "properties": {
+        "workPackageId": {
+          "type": "string",
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "type": {
+          "enum": [
+            "hard",
+            "soft",
+            "integration"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "satisfied",
+            "blocked",
+            "waived"
+          ]
+        }
+      },
+      "required": [
+        "workPackageId",
+        "type",
+        "reason",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "fleetPlan": {
+      "type": "object",
+      "properties": {
+        "suitability": {
+          "enum": [
+            "eligible",
+            "sequential",
+            "ineligible",
+            "unknown"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "wave": {
+          "$ref": "./common.schema.json#/$defs/resolvedPositiveInteger"
+        },
+        "parallelGroup": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "fileOwnership": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fileOwnership"
+          }
+        },
+        "conflictsWithWorkPackageIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "suitability",
+        "rationale",
+        "wave",
+        "parallelGroup",
+        "fileOwnership",
+        "conflictsWithWorkPackageIds"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "suitability": {
+                "const": "eligible"
+              }
+            },
+            "required": [
+              "suitability"
+            ]
+          },
+          "then": {
+            "properties": {
+              "wave": {
+                "properties": {
+                  "state": {
+                    "const": "known"
+                  }
+                }
+              },
+              "parallelGroup": {
+                "properties": {
+                  "state": {
+                    "const": "known"
+                  }
+                }
+              },
+              "fileOwnership": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "fileOwnership": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "mode": {
+          "enum": [
+            "exclusive-write",
+            "shared-read",
+            "integration-owner"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "path",
+        "mode",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "deliverable": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "action": {
+          "enum": [
+            "create",
+            "modify",
+            "delete",
+            "verify"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "path",
+        "action",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "rollbackPlan": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "dataImpact": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "owner": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "validationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^VAL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "strategy",
+        "triggers",
+        "steps",
+        "dataImpact",
+        "owner",
+        "validationIds"
+      ],
+      "additionalProperties": false
+    },
+    "coexistencePlan": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "strategy": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "trafficControl": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "durationOrExitCondition": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "legacyEndpointRetained": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "validationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^VAL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "required",
+        "strategy",
+        "trafficControl",
+        "durationOrExitCondition",
+        "legacyEndpointRetained",
+        "validationIds"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

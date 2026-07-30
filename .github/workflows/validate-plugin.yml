@@ -1,0 +1,28 @@
+name: Validate plugin
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate manifests, schemas, content, and fixtures
+        shell: pwsh
+        run: ./plugins/wcf-to-grpc/scripts/Validate-Plugin.ps1

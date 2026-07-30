@@ -1,0 +1,187 @@
+{
+  "fixtureId": "FIX-faults-serialization",
+  "description": "wsHttpBinding service with typed faults, Windows message security, nullable/default values, decimal/date/enum semantics, and KnownType polymorphism.",
+  "sourceFiles": [
+    "FaultsAndSerialization.sln",
+    "FaultsAndSerialization.csproj",
+    "Contracts.cs",
+    "InvoiceService.cs",
+    "Program.cs",
+    "App.config"
+  ],
+  "coverage": [
+    "typed-fault",
+    "message-security",
+    "nullable",
+    "default-value",
+    "decimal",
+    "date-time",
+    "enum",
+    "known-type"
+  ],
+  "inventory": {
+    "facts": [
+      {
+        "id": "EVD-fault-contract",
+        "claim": "GetInvoice declares ValidationFault as a typed FaultContract.",
+        "path": "Contracts.cs",
+        "line": 12
+      },
+      {
+        "id": "EVD-fault-security",
+        "claim": "The wsHttpBinding uses SOAP message security and Windows credentials.",
+        "path": "App.config",
+        "line": 7
+      },
+      {
+        "id": "EVD-fault-known-types",
+        "claim": "PaymentMethod declares two KnownType subclasses.",
+        "path": "Contracts.cs",
+        "line": 73
+      }
+    ],
+    "services": [
+      {
+        "id": "SVC-secure-invoice",
+        "contract": "Fixtures.FaultsAndSerialization.IInvoiceService",
+        "operationIds": [
+          "OP-secure-get-invoice"
+        ]
+      }
+    ],
+    "endpoints": [
+      {
+        "id": "END-secure-invoice-ws",
+        "binding": "wsHttpBinding/SecureInvoices",
+        "security": "SOAP message security, Windows credentials, secure conversation"
+      }
+    ],
+    "dataContracts": [
+      {
+        "id": "DC-secure-invoice",
+        "type": "Invoice",
+        "edgeCases": [
+          "decimal",
+          "nullable decimal",
+          "nullable DateTime",
+          "EmitDefaultValue false",
+          "sparse enum",
+          "KnownType polymorphism"
+        ]
+      },
+      {
+        "id": "DC-secure-validation-fault",
+        "type": "ValidationFault",
+        "edgeCases": [
+          "typed fault detail",
+          "dictionary field errors"
+        ]
+      }
+    ]
+  },
+  "risks": [
+    {
+      "id": "RSK-fault-error-model",
+      "severity": "high",
+      "construct": "FaultException<ValidationFault>",
+      "consequence": "The fault code, reason, detail, and client catch behavior require an explicit gRPC status and error-details contract.",
+      "redesignRequired": true
+    },
+    {
+      "id": "RSK-fault-message-security",
+      "severity": "critical",
+      "construct": "wsHttpBinding message security with Windows secure conversation",
+      "consequence": "SOAP message security has no direct gRPC equivalent; transport security, identity propagation, and authorization must be redesigned.",
+      "redesignRequired": true
+    },
+    {
+      "id": "RSK-fault-serialization",
+      "severity": "high",
+      "construct": "nullable/default/decimal/date/enum/KnownType serialization",
+      "consequence": "Proto presence, decimal precision, timestamp rules, unknown enum handling, and polymorphic shape must be specified and tested.",
+      "redesignRequired": true
+    }
+  ],
+  "questions": [
+    {
+      "id": "QST-fault-identity",
+      "prompt": "Which identity and authorization model replaces Windows SOAP message security?",
+      "trigger": "clientCredentialType=Windows and UseWindowsGroups are configured.",
+      "riskIds": [
+        "RSK-fault-message-security"
+      ]
+    },
+    {
+      "id": "QST-fault-polymorphism",
+      "prompt": "Is the PaymentMethod subtype set closed, and must unknown future subtypes round-trip?",
+      "trigger": "KnownType-based inheritance is used on a contract field.",
+      "riskIds": [
+        "RSK-fault-serialization"
+      ]
+    }
+  ],
+  "mapping": {
+    "target": "grpc-aspnetcore",
+    "targetRuntime": "ASP.NET Core gRPC",
+    "serviceMappings": [
+      {
+        "sourceServiceId": "SVC-secure-invoice",
+        "targetService": "fixtures.invoices.v1.InvoiceService",
+        "rpcs": [
+          {
+            "id": "RPC-secure-get-invoice",
+            "sourceOperationId": "OP-secure-get-invoice",
+            "targetRpc": "GetInvoice",
+            "shape": "unary",
+            "notes": "Map validation failures to INVALID_ARGUMENT plus a versioned ValidationError detail."
+          }
+        ]
+      }
+    ],
+    "typeMappings": [
+      {
+        "sourceTypeId": "DC-secure-invoice",
+        "targetType": "Invoice",
+        "notes": "Use explicit presence, a lossless DecimalValue, UTC Timestamp policy, UNSPECIFIED enum zero, and oneof for payment subtypes."
+      },
+      {
+        "sourceTypeId": "DC-secure-validation-fault",
+        "targetType": "ValidationError",
+        "notes": "Use google.rpc.Status-compatible error details and preserve machine-readable field violations."
+      }
+    ],
+    "redesignRiskIds": [
+      "RSK-fault-error-model",
+      "RSK-fault-message-security",
+      "RSK-fault-serialization"
+    ]
+  },
+  "spec": {
+    "workPackages": [
+      {
+        "id": "WP-fault-contract",
+        "dependsOn": [],
+        "objective": "Specify invoice messages, presence, decimal, timestamp, enum, oneof, and error details."
+      },
+      {
+        "id": "WP-fault-security",
+        "dependsOn": [
+          "WP-fault-contract"
+        ],
+        "objective": "Implement TLS, replacement authentication, authorization policies, and identity propagation."
+      },
+      {
+        "id": "WP-fault-service",
+        "dependsOn": [
+          "WP-fault-contract",
+          "WP-fault-security"
+        ],
+        "objective": "Implement the ASP.NET Core gRPC adapter and parity tests for success, faults, and serialization edges."
+      }
+    ],
+    "expectations": [
+      "The target remains gRPC on ASP.NET Core; SOAP message security is recorded as a blocking redesign risk.",
+      "Golden parity cases cover null versus default, high-precision decimal, leap-day UTC timestamps, unknown enums, every KnownType subtype, and typed validation faults."
+    ]
+  }
+}

@@ -1,0 +1,503 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./issue-set.schema.json",
+  "title": "Migration issue set",
+  "description": "Previewable, approval-gated GitHub Issue payloads derived from approved migration work packages.",
+  "allOf": [
+    {
+      "$ref": "./common.schema.json#/$defs/artifactBase"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "const": "issue-set"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^ISET-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "migrationSpecId": {
+          "type": "string",
+          "pattern": "^MSPEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "targetRepository": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/label"
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue"
+          }
+        }
+      },
+      "required": [
+        "migrationSpecId",
+        "targetRepository",
+        "publication",
+        "labels",
+        "issues"
+      ]
+    },
+    {
+      "if": {
+        "properties": {
+          "publication": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "enum": [
+                  "approved",
+                  "published"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          }
+        },
+        "required": [
+          "publication"
+        ]
+      },
+      "then": {
+        "properties": {
+          "targetRepository": {
+            "properties": {
+              "state": {
+                "const": "known"
+              }
+            }
+          },
+          "issues": {
+            "items": {
+              "properties": {
+                "state": {
+                  "enum": [
+                    "ready",
+                    "published",
+                    "skipped"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "publication": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "const": "published"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          }
+        },
+        "required": [
+          "publication"
+        ]
+      },
+      "then": {
+        "properties": {
+          "issues": {
+            "items": {
+              "properties": {
+                "state": {
+                  "enum": [
+                    "published",
+                    "skipped"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "publication": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "draft"
+            }
+          },
+          "required": [
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "previewed"
+            },
+            "previewedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "previewDigest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            }
+          },
+          "required": [
+            "state",
+            "previewedAt",
+            "previewDigest"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "approved"
+            },
+            "previewedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "previewDigest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "approvedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "approvedBy": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "previewedAt",
+            "previewDigest",
+            "approvedAt",
+            "approvedBy"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "published"
+            },
+            "previewedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "previewDigest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "approvedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "approvedBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "publishedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "state",
+            "previewedAt",
+            "previewDigest",
+            "approvedAt",
+            "approvedBy",
+            "publishedAt"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "declined"
+            },
+            "declinedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "declinedBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "declinedAt",
+            "declinedBy",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "label": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^LBL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{6}$"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "createIfMissing": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "description",
+        "createIfMissing"
+      ],
+      "additionalProperties": false
+    },
+    "issue": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^ISSUE-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "workPackageId": {
+          "type": "string",
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "state": {
+          "enum": [
+            "draft",
+            "ready",
+            "published",
+            "skipped"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labelIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^LBL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "assignees": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "dependsOnIssueIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^ISSUE-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "dependsOnWorkPackageIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "sourceAcceptanceCriterionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^AC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "sourceValidationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^VAL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "fleetSuitability": {
+          "enum": [
+            "eligible",
+            "sequential",
+            "ineligible",
+            "unknown"
+          ]
+        },
+        "fileOwnership": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fileOwnership"
+          }
+        },
+        "github": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/githubIssue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "workPackageId",
+        "state",
+        "title",
+        "body",
+        "labelIds",
+        "assignees",
+        "dependsOnIssueIds",
+        "dependsOnWorkPackageIds",
+        "sourceAcceptanceCriterionIds",
+        "sourceValidationIds",
+        "fleetSuitability",
+        "fileOwnership",
+        "github"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "published"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "github": {
+                "$ref": "#/$defs/githubIssue"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "github": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "fileOwnership": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "mode": {
+          "enum": [
+            "exclusive-write",
+            "shared-read",
+            "integration-owner"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "githubIssue": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[^/\\s]+/[^/\\s]+$"
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://github\\.com/"
+        },
+        "publishedBodyDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "repository",
+        "number",
+        "url",
+        "publishedBodyDigest"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

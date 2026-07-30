@@ -1,0 +1,1063 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./inventory.schema.json",
+  "title": "WCF repository inventory",
+  "description": "Evidence-backed, incrementally completable inventory of WCF services, contracts, endpoints, consumers, risks, and unknowns.",
+  "allOf": [
+    {
+      "$ref": "./common.schema.json#/$defs/artifactBase"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "const": "inventory"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^INV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "analysisState": {
+          "enum": [
+            "discovered",
+            "partial",
+            "complete"
+          ]
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/service"
+          }
+        },
+        "dataContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dataContract"
+          }
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/endpoint"
+          }
+        },
+        "consumers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/consumer"
+          }
+        },
+        "externalDependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/externalDependency"
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/risk"
+          }
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unknown"
+          }
+        }
+      },
+      "required": [
+        "analysisState",
+        "scope",
+        "repository",
+        "services",
+        "dataContracts",
+        "endpoints",
+        "consumers",
+        "externalDependencies",
+        "risks",
+        "unknowns"
+      ]
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "scope": {
+      "type": "object",
+      "properties": {
+        "includedPaths": {
+          "type": "array",
+          "items": {
+            "$ref": "./common.schema.json#/$defs/relativePath"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "excludedPaths": {
+          "type": "array",
+          "items": {
+            "$ref": "./common.schema.json#/$defs/relativePath"
+          },
+          "uniqueItems": true
+        },
+        "serverMigration": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "clientOnlyRepository": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "includedPaths",
+        "excludedPaths",
+        "serverMigration",
+        "clientOnlyRepository",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^REPO-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "root": {
+          "const": "."
+        },
+        "solutions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/solution"
+          }
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/project"
+          }
+        },
+        "hosting": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/host"
+          }
+        },
+        "evidenceIds": {
+          "$ref": "./common.schema.json#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "root",
+        "solutions",
+        "projects",
+        "hosting",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "solution": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^SOL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "projectIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^PRJ-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "$ref": "./common.schema.json#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "projectIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^PRJ-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "targetFramework": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "wcf-server",
+              "wcf-client",
+              "shared-contracts",
+              "business-logic",
+              "host",
+              "tests",
+              "deployment",
+              "other"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "wcfReferences": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "$ref": "./common.schema.json#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "path",
+        "targetFramework",
+        "roles",
+        "wcfReferences",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "host": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^HOST-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "iis",
+            "was",
+            "windows-service",
+            "console",
+            "desktop-process",
+            "com-plus",
+            "test-host",
+            "unknown",
+            "other"
+          ]
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^PRJ-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "entryPoint": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "environmentNotes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidenceIds": {
+          "$ref": "./common.schema.json#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "projectId",
+        "entryPoint",
+        "environmentNotes",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^PRJ-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "contractSymbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "namespace": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "implementationSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        },
+        "endpointIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^END-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "consumerIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CON-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "instanceContextMode": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "concurrencyMode": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "behaviors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "analysisState": {
+          "enum": [
+            "discovered",
+            "partial",
+            "complete"
+          ]
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "projectId",
+        "contractSymbol",
+        "namespace",
+        "implementationSymbols",
+        "operations",
+        "endpointIds",
+        "consumerIds",
+        "instanceContextMode",
+        "concurrencyMode",
+        "behaviors",
+        "analysisState",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "operation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^OP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shape": {
+          "enum": [
+            "unary",
+            "one-way",
+            "server-streaming",
+            "client-streaming",
+            "duplex-callback",
+            "unknown"
+          ]
+        },
+        "isAsync": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "requestContractIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "responseContractIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "faultContractIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "usesSession": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "flowsTransaction": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "requiresOrderedDelivery": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "timeout": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "authorization": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "symbol",
+        "shape",
+        "isAsync",
+        "requestContractIds",
+        "responseContractIds",
+        "faultContractIds",
+        "usesSession",
+        "flowsTransaction",
+        "requiresOrderedDelivery",
+        "timeout",
+        "authorization",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "dataContract": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^PRJ-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "data-contract",
+            "message-contract",
+            "fault-contract",
+            "enum",
+            "xml-serializable",
+            "generated-proxy-type",
+            "other"
+          ]
+        },
+        "serializer": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "baseContractIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "knownTypeIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          }
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "symbol",
+        "projectId",
+        "kind",
+        "serializer",
+        "baseContractIds",
+        "knownTypeIds",
+        "fields",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "field": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^FLD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dotnetType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nullable": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "required": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "emitDefaultValue": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "order": {
+          "$ref": "./common.schema.json#/$defs/resolvedNonNegativeInteger"
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "symbol",
+        "dotnetType",
+        "nullable",
+        "required",
+        "emitDefaultValue",
+        "order",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "endpoint": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^END-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "serviceId": {
+          "type": "string",
+          "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "address": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "binding": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "contract": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "securityMode": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "settings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/setting"
+          }
+        },
+        "behaviorNames": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "serviceId",
+        "address",
+        "binding",
+        "contract",
+        "securityMode",
+        "settings",
+        "behaviorNames",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "setting": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "source": {
+          "enum": [
+            "configuration",
+            "code",
+            "default",
+            "unknown"
+          ]
+        },
+        "evidenceIds": {
+          "$ref": "./common.schema.json#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "source",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^CON-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "internal-project",
+            "external-controlled",
+            "external-uncontrolled",
+            "generated-proxy",
+            "test",
+            "unknown"
+          ]
+        },
+        "projectId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^PRJ-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serviceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "upgradeControl": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "generatedClient": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "projectId",
+        "serviceIds",
+        "upgradeControl",
+        "generatedClient",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "externalDependency": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^DEP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "database",
+            "message-queue",
+            "identity-provider",
+            "certificate",
+            "file-system",
+            "network-service",
+            "soap-service",
+            "grpc-service",
+            "deployment-platform",
+            "other"
+          ]
+        },
+        "affectedIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "availability": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "affectedIds",
+        "availability",
+        "riskIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "risk": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "enum": [
+            "contract",
+            "serialization",
+            "security",
+            "hosting",
+            "consumer",
+            "transaction",
+            "session",
+            "streaming",
+            "reliability",
+            "operations",
+            "unknown"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "status": {
+          "enum": [
+            "identified",
+            "decision-required",
+            "mitigated",
+            "accepted",
+            "closed"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "affectedIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "questionIds": {
+          "$ref": "./common.schema.json#/$defs/questionIdArray"
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "category",
+        "severity",
+        "status",
+        "statement",
+        "affectedIds",
+        "questionIds",
+        "decisionIds",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "unknown": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^QST-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "whyNeeded": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "open",
+            "answered",
+            "obsolete"
+          ]
+        },
+        "blocking": {
+          "type": "boolean"
+        },
+        "affectedIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "decisionId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "whyNeeded",
+        "status",
+        "blocking",
+        "affectedIds",
+        "decisionId",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

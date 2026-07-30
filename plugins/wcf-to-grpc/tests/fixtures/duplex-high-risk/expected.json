@@ -1,0 +1,278 @@
+{
+  "fixtureId": "FIX-duplex-high-risk",
+  "description": "Duplex callback service with one-way initiating calls, required sessions, per-session state, flowed transactions, reliable sessions, and a streamed archive service.",
+  "sourceFiles": [
+    "DuplexHighRisk.sln",
+    "DuplexHighRisk.csproj",
+    "Contracts.cs",
+    "DispatchService.cs",
+    "ArchiveTransferService.cs",
+    "Program.cs",
+    "App.config"
+  ],
+  "coverage": [
+    "duplex-callback",
+    "one-way",
+    "session",
+    "transaction",
+    "reliable-session",
+    "streaming"
+  ],
+  "inventory": {
+    "facts": [
+      {
+        "id": "EVD-duplex-callback-contract",
+        "claim": "IDispatchService requires a callback contract and an ordered session.",
+        "path": "Contracts.cs",
+        "line": 13
+      },
+      {
+        "id": "EVD-duplex-session-state",
+        "claim": "DispatchService stores mutable job state in a PerSession, Reentrant service instance.",
+        "path": "DispatchService.cs",
+        "line": 6
+      },
+      {
+        "id": "EVD-duplex-reliable-binding",
+        "claim": "The duplex netTcpBinding enables ordered reliable sessions.",
+        "path": "App.config",
+        "line": 7
+      },
+      {
+        "id": "EVD-duplex-stream-contract",
+        "claim": "IArchiveTransfer sends and receives System.IO.Stream values.",
+        "path": "Contracts.cs",
+        "line": 31
+      }
+    ],
+    "services": [
+      {
+        "id": "SVC-duplex-dispatch",
+        "contract": "Fixtures.DuplexHighRisk.IDispatchService",
+        "operationIds": [
+          "OP-duplex-start-job",
+          "OP-duplex-get-status",
+          "OP-duplex-commit-job"
+        ]
+      },
+      {
+        "id": "SVC-duplex-archive",
+        "contract": "Fixtures.DuplexHighRisk.IArchiveTransfer",
+        "operationIds": [
+          "OP-duplex-download",
+          "OP-duplex-upload"
+        ]
+      }
+    ],
+    "endpoints": [
+      {
+        "id": "END-duplex-dispatch-tcp",
+        "binding": "netTcpBinding/ReliableDuplex",
+        "security": "transport security with Windows credentials"
+      },
+      {
+        "id": "END-duplex-archive-http",
+        "binding": "basicHttpBinding/StreamedArchive",
+        "security": "none configured"
+      }
+    ],
+    "dataContracts": [
+      {
+        "id": "DC-duplex-job-progress",
+        "type": "JobProgress",
+        "edgeCases": [
+          "callback ordering",
+          "sequence number",
+          "per-session state"
+        ]
+      },
+      {
+        "id": "DC-duplex-stream",
+        "type": "System.IO.Stream",
+        "edgeCases": [
+          "large payload",
+          "backpressure",
+          "partial transfer"
+        ]
+      }
+    ]
+  },
+  "risks": [
+    {
+      "id": "RSK-duplex-callback-redesign",
+      "severity": "critical",
+      "construct": "duplex callback plus one-way initiating operation",
+      "consequence": "Callback lifetime, delivery, ordering, acknowledgement, cancellation, and reconnect behavior require a streaming redesign.",
+      "redesignRequired": true
+    },
+    {
+      "id": "RSK-duplex-session-state",
+      "severity": "critical",
+      "construct": "SessionMode.Required and InstanceContextMode.PerSession mutable state",
+      "consequence": "gRPC calls cannot depend on WCF session affinity; state ownership, persistence, concurrency, and correlation must be redesigned.",
+      "redesignRequired": true
+    },
+    {
+      "id": "RSK-duplex-transaction",
+      "severity": "critical",
+      "construct": "TransactionFlow Mandatory and TransactionScopeRequired",
+      "consequence": "Ambient distributed transaction flow is not a gRPC transport feature and needs an explicit consistency, saga, or outbox design.",
+      "redesignRequired": true
+    },
+    {
+      "id": "RSK-duplex-reliable-session",
+      "severity": "high",
+      "construct": "ordered reliableSession",
+      "consequence": "Delivery guarantees, deduplication, replay, ordering, and reconnect semantics must be implemented and observed at the application layer.",
+      "redesignRequired": true
+    },
+    {
+      "id": "RSK-duplex-streaming",
+      "severity": "high",
+      "construct": "System.IO.Stream with Streamed transfer mode",
+      "consequence": "The contract needs chunk messages, limits, checksums, cancellation, backpressure, and resume semantics.",
+      "redesignRequired": true
+    }
+  ],
+  "questions": [
+    {
+      "id": "QST-duplex-stream-shape",
+      "prompt": "Should job progress use server streaming after a unary start, or one bidirectional stream that also carries commands?",
+      "trigger": "The WCF service combines a one-way initiating call with callbacks.",
+      "riskIds": [
+        "RSK-duplex-callback-redesign"
+      ]
+    },
+    {
+      "id": "QST-duplex-consistency",
+      "prompt": "What business invariant does CommitJob protect, and which saga, outbox, or idempotent workflow will replace transaction flow?",
+      "trigger": "TransactionFlowOption.Mandatory and TransactionScopeRequired are present.",
+      "riskIds": [
+        "RSK-duplex-transaction"
+      ]
+    },
+    {
+      "id": "QST-duplex-delivery",
+      "prompt": "Which ordering, retry, deduplication, reconnect, and loss guarantees are actually required?",
+      "trigger": "Reliable sessions and one-way callbacks are configured.",
+      "riskIds": [
+        "RSK-duplex-reliable-session"
+      ]
+    }
+  ],
+  "mapping": {
+    "target": "grpc-aspnetcore",
+    "targetRuntime": "ASP.NET Core gRPC",
+    "serviceMappings": [
+      {
+        "sourceServiceId": "SVC-duplex-dispatch",
+        "targetService": "fixtures.dispatch.v1.DispatchService",
+        "rpcs": [
+          {
+            "id": "RPC-duplex-start-job",
+            "sourceOperationId": "OP-duplex-start-job",
+            "targetRpc": "StartJob",
+            "shape": "unary",
+            "notes": "Return an explicit acknowledgement and idempotency token; do not preserve fire-and-forget ambiguity."
+          },
+          {
+            "id": "RPC-duplex-watch-job",
+            "sourceOperationId": "OP-duplex-get-status",
+            "targetRpc": "WatchJob",
+            "shape": "server-streaming",
+            "notes": "Replace callbacks with a cancellable ordered progress stream and explicit reconnect cursor."
+          },
+          {
+            "id": "RPC-duplex-commit-job",
+            "sourceOperationId": "OP-duplex-commit-job",
+            "targetRpc": "CommitJob",
+            "shape": "unary",
+            "notes": "Invoke an explicitly designed consistency workflow; never imply transaction propagation."
+          }
+        ]
+      },
+      {
+        "sourceServiceId": "SVC-duplex-archive",
+        "targetService": "fixtures.archive.v1.ArchiveTransferService",
+        "rpcs": [
+          {
+            "id": "RPC-duplex-download",
+            "sourceOperationId": "OP-duplex-download",
+            "targetRpc": "Download",
+            "shape": "server-streaming",
+            "notes": "Stream bounded chunks with offset, checksum, total length, cancellation, and backpressure."
+          },
+          {
+            "id": "RPC-duplex-upload",
+            "sourceOperationId": "OP-duplex-upload",
+            "targetRpc": "Upload",
+            "shape": "client-streaming",
+            "notes": "Accept bounded chunks and return a final validation and persistence result."
+          }
+        ]
+      }
+    ],
+    "typeMappings": [
+      {
+        "sourceTypeId": "DC-duplex-job-progress",
+        "targetType": "JobProgress",
+        "notes": "Keep a monotonic sequence and stable job ID so consumers can detect gaps and resume."
+      },
+      {
+        "sourceTypeId": "DC-duplex-stream",
+        "targetType": "ArchiveChunk",
+        "notes": "Replace Stream with explicit bytes chunks plus transfer metadata and integrity fields."
+      }
+    ],
+    "redesignRiskIds": [
+      "RSK-duplex-callback-redesign",
+      "RSK-duplex-session-state",
+      "RSK-duplex-transaction",
+      "RSK-duplex-reliable-session",
+      "RSK-duplex-streaming"
+    ]
+  },
+  "spec": {
+    "workPackages": [
+      {
+        "id": "WP-duplex-foundation",
+        "dependsOn": [],
+        "objective": "Define common identity, error, idempotency, observability, and chunking conventions."
+      },
+      {
+        "id": "WP-duplex-contract",
+        "dependsOn": [
+          "WP-duplex-foundation"
+        ],
+        "objective": "Specify dispatch and archive Protobuf services with unary and streaming shapes."
+      },
+      {
+        "id": "WP-duplex-state-redesign",
+        "dependsOn": [
+          "WP-duplex-contract"
+        ],
+        "objective": "Implement correlated durable job state, concurrency rules, reconnect cursors, and the transaction replacement."
+      },
+      {
+        "id": "WP-duplex-streaming",
+        "dependsOn": [
+          "WP-duplex-contract"
+        ],
+        "objective": "Implement chunked upload/download with limits, cancellation, integrity, and backpressure."
+      },
+      {
+        "id": "WP-duplex-service",
+        "dependsOn": [
+          "WP-duplex-state-redesign",
+          "WP-duplex-streaming"
+        ],
+        "objective": "Implement ASP.NET Core gRPC services and parity, reconnect, ordering, and failure-injection tests."
+      }
+    ],
+    "expectations": [
+      "The mandatory target is ASP.NET Core gRPC; CoreWCF, REST, and message brokers may be coexistence or implementation details but not replacement targets.",
+      "Every duplex, one-way, session, transaction, reliable-delivery, and raw-stream behavior is an explicit redesign risk with an approved decision and executable parity criteria.",
+      "The dependency graph is acyclic and keeps shared contract work ahead of independently owned state and streaming work."
+    ]
+  }
+}

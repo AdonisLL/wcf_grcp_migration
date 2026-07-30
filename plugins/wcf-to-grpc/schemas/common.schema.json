@@ -1,0 +1,743 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./common.schema.json",
+  "title": "WCF to gRPC shared artifact definitions",
+  "description": "Reusable definitions for migration artifacts. This schema is a vocabulary resource and is not an artifact contract by itself.",
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^(INV|DLOG|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\r\\n]+$"
+    },
+    "idArray": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stableId"
+      },
+      "uniqueItems": true
+    },
+    "questionIdArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^QST-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "evidenceIdArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "resolvedString": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "known"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "questionIds": {
+              "$ref": "#/$defs/questionIdArray"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "not-applicable"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "resolvedBoolean": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "known"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "state",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "questionIds": {
+              "$ref": "#/$defs/questionIdArray"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "not-applicable"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "resolvedPositiveInteger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "known"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 536870911,
+              "not": {
+                "minimum": 19000,
+                "maximum": 19999
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "questionIds": {
+              "$ref": "#/$defs/questionIdArray"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "not-applicable"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "resolvedNonNegativeInteger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "known"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "state",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "questionIds": {
+              "$ref": "#/$defs/questionIdArray"
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "not-applicable"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "generation": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatorVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sourceRevision": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "sourceDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "mode": {
+          "enum": [
+            "full",
+            "incremental"
+          ]
+        }
+      },
+      "required": [
+        "generator",
+        "generatorVersion",
+        "generatedAt",
+        "sourceRevision",
+        "sourceDigest",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "approval": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "draft"
+            }
+          },
+          "required": [
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "review-requested"
+            },
+            "requestedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "requestedFrom": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "state",
+            "requestedAt",
+            "requestedFrom"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "approved"
+            },
+            "approvedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "approvedBy": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "note": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "state",
+            "approvedAt",
+            "approvedBy"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "rejected"
+            },
+            "rejectedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "rejectedBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "rejectedAt",
+            "rejectedBy",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "superseded"
+            },
+            "supersededAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "supersededBy": {
+              "$ref": "#/$defs/stableId"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "supersededAt",
+            "supersededBy",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "artifactRef": {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "enum": [
+            "inventory",
+            "decision-log",
+            "migration-spec",
+            "issue-set",
+            "implementation-report",
+            "validation-report"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/stableId"
+        }
+      },
+      "required": [
+        "artifactType",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "citation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "code",
+            "configuration",
+            "project",
+            "package",
+            "generated-code",
+            "test",
+            "command-output",
+            "documentation",
+            "user-statement"
+          ]
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://"
+            },
+            {
+              "type": "string",
+              "pattern": "^(?!https?://)(?!user-statement:)(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\r\\n#]+(?:#L[1-9][0-9]*(?:-L[1-9][0-9]*)?)?$"
+            },
+            {
+              "type": "string",
+              "pattern": "^user-statement:[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          ],
+          "description": "Repository-relative path with an optional #Lx-Ly suffix, an HTTP(S) URL, or user-statement:<label>."
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "excerptDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "claim",
+        "locator",
+        "confidence"
+      ],
+      "additionalProperties": false
+    },
+    "traceLink": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^TRC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "from": {
+          "$ref": "#/$defs/artifactRef"
+        },
+        "relation": {
+          "enum": [
+            "evidences",
+            "raises",
+            "resolved-by",
+            "specified-by",
+            "implemented-by",
+            "validated-by",
+            "depends-on",
+            "blocks",
+            "owned-by",
+            "published-as",
+            "derived-from",
+            "affects",
+            "supersedes"
+          ]
+        },
+        "to": {
+          "$ref": "#/$defs/artifactRef"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "unresolved",
+            "superseded"
+          ]
+        },
+        "evidenceIds": {
+          "$ref": "#/$defs/evidenceIdArray"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "relation",
+        "to",
+        "state",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "artifactBase": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "artifactType": {
+          "type": "string"
+        },
+        "artifactId": {
+          "$ref": "#/$defs/stableId"
+        },
+        "generation": {
+          "$ref": "#/$defs/generation"
+        },
+        "approval": {
+          "$ref": "#/$defs/approval"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/citation"
+          }
+        },
+        "traceLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/traceLink"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "artifactType",
+        "artifactId",
+        "generation",
+        "approval",
+        "citations",
+        "traceLinks"
+      ]
+    },
+    "acceptanceCriterion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^AC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidenceRequired": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^VAL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "evidenceRequired",
+        "validationIds"
+      ],
+      "additionalProperties": false
+    },
+    "validationStep": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^VAL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "build",
+            "test",
+            "lint",
+            "command",
+            "manual",
+            "contract-compatibility",
+            "security",
+            "performance",
+            "operational"
+          ]
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workingDirectory": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "expectedResult": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "not-run",
+            "passed",
+            "failed",
+            "blocked"
+          ]
+        },
+        "evidenceIds": {
+          "$ref": "#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "expectedResult",
+        "status",
+        "evidenceIds"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "build",
+                  "test",
+                  "lint",
+                  "command",
+                  "contract-compatibility",
+                  "security",
+                  "performance",
+                  "operational"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "command"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,467 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./fixture-expectations.schema.json",
+  "title": "WCF fixture analysis expectations",
+  "type": "object",
+  "properties": {
+    "fixtureId": {
+      "type": "string",
+      "pattern": "^FIX-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceFiles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\r\\n]+$"
+      },
+      "minItems": 3,
+      "uniqueItems": true
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "minItems": 2,
+      "uniqueItems": true
+    },
+    "inventory": {
+      "$ref": "#/$defs/inventory"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/risk"
+      },
+      "minItems": 1
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/question"
+      },
+      "minItems": 1
+    },
+    "mapping": {
+      "$ref": "#/$defs/mapping"
+    },
+    "spec": {
+      "$ref": "#/$defs/spec"
+    }
+  },
+  "required": [
+    "fixtureId",
+    "description",
+    "sourceFiles",
+    "coverage",
+    "inventory",
+    "risks",
+    "questions",
+    "mapping",
+    "spec"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "inventory": {
+      "type": "object",
+      "properties": {
+        "facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fact"
+          },
+          "minItems": 2
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/service"
+          },
+          "minItems": 1
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/endpoint"
+          },
+          "minItems": 1
+        },
+        "dataContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dataContract"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "facts",
+        "services",
+        "endpoints",
+        "dataContracts"
+      ],
+      "additionalProperties": false
+    },
+    "fact": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "id",
+        "claim",
+        "path",
+        "line"
+      ],
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "contract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^OP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "contract",
+        "operationIds"
+      ],
+      "additionalProperties": false
+    },
+    "endpoint": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^END-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "binding": {
+          "type": "string",
+          "minLength": 1
+        },
+        "security": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "binding",
+        "security"
+      ],
+      "additionalProperties": false
+    },
+    "dataContract": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "edgeCases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "edgeCases"
+      ],
+      "additionalProperties": false
+    },
+    "risk": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "construct": {
+          "type": "string",
+          "minLength": 1
+        },
+        "consequence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "redesignRequired": {
+          "const": true
+        }
+      },
+      "required": [
+        "id",
+        "severity",
+        "construct",
+        "consequence",
+        "redesignRequired"
+      ],
+      "additionalProperties": false
+    },
+    "question": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^QST-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "riskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "trigger",
+        "riskIds"
+      ],
+      "additionalProperties": false
+    },
+    "mapping": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "const": "grpc-aspnetcore"
+        },
+        "targetRuntime": {
+          "const": "ASP.NET Core gRPC"
+        },
+        "serviceMappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/serviceMapping"
+          },
+          "minItems": 1
+        },
+        "typeMappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/typeMapping"
+          },
+          "minItems": 1
+        },
+        "redesignRiskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^RSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "target",
+        "targetRuntime",
+        "serviceMappings",
+        "typeMappings",
+        "redesignRiskIds"
+      ],
+      "additionalProperties": false
+    },
+    "serviceMapping": {
+      "type": "object",
+      "properties": {
+        "sourceServiceId": {
+          "type": "string",
+          "pattern": "^SVC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "targetService": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rpcs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rpc"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "sourceServiceId",
+        "targetService",
+        "rpcs"
+      ],
+      "additionalProperties": false
+    },
+    "rpc": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^RPC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "sourceOperationId": {
+          "type": "string",
+          "pattern": "^OP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "targetRpc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shape": {
+          "enum": [
+            "unary",
+            "client-streaming",
+            "server-streaming",
+            "bidirectional-streaming"
+          ]
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "sourceOperationId",
+        "targetRpc",
+        "shape",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "typeMapping": {
+      "type": "object",
+      "properties": {
+        "sourceTypeId": {
+          "type": "string",
+          "pattern": "^DC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "targetType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "sourceTypeId",
+        "targetType",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "workPackages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/workPackage"
+          },
+          "minItems": 2
+        },
+        "expectations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "workPackages",
+        "expectations"
+      ],
+      "additionalProperties": false
+    },
+    "workPackage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "dependsOn",
+        "objective"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "fixtureId": "FIX-basic-unary",
+  "description": "Self-hosted basicHttpBinding service and ChannelFactory client with a unary operation and common DataContract values.",
+  "sourceFiles": [
+    "BasicUnary.sln",
+    "BasicUnary.csproj",
+    "Contracts.cs",
+    "CustomerService.cs",
+    "Program.cs",
+    "App.config"
+  ],
+  "coverage": [
+    "basic-http",
+    "unary",
+    "client",
+    "data-contract"
+  ],
+  "inventory": {
+    "facts": [
+      {
+        "id": "EVD-basic-unary-contract",
+        "claim": "ICustomerService exposes one request/response OperationContract.",
+        "path": "Contracts.cs",
+        "line": 7
+      },
+      {
+        "id": "EVD-basic-unary-client",
+        "claim": "The executable creates a typed ChannelFactory client.",
+        "path": "Program.cs",
+        "line": 14
+      },
+      {
+        "id": "EVD-basic-unary-binding",
+        "claim": "Service and client use the same named basicHttpBinding configuration.",
+        "path": "App.config",
+        "line": 5
+      }
+    ],
+    "services": [
+      {
+        "id": "SVC-basic-customer",
+        "contract": "Fixtures.BasicUnary.ICustomerService",
+        "operationIds": [
+          "OP-basic-get-customer"
+        ]
+      }
+    ],
+    "endpoints": [
+      {
+        "id": "END-basic-customer-http",
+        "binding": "basicHttpBinding/CustomerBasicHttp",
+        "security": "TransportCredentialOnly with Windows credentials"
+      }
+    ],
+    "dataContracts": [
+      {
+        "id": "DC-basic-customer-record",
+        "type": "CustomerRecord",
+        "edgeCases": [
+          "Guid",
+          "DateTime",
+          "decimal",
+          "enum",
+          "nested message",
+          "repeated string"
+        ]
+      }
+    ]
+  },
+  "risks": [
+    {
+      "id": "RSK-basic-transport-credential",
+      "severity": "medium",
+      "construct": "basicHttpBinding TransportCredentialOnly with Windows credentials",
+      "consequence": "ASP.NET Core gRPC requires an explicit TLS and authentication design rather than copying SOAP transport settings.",
+      "redesignRequired": true
+    }
+  ],
+  "questions": [
+    {
+      "id": "QST-basic-authentication",
+      "prompt": "Should Windows identity remain required, or will the gRPC service use a token-based identity?",
+      "trigger": "TransportCredentialOnly and clientCredentialType=Windows are configured.",
+      "riskIds": [
+        "RSK-basic-transport-credential"
+      ]
+    }
+  ],
+  "mapping": {
+    "target": "grpc-aspnetcore",
+    "targetRuntime": "ASP.NET Core gRPC",
+    "serviceMappings": [
+      {
+        "sourceServiceId": "SVC-basic-customer",
+        "targetService": "fixtures.customers.v1.CustomerService",
+        "rpcs": [
+          {
+            "id": "RPC-basic-get-customer",
+            "sourceOperationId": "OP-basic-get-customer",
+            "targetRpc": "GetCustomer",
+            "shape": "unary",
+            "notes": "Preserve request/response behavior and define deadline and not-found status semantics."
+          }
+        ]
+      }
+    ],
+    "typeMappings": [
+      {
+        "sourceTypeId": "DC-basic-customer-record",
+        "targetType": "CustomerRecord",
+        "notes": "Use string for Guid, Timestamp for UTC DateTime, a lossless decimal message, enum zero UNSPECIFIED, and repeated string tags."
+      }
+    ],
+    "redesignRiskIds": [
+      "RSK-basic-transport-credential"
+    ]
+  },
+  "spec": {
+    "workPackages": [
+      {
+        "id": "WP-basic-contract",
+        "dependsOn": [],
+        "objective": "Define versioned customer Protobuf messages and the unary RPC."
+      },
+      {
+        "id": "WP-basic-host-client",
+        "dependsOn": [
+          "WP-basic-contract"
+        ],
+        "objective": "Implement ASP.NET Core gRPC hosting, authentication, service adapter, and generated client migration."
+      }
+    ],
+    "expectations": [
+      "The target remains gRPC on ASP.NET Core and does not fall back to REST or CoreWCF.",
+      "The specification defines decimal, DateTime, Guid, enum-zero, deadline, authentication, coexistence, and rollback behavior."
+    ]
+  }
+}
