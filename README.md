@@ -62,7 +62,17 @@ copilot plugin list
 ### From a local path, without the marketplace
 
 ```shell
+# From a clone of this repository
+copilot plugin install C:\path\to\wcf_grcp_migration
+
+# Or install the plugin subdirectory directly
 copilot plugin install ./plugins/wcf-to-grpc
+```
+
+### Directly from GitHub, without the marketplace
+
+```shell
+copilot plugin install OWNER/REPO
 ```
 
 ### Verify discovery
@@ -304,6 +314,7 @@ deliberately excluded from CI.
 | Local edits have no effect | Installed plugins are cached. `copilot plugin update wcf-to-grpc`, or uninstall and reinstall |
 | `copilot plugin install wcf-to-grpc@wcf-grpc-marketplace` cannot find it | The marketplace is not registered, or its catalog is stale. `copilot plugin marketplace list`, then `... marketplace update wcf-grpc-marketplace` |
 | Marketplace add fails | The source must contain `.github/plugin/marketplace.json`. Point at the repository root, not the plugin directory |
+| Direct repository install reports `No plugin.json found` | Update the clone or default branch to a revision containing the root `plugin.json`, then run `copilot plugin install OWNER/REPO` again |
 | An agent refuses to start implementing | The specification or the work package is unapproved, or a hard dependency is unsatisfied. The refusal names the exact id |
 | The architect reports `blocked` | An unresolved blocking decision. Answer the named `QST-*`, record the `DEC-*`, re-run in incremental mode |
 | A validation gate is `blocked`, not `fail` | It could not be assessed — missing environment, baseline, or permission. Supply it and re-run the same scope |

@@ -1,0 +1,17 @@
+{
+  "name": "wcf-to-grpc",
+  "description": "Orchestrated WCF to gRPC migration workflow: read-only inventory, decision interview, mapping, specification authoring, confirmation-gated issue publication, fleet-ready implementation, and independent parity validation.",
+  "version": "1.0.0",
+  "keywords": [
+    "wcf",
+    "grpc",
+    "migration",
+    "dotnet",
+    "kestrel",
+    "protobuf",
+    "soap",
+    "modernization"
+  ],
+  "skills": "./plugins/wcf-to-grpc/skills/",
+  "agents": "./plugins/wcf-to-grpc/agents/"
+}

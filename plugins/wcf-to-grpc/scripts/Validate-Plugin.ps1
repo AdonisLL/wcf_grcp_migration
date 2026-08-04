@@ -9,6 +9,7 @@ $script:Failures = [System.Collections.Generic.List[string]]::new()
 $pluginRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $pluginRoot "../.."))
 $marketplacePath = Join-Path $repoRoot ".github/plugin/marketplace.json"
+$repositoryPluginManifestPath = Join-Path $repoRoot "plugin.json"
 $pluginManifestPath = Join-Path $pluginRoot "plugin.json"
 $fixtureRoot = Join-Path $pluginRoot "tests/fixtures"
 $docsRoot = Join-Path $repoRoot "docs"
@@ -292,6 +293,7 @@ Write-Host "Validating plugin at $pluginRoot"
 Write-Host " - JSON and manifests"
 $allJsonFiles = @(
     Get-Item -LiteralPath $marketplacePath
+    Get-Item -LiteralPath $repositoryPluginManifestPath
     Get-ChildItem -LiteralPath $pluginRoot -Recurse -File -Filter "*.json"
 )
 $jsonDocuments = @{}
@@ -301,6 +303,7 @@ foreach ($jsonFile in $allJsonFiles) {
 Add-Check ($script:Failures.Count -eq 0) "One or more JSON files could not be parsed."
 
 $marketplace = $jsonDocuments[$marketplacePath]
+$repositoryPlugin = $jsonDocuments[$repositoryPluginManifestPath]
 $plugin = $jsonDocuments[$pluginManifestPath]
 Test-AllowedProperties $marketplace @("name", "metadata", "owner", "plugins") "Marketplace manifest"
 Test-AllowedProperties (Get-PropertyValue $marketplace "metadata") @("description", "version") "Marketplace metadata"
@@ -312,8 +315,17 @@ Test-AllowedProperties $plugin @(
     "name", "description", "version", "keywords", "skills", "agents",
     "hooks", "mcpServers", "lspServers"
 ) "Plugin manifest"
+Test-AllowedProperties $repositoryPlugin @(
+    "name", "description", "version", "keywords", "skills", "agents",
+    "hooks", "mcpServers", "lspServers"
+) "Repository plugin manifest"
 Add-Check ((Get-PropertyValue $plugin "name") -match "^[a-z0-9]+(?:-[a-z0-9]+)*$") "Plugin name is missing or invalid."
 Add-Check ((Get-PropertyValue $plugin "version") -match "^\d+\.\d+\.\d+$") "Plugin version is not semantic."
+foreach ($property in @("name", "description", "version")) {
+    Add-Check (
+        (Get-PropertyValue $repositoryPlugin $property) -eq (Get-PropertyValue $plugin $property)
+    ) "Repository and marketplace plugin manifests differ on '$property'."
+}
 
 $marketplacePlugins = @(Get-PropertyValue $marketplace "plugins")
 Add-Check ($marketplacePlugins.Count -gt 0) "Marketplace has no plugins."
@@ -328,8 +340,14 @@ foreach ($entry in $marketplacePlugins) {
 
 $skillsPath = Resolve-ComponentPath $pluginRoot (Get-PropertyValue $plugin "skills")
 $agentsPath = Resolve-ComponentPath $pluginRoot (Get-PropertyValue $plugin "agents")
+$repositorySkillsPath = Resolve-ComponentPath $repoRoot (Get-PropertyValue $repositoryPlugin "skills")
+$repositoryAgentsPath = Resolve-ComponentPath $repoRoot (Get-PropertyValue $repositoryPlugin "agents")
 Add-Check (Test-Path -LiteralPath $skillsPath -PathType Container) "Plugin skills directory is missing."
 Add-Check (Test-Path -LiteralPath $agentsPath -PathType Container) "Plugin agents directory is missing."
+Add-Check (Test-Path -LiteralPath $repositorySkillsPath -PathType Container) "Repository plugin skills directory is missing."
+Add-Check (Test-Path -LiteralPath $repositoryAgentsPath -PathType Container) "Repository plugin agents directory is missing."
+Add-Check ($repositorySkillsPath -eq $skillsPath) "Repository and marketplace plugin manifests resolve different skills directories."
+Add-Check ($repositoryAgentsPath -eq $agentsPath) "Repository and marketplace plugin manifests resolve different agents directories."
 
 $skillFiles = @(Get-ChildItem -LiteralPath $skillsPath -Recurse -File -Filter "SKILL.md")
 $agentFiles = @(Get-ChildItem -LiteralPath $agentsPath -File -Filter "*.agent.md")

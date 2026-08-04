@@ -62,6 +62,13 @@ not run it.
    `copilot plugin install ./plugins/wcf-to-grpc` bypasses the marketplace
    catalog, but it does not replace the marketplace install/reinstall smoke
    test.
+5. Confirm that the repository itself is directly installable:
+
+   ```powershell
+   copilot plugin uninstall wcf-to-grpc
+   copilot plugin install C:\path\to\wcf_grcp_migration
+   copilot plugin list
+   ```
 
 ## Fixture repositories
 
