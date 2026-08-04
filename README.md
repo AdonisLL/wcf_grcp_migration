@@ -7,8 +7,9 @@ evidence-backed analysis, an explicit decision record, a reviewable
 specification, gated implementation, and independent parity validation, ending
 at a WCF retirement gate that will not open without proof.
 
-The plugin never guesses. When it cannot establish something, it says so, names
-who must resolve it, and stops.
+The plugin never guesses. When it needs operator input, it asks for the missing
+value and waits; when an artifact or approval gate blocks progress, it names who
+must resolve it and the exact action needed to resume.
 
 <p align="center">
   <img src="assets/wcf-to-grpc-migration-pipeline.svg"
@@ -111,12 +112,42 @@ Run Copilot CLI from the root of the WCF repository you want to migrate, then
 pick an agent with `/agent` and prompt it.
 
 **Run the whole migration (recommended).** Select **WCF Migration
-Orchestrator**:
+Orchestrator**. You can start interactively with:
+
+> Orchestrate a WCF to gRPC migration for this repository. Ask me for any
+> required intake values, then continue through the workflow and stop only at
+> gates that require operator action.
+
+The orchestrator will ask for missing Stage 0 values and continue in the same
+conversation after you answer. To supply the complete intake up front, use:
 
 > Orchestrate a WCF to gRPC migration for this repository. Scope it to the
-> Orders solution, use `docs/wcf-grpc-migration/` for output, and stop at every
-> approval gate. I have not granted network, GitHub mutation, or production
-> access.
+> Orders solution and exclude the legacy Billing solution. This is a mixed
+> service-and-client repository. Target .NET 10 and use
+> `docs/wcf-grpc-migration/` for output. Local test-harness access is granted;
+> network, GitHub mutation, golden traffic, load testing, and production access
+> are not granted. Stop at every human approval gate.
+
+Stage 0 collects the following values. Omitted permissions default to denied;
+the repository kind, scope, and target runtime are never guessed.
+
+| Intake value | Accepted values or example |
+|---|---|
+| Repository kind | `service-host`, `client-only`, or `mixed` |
+| Scope | A service, solution, or bounded slice, plus explicit exclusions |
+| Target runtime | A specific supported .NET version; confirm the current .NET LTS rather than copying an old example |
+| Output directory | Defaults to `docs/wcf-grpc-migration/` |
+| Network | Grant only when a stage may access external resources |
+| GitHub mutation | Grant only for confirmation-gated Issue publication |
+| Test harness | Grant when validation may run the migration test harness |
+| Golden traffic | Grant only with the required privacy controls |
+| Load testing | Grant only for an approved environment and workload |
+| Production access | Grant explicitly; it is never implied by another grant |
+
+A `blocked` stage is normally a safety gate, not a failed migration. Respond to
+the orchestrator's **next required action in the same conversation**; it reads
+the saved orchestration state, re-checks the gate, and resumes at the first
+eligible stage.
 
 **Just understand what you have.** Select **WCF Codebase Analyst**:
 
@@ -162,6 +193,18 @@ and a decision log):
 Loops are normal: findings route back to implementation, deviations to the
 architect, unresolved questions to the interview. Stages never run out of
 order, and changing an upstream artifact marks its downstream artifacts stale.
+
+The operator-controlled gates are:
+
+| Gate | What clears it |
+|---|---|
+| Stage 0 intake | Provide repository kind, scope, target runtime, output directory, and any permission grants |
+| Decision interview | Answer the evidence-triggered architecture question; the interview stage records the decision |
+| Specification approval | A human reviews and explicitly approves the current specification |
+| Issue publication | Approve the full preview using its matching digest and grant GitHub mutation |
+| Implementation dispatch | Run the exact `/fleet` or individual-agent handoff emitted by the orchestrator |
+| Validation environment | Provide the named environment and explicitly grant any required harness, traffic, load, network, or production permission |
+| WCF retirement | A current `retirement-ready` validation report and a separate human approval |
 
 ## Agents
 

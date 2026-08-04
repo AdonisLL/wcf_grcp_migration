@@ -147,6 +147,15 @@ Before any stage runs, establish and record — do not guess:
    mutation, test harness, golden traffic, load test, production access. All
    default to `false`/absent until the operator states otherwise.
 
+Missing Stage 0 input is an expected intake state, not an orchestration error or
+a completed task. Ask the operator directly for the missing value, include the
+accepted choices where applicable, and explain that their answer in the same
+conversation will resume the run. Prefer one concise, copyable intake request
+that lists every missing value rather than making the operator discover them
+through repeated blocked responses. Do not merely persist a status file and
+declare the task complete while required intake can be collected from the
+operator.
+
 Record all of it in orchestration state, then start (or resume) at the first
 stage whose gates are unsatisfied.
 
@@ -442,9 +451,14 @@ After every invocation, return a short, readable status:
    overlapping fleet ownership, retirement without current evidence).
 5. **The single next required action**, addressed to whoever must take it.
 
+When that action is operator input, end with a direct request for the input and
+state that the run is waiting for the reply. Use `blocked` for the persisted
+stage status when the schema requires it, but describe the interaction as
+**waiting for operator input**, not as an error or completed migration.
+
 ## Completion checklist
 
-- [ ] Scope, repository kind (server, client-only, or both), output directory,
+- [ ] Scope, repository kind (`service-host`, `client-only`, or `mixed`), output directory,
       and permissions were recorded, not assumed.
 - [ ] The target runtime was asked once for this migration, with the current
       supported .NET LTS recommended after checking the support policy, and
