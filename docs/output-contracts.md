@@ -18,6 +18,7 @@ docs/wcf-grpc-migration/
 ├── migration-status.md               Optional rendered run status
 ├── inventory.json                    Evidence-backed legacy inventory
 ├── decision-log.json                 Decisions, options, approvals
+├── mapping-result.json               Complete WCF-to-gRPC construct mapping
 ├── migration-spec.json               Architecture, contracts, roadmap, work packages
 ├── issue-set.json                    Issue-ready payloads and publication state
 ├── assessment.md                     Rendered current-state assessment
@@ -51,8 +52,9 @@ Exactly one stage may write each artifact. Every other stage reads it.
 | Artifact | Written by | Read by |
 |---|---|---|
 | `orchestration-state.json` | Orchestrator | Orchestrator, humans |
-| `inventory.json` | Specification stage, from the analyst's output | Interview, mapping, architect, validator |
+| `inventory.json` | WCF Codebase Analyst | Interview, mapping, architect, validator |
 | `decision-log.json` | Interview stage | Mapping, architect, implementer, validator |
+| `mapping-result.json` | Mapping stage | Architect, orchestrator, validator |
 | `migration-spec.json` | Architect | Publication, implementer, validator |
 | `issue-set.json` | Publication stage | Humans, GitHub |
 | `implementation-reports/*` | Implementer | Orchestrator, validator, humans |
@@ -72,6 +74,7 @@ Strict JSON Schema Draft 2020-12, `additionalProperties: false` throughout, in
 | [`common.schema.json`](../plugins/wcf-to-grpc/schemas/common.schema.json) | Shared vocabulary: stable ids, relative paths, resolved values, generation, approval, citations, trace links, acceptance criteria, validation steps |
 | [`inventory.schema.json`](../plugins/wcf-to-grpc/schemas/inventory.schema.json) | `inventory.json` |
 | [`decision-log.schema.json`](../plugins/wcf-to-grpc/schemas/decision-log.schema.json) | `decision-log.json` |
+| [`mapping-result.schema.json`](../plugins/wcf-to-grpc/schemas/mapping-result.schema.json) | `mapping-result.json` |
 | [`migration-spec.schema.json`](../plugins/wcf-to-grpc/schemas/migration-spec.schema.json) | `migration-spec.json` |
 | [`issue-set.schema.json`](../plugins/wcf-to-grpc/schemas/issue-set.schema.json) | `issue-set.json` |
 | [`orchestration-state.schema.json`](../plugins/wcf-to-grpc/schemas/orchestration-state.schema.json) | `orchestration-state.json` |

@@ -1,0 +1,1256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./mapping-result.schema.json",
+  "title": "WCF to gRPC mapping result",
+  "description": "Stage 3 artifact: per-construct mapping coverage from a WCF inventory to gRPC/Protobuf targets, unsupported-feature redesign risks, coverage summary, blocking items, and next required action. A complete document is consumed by author-migration-specs without a separate human approval gate.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "artifactType": {
+      "const": "mapping-result"
+    },
+    "artifactId": {
+      "type": "string",
+      "pattern": "^MRES-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "generation": {
+      "$ref": "#/$defs/generation"
+    },
+    "approval": {
+      "type": "object",
+      "description": "Mapping completion is a machine gate, not a human approval gate.",
+      "properties": {
+        "state": {
+          "const": "draft"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/citation"
+      }
+    },
+    "traceLinks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/traceLink"
+      }
+    },
+    "inventoryId": {
+      "type": "string",
+      "pattern": "^INV-[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Stable ID of the source inventory artifact this mapping was derived from."
+    },
+    "decisionLogId": {
+      "type": "string",
+      "pattern": "^DLOG-[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Stable ID of the decision log whose resolved decisions informed this mapping."
+    },
+    "repository": {
+      "$ref": "#/$defs/repositoryScope"
+    },
+    "status": {
+      "$ref": "#/$defs/mappingStatus"
+    },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/constructMapping"
+      },
+      "minItems": 1,
+      "description": "Complete per-construct mapping coverage. Every WCF construct in the source inventory must have exactly one entry."
+    },
+    "redesignRisks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/redesignRisk"
+      },
+      "description": "Unsupported-feature risks requiring architectural decisions before specification authoring can proceed."
+    },
+    "coverageSummary": {
+      "$ref": "#/$defs/coverageSummary"
+    },
+    "blockingItems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blockingItem"
+      },
+      "description": "Items that prevent progression to specification authoring."
+    },
+    "deferredItems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/deferredItem"
+      },
+      "description": "Items deferred to a later wave or work package with a documented rationale."
+    },
+    "validation": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/validationStep"
+      },
+      "description": "Validation steps that must pass before this mapping result is considered ready for specification authoring."
+    },
+    "nextRequiredAction": {
+      "$ref": "#/$defs/nextRequiredAction"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "artifactType",
+    "artifactId",
+    "generation",
+    "approval",
+    "citations",
+    "traceLinks",
+    "inventoryId",
+    "decisionLogId",
+    "repository",
+    "status",
+    "mappings",
+    "redesignRisks",
+    "coverageSummary",
+    "blockingItems",
+    "deferredItems",
+    "validation",
+    "nextRequiredAction"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^(INV|DLOG|MRES|MMAP|MRSK|MBLK|MDEF|REPO|SVC|OP|DC|FLD|END|EVD|RSK|QST|DEC|TRC|VAL)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "idArray": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stableId"
+      },
+      "uniqueItems": true
+    },
+    "evidenceIdArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "questionIdArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^QST-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\r\\n]+$"
+    },
+    "resolvedString": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "known",
+            "unknown",
+            "not-applicable"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "questionIds": {
+          "$ref": "#/$defs/questionIdArray"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "known"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "unknown",
+                  "not-applicable"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reason"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "generation": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatorVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sourceRevision": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "sourceDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "mode": {
+          "enum": [
+            "full",
+            "incremental"
+          ]
+        }
+      },
+      "required": [
+        "generator",
+        "generatorVersion",
+        "generatedAt",
+        "sourceRevision",
+        "sourceDigest",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "citation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "code",
+            "configuration",
+            "project",
+            "package",
+            "generated-code",
+            "test",
+            "command-output",
+            "documentation",
+            "user-statement"
+          ]
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "excerptDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "claim",
+        "locator",
+        "confidence"
+      ],
+      "additionalProperties": false
+    },
+    "artifactRef": {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "enum": [
+            "inventory",
+            "decision-log",
+            "mapping-result",
+            "migration-spec"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/stableId"
+        }
+      },
+      "required": [
+        "artifactType",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "traceLink": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^TRC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "from": {
+          "$ref": "#/$defs/artifactRef"
+        },
+        "relation": {
+          "enum": [
+            "derived-from",
+            "raises",
+            "resolved-by",
+            "affects",
+            "blocks"
+          ]
+        },
+        "to": {
+          "$ref": "#/$defs/artifactRef"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "unresolved",
+            "superseded"
+          ]
+        },
+        "evidenceIds": {
+          "$ref": "#/$defs/evidenceIdArray"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "relation",
+        "to",
+        "state",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "validationStep": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^VAL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "build",
+            "test",
+            "lint",
+            "command",
+            "manual",
+            "contract-compatibility",
+            "security",
+            "performance",
+            "operational"
+          ]
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workingDirectory": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "expectedResult": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "not-run",
+            "passed",
+            "failed",
+            "blocked"
+          ]
+        },
+        "evidenceIds": {
+          "$ref": "#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "expectedResult",
+        "status",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "repositoryScope": {
+      "type": "object",
+      "description": "Repository and scope coordinates from the source inventory.",
+      "properties": {
+        "repositoryId": {
+          "type": "string",
+          "pattern": "^REPO-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "root": {
+          "const": "."
+        },
+        "analyzedPaths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relativePath"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "repositoryId",
+        "root",
+        "analyzedPaths"
+      ],
+      "additionalProperties": false
+    },
+    "mappingStatus": {
+      "type": "object",
+      "description": "Overall progression state of this mapping result.",
+      "properties": {
+        "state": {
+          "enum": [
+            "in-progress",
+            "complete",
+            "blocked"
+          ],
+          "description": "in-progress: mapping is still being assembled; complete: all constructs are mapped and the artifact is ready for specification authoring; blocked: one or more unresolved blocking items."
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the state first transitioned to complete."
+        },
+        "blockedReason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required when state is blocked."
+        },
+        "blockingItemIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^MBLK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "state",
+        "blockingItemIds"
+      ],
+      "additionalProperties": false
+    },
+    "constructMapping": {
+      "type": "object",
+      "description": "Mapping of a single WCF inventory construct to its gRPC/Protobuf target.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^MMAP-[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "description": "Stable mapping entry ID."
+        },
+        "inventoryRef": {
+          "$ref": "#/$defs/inventoryConstructRef"
+        },
+        "constructKind": {
+          "enum": [
+            "service-contract",
+            "operation-contract",
+            "data-contract",
+            "message-contract",
+            "fault-contract",
+            "binding",
+            "endpoint",
+            "behavior",
+            "channel-shape",
+            "enum-type",
+            "field"
+          ]
+        },
+        "featureMapping": {
+          "$ref": "#/$defs/featureMapping"
+        },
+        "protoTypeMapping": {
+          "$ref": "#/$defs/protoTypeMapping"
+        },
+        "securityMapping": {
+          "$ref": "#/$defs/securityMapping"
+        },
+        "errorMapping": {
+          "$ref": "#/$defs/errorMapping"
+        },
+        "streamingMapping": {
+          "$ref": "#/$defs/streamingMapping"
+        },
+        "behaviorMapping": {
+          "$ref": "#/$defs/behaviorMapping"
+        },
+        "evidenceIds": {
+          "$ref": "#/$defs/evidenceIdArray"
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "redesignRiskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^MRSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "inventoryRef",
+        "constructKind",
+        "featureMapping",
+        "evidenceIds",
+        "decisionIds",
+        "redesignRiskIds"
+      ],
+      "additionalProperties": false
+    },
+    "inventoryConstructRef": {
+      "type": "object",
+      "description": "Reference to the exact WCF construct in the source inventory.",
+      "properties": {
+        "inventoryId": {
+          "type": "string",
+          "pattern": "^INV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "constructId": {
+          "$ref": "#/$defs/stableId"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "inventoryId",
+        "constructId",
+        "displayName"
+      ],
+      "additionalProperties": false
+    },
+    "featureMapping": {
+      "type": "object",
+      "description": "Mapping of a WCF feature/contract construct to its gRPC/Protobuf structural equivalent.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "mapped",
+            "mapped-with-changes",
+            "unsupported",
+            "deferred",
+            "not-applicable"
+          ],
+          "description": "mapped: direct equivalent exists; mapped-with-changes: equivalent exists but requires code-level adaptation; unsupported: no safe direct gRPC equivalent—see redesignRiskIds; deferred: mapping postponed to a later wave; not-applicable: construct does not require a gRPC-side artifact."
+        },
+        "grpcTarget": {
+          "$ref": "#/$defs/grpcTarget"
+        },
+        "adaptationNotes": {
+          "type": "string",
+          "description": "Required for mapped-with-changes outcome."
+        },
+        "riskLevel": {
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      },
+      "required": [
+        "outcome",
+        "riskLevel"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "mapped",
+                  "mapped-with-changes"
+                ]
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "required": [
+              "grpcTarget"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "mapped-with-changes"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "required": [
+              "adaptationNotes"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "grpcTarget": {
+      "type": "object",
+      "description": "Identifies the gRPC/Protobuf construct that replaces the WCF source.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "service",
+            "rpc",
+            "message",
+            "field",
+            "enum",
+            "enum-value",
+            "stream",
+            "interceptor",
+            "option",
+            "none"
+          ]
+        },
+        "packageName": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "protoFile": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "symbolName": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "rpcPattern": {
+          "enum": [
+            "unary",
+            "client-streaming",
+            "server-streaming",
+            "bidirectional-streaming"
+          ],
+          "description": "Required when kind is rpc or stream."
+        }
+      },
+      "required": [
+        "kind",
+        "packageName",
+        "protoFile",
+        "symbolName"
+      ],
+      "additionalProperties": false
+    },
+    "protoTypeMapping": {
+      "type": "object",
+      "description": "Protobuf scalar/message type mapping for data-contract fields and message-contract fields.",
+      "properties": {
+        "wcfClrType": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Fully qualified CLR type from the inventory."
+        },
+        "protoType": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "nullabilityStrategy": {
+          "enum": [
+            "optional-field",
+            "wrapper-type",
+            "oneof-presence",
+            "not-applicable"
+          ]
+        },
+        "specialHandling": {
+          "enum": [
+            "none",
+            "decimal-as-string",
+            "decimal-as-custom-message",
+            "guid-as-string",
+            "guid-as-bytes",
+            "datetime-as-timestamp",
+            "datetime-offset-as-timestamp-with-offset",
+            "enum-as-int32",
+            "polymorphism-as-oneof",
+            "collection-as-repeated",
+            "collection-as-map",
+            "custom"
+          ]
+        },
+        "customHandlingNote": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required when specialHandling is custom."
+        }
+      },
+      "required": [
+        "wcfClrType",
+        "protoType",
+        "nullabilityStrategy",
+        "specialHandling"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "specialHandling": {
+                "const": "custom"
+              }
+            },
+            "required": [
+              "specialHandling"
+            ]
+          },
+          "then": {
+            "required": [
+              "customHandlingNote"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "securityMapping": {
+      "type": "object",
+      "description": "Mapping of WCF binding/endpoint security configuration to gRPC transport and auth equivalents.",
+      "properties": {
+        "wcfSecurityMode": {
+          "enum": [
+            "None",
+            "Transport",
+            "Message",
+            "TransportWithMessageCredential",
+            "TransportCredentialOnly"
+          ]
+        },
+        "wcfCredentialType": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "grpcTransportSecurity": {
+          "enum": [
+            "tls",
+            "mtls",
+            "plaintext-internal-only",
+            "not-applicable"
+          ]
+        },
+        "grpcAuthMechanism": {
+          "enum": [
+            "none",
+            "jwt-bearer",
+            "mtls-client-cert",
+            "api-key-metadata",
+            "custom-interceptor",
+            "deferred-to-decision"
+          ]
+        },
+        "wsStarReplacement": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "wcfSecurityMode",
+        "wcfCredentialType",
+        "grpcTransportSecurity",
+        "grpcAuthMechanism"
+      ],
+      "additionalProperties": false
+    },
+    "errorMapping": {
+      "type": "object",
+      "description": "Mapping of WCF fault contracts and SOAP faults to gRPC status codes and rich error details.",
+      "properties": {
+        "wcfFaultContractIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(SVC|OP|DC)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "grpcStatusCode": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "richErrorDetailType": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "faultToStatusMapping": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/faultStatusEntry"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "wcfFaultContractIds",
+        "grpcStatusCode",
+        "richErrorDetailType",
+        "faultToStatusMapping"
+      ],
+      "additionalProperties": false
+    },
+    "faultStatusEntry": {
+      "type": "object",
+      "properties": {
+        "wcfFaultType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grpcStatusCode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "richDetailProtoType": {
+          "$ref": "#/$defs/resolvedString"
+        }
+      },
+      "required": [
+        "wcfFaultType",
+        "grpcStatusCode",
+        "richDetailProtoType"
+      ],
+      "additionalProperties": false
+    },
+    "streamingMapping": {
+      "type": "object",
+      "description": "Mapping of WCF streaming shapes, duplex callbacks, and session channels to gRPC streaming patterns.",
+      "properties": {
+        "wcfChannelShape": {
+          "enum": [
+            "IRequestChannel",
+            "IRequestReplyChannel",
+            "IOutputChannel",
+            "IInputChannel",
+            "IDuplexChannel",
+            "IDuplexSessionChannel",
+            "IStreamedRequestChannel",
+            "IStreamedReplyChannel"
+          ]
+        },
+        "grpcStreamingPattern": {
+          "enum": [
+            "unary",
+            "client-streaming",
+            "server-streaming",
+            "bidirectional-streaming",
+            "not-applicable"
+          ]
+        },
+        "duplexRedesign": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "sessionRedesign": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "reliableDeliveryRedesign": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "wcfChannelShape",
+        "grpcStreamingPattern"
+      ],
+      "additionalProperties": false
+    },
+    "behaviorMapping": {
+      "type": "object",
+      "description": "Mapping of WCF service/endpoint behaviors, instance/concurrency modes, and extensibility points.",
+      "properties": {
+        "wcfInstanceMode": {
+          "enum": [
+            "PerCall",
+            "PerSession",
+            "Single",
+            "not-applicable"
+          ]
+        },
+        "wcfConcurrencyMode": {
+          "enum": [
+            "Single",
+            "Reentrant",
+            "Multiple",
+            "not-applicable"
+          ]
+        },
+        "grpcEquivalent": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "transactionRedesign": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "observabilityMapping": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "wcfInstanceMode",
+        "wcfConcurrencyMode",
+        "grpcEquivalent"
+      ],
+      "additionalProperties": false
+    },
+    "redesignRisk": {
+      "type": "object",
+      "description": "An unsupported WCF feature that requires an architectural decision before mapping can be finalized.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^MRSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "riskLevel": {
+          "enum": [
+            "medium",
+            "high"
+          ]
+        },
+        "wcfFeature": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The specific WCF feature that has no safe direct gRPC equivalent."
+        },
+        "recommendedRedesign": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Recommended gRPC-centered redesign approach."
+        },
+        "inventoryConstructIds": {
+          "$ref": "#/$defs/idArray"
+        },
+        "evidenceIds": {
+          "$ref": "#/$defs/evidenceIdArray"
+        },
+        "questionIds": {
+          "$ref": "#/$defs/questionIdArray"
+        },
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "blocksProgression": {
+          "type": "boolean",
+          "description": "true when this risk must be resolved before specification authoring can begin."
+        },
+        "state": {
+          "enum": [
+            "open",
+            "decision-pending",
+            "resolved",
+            "deferred"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "riskLevel",
+        "wcfFeature",
+        "recommendedRedesign",
+        "inventoryConstructIds",
+        "evidenceIds",
+        "questionIds",
+        "decisionIds",
+        "blocksProgression",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "coverageSummary": {
+      "type": "object",
+      "description": "Aggregate counts and percentages reflecting completeness of the mapping.",
+      "properties": {
+        "totalConstructs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mapped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mappedWithChanges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unsupported": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deferred": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notApplicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coveragePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "(mapped + mappedWithChanges + notApplicable) / totalConstructs * 100, rounded to two decimal places."
+        },
+        "highRiskCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediumRiskCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "openRedesignRisks": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of redesignRisks with state open or decision-pending."
+        },
+        "blockingItemCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "totalConstructs",
+        "mapped",
+        "mappedWithChanges",
+        "unsupported",
+        "deferred",
+        "notApplicable",
+        "coveragePercent",
+        "highRiskCount",
+        "mediumRiskCount",
+        "openRedesignRisks",
+        "blockingItemCount"
+      ],
+      "additionalProperties": false
+    },
+    "blockingItem": {
+      "type": "object",
+      "description": "An issue that must be resolved before this mapping result can advance to the complete state.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^MBLK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "unresolved-decision",
+            "missing-evidence",
+            "unsupported-feature",
+            "schema-violation",
+            "other"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "affectedMappingIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^MMAP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "relatedDecisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "relatedRiskIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^MRSK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "state": {
+          "enum": [
+            "open",
+            "resolved"
+          ]
+        },
+        "resolvedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "description",
+        "affectedMappingIds",
+        "relatedDecisionIds",
+        "relatedRiskIds",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "deferredItem": {
+      "type": "object",
+      "description": "A mapping construct deferred to a later migration wave with documented rationale.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^MDEF-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "mappingId": {
+          "type": "string",
+          "pattern": "^MMAP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "targetWave": {
+          "$ref": "#/$defs/resolvedString"
+        },
+        "prerequisiteDecisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "mappingId",
+        "rationale",
+        "targetWave",
+        "prerequisiteDecisionIds"
+      ],
+      "additionalProperties": false
+    },
+    "nextRequiredAction": {
+      "type": "object",
+      "description": "The single next step the orchestrator or human must take to advance this artifact.",
+      "properties": {
+        "actor": {
+          "enum": [
+            "human",
+            "orchestrator",
+            "wcf-migration-decision-interviewer",
+            "grpc-migration-architect"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prerequisiteIds": {
+          "$ref": "#/$defs/idArray"
+        }
+      },
+      "required": [
+        "actor",
+        "action",
+        "prerequisiteIds"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

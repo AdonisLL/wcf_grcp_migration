@@ -7,8 +7,8 @@ description: >
   serialization, sessions, concurrency, transactions, streaming, proxies,
   consumers, deployment, and tests. Separates facts, conclusions, and unknowns;
   records file, symbol, and line evidence with confidence; flags unsupported or
-  high-risk features; and emits schemas/inventory.schema.json output. It is
-  read-only and never edits the analyzed repository.
+  high-risk features; and emits schemas/inventory.schema.json output. It writes
+  only the configured inventory artifact and never edits application code.
 ---
 
 # Skill: Inventory a WCF Codebase
@@ -33,9 +33,8 @@ implement code, or claim runtime parity.
   non-mutating inspection only. Never create, edit, delete, move, rename, or
   reformat repository files, and never run build, restore, format,
   code-generation, or package commands that mutate files, the working tree, or
-  global state. The inventory is emitted as structured output; persistence to
-  the output directory (default `docs/wcf-grpc-migration/inventory.json`) is
-  performed later by the specification-authoring stage, not here.
+  global state. The sole write allowed is the validated inventory artifact in
+  the output directory (default `docs/wcf-grpc-migration/inventory.json`).
 - **Facts vs. derived conclusions vs. unknowns.** Every assertion is a cited
   fact, a labelled inference over cited facts, or an explicit `QST-*` unknown.
   Never fill an unknown with a guess, an empty string, `0`, or `null` (unless

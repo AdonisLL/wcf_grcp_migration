@@ -592,8 +592,11 @@
             "reviewer",
             "wcf-codebase-analyst",
             "interview-stage",
+            "wcf-migration-decision-interviewer",
+            "wcf-to-grpc-mapper",
             "grpc-migration-architect",
             "publication-stage",
+            "grpc-migration-issue-publisher",
             "grpc-migration-implementer",
             "grpc-parity-validator"
           ]

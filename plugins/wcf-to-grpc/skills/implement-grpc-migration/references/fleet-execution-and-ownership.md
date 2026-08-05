@@ -9,36 +9,27 @@ this reference is the *implementer's* side of the same contract — how to
 behave correctly given the plan that reference produces, not how to produce
 it.
 
-## 1. The orchestrator plans; a human runs the slash commands
+## 1. The orchestrator plans and delegates
 
 The orchestrator role belongs to the `wcf-migration-orchestrator` agent
 ([`../../../agents/wcf-migration-orchestrator.agent.md`](../../../agents/wcf-migration-orchestrator.agent.md));
-a human operator can also fill it directly in the Copilot CLI. Neither the
-orchestrator agent nor this agent can invoke a slash command — the
-orchestrator emits an explicit operator handoff, and the operator runs
-`/fleet` and `/tasks` in their own session. This agent must work correctly
-either way: invoked by a human directly, invoked as one of several parallel
-subagents a human dispatched, or dispatched under an orchestrator-planned
-wave.
+a human operator can also fill it directly in the Copilot CLI. The orchestrator
+normally invokes one implementer per package through the supported `agent` tool.
+Neither agent can invoke a slash command. This agent must work correctly whether
+invoked directly, as an optional `/fleet` subagent, or by the orchestrator.
 
-### How the orchestrator and operator use `/fleet` and `/tasks`
+### How the orchestrator dispatches work
 
-- **`/fleet`** enables fleet mode in the Copilot CLI, which allows multiple
-  subagents to run in parallel in the current session. The operator enables
-  it, then dispatches one subagent per fleet-`eligible` work package within
-  the wave the orchestrator planned — each subagent invocation
-  supplies exactly one `WP-*` id (or an explicitly wave-and-ownership-checked
-  small set) as this agent's assigned input, per the "Required inputs"
-  section of the skill.
-- **`/tasks`** is used by the operator to view and manage the running
-  subagents/shell commands — to see which work packages are in flight, which
-  finished, and which failed. The orchestrator decides that a wave — or an
-  `integrationCheckpoint` — is complete from the handoff reports written to
-  disk, never from `/tasks` output it cannot see.
+- Each invocation supplies exactly one `WP-*` id as this agent's assigned input.
+- Concurrent invocations are permitted only for the orchestrator's verified
+  pairwise-disjoint, fleet-`eligible` set.
+- The orchestrator decides that a wave or `integrationCheckpoint` is complete
+  from handoff reports written to disk, never from a child-agent summary.
 - Work packages marked `fleet.suitability: sequential` (shared/schema
   infrastructure, coexistence routing, cutover, retirement) are dispatched
-  **one at a time**, never inside a `/fleet` parallel batch, regardless of
-  which wave they are in.
+  **one at a time**, regardless of which wave they are in.
+- `/fleet` and `/tasks` remain optional interactive operator controls; the
+  orchestrated workflow does not require them.
 
 ### What this agent must never assume
 

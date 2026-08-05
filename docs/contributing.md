@@ -85,8 +85,10 @@ failure.
 ### Agents (`agents/*.agent.md`)
 
 - Frontmatter: `name`, `description`, `tools` only. `tools` is a YAML flow
-  sequence drawn from `read`, `search`, `edit`, `execute` — request the
-  narrowest set that lets the agent do its job.
+  sequence drawn from the supported aliases `read`, `search`, `edit`,
+  `execute`, `agent`, and `web` — request the narrowest set that lets the agent
+  do its job. `agent` invokes another custom agent; it does not grant command
+  execution or permission to bypass either agent's boundaries.
 - `description` is a single folded block that states what the agent does, what
   it produces, and what it refuses. It is the text a user sees when choosing an
   agent.

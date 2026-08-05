@@ -1,7 +1,7 @@
 # WCF to gRPC migration plugin for GitHub Copilot CLI
 
-A GitHub Copilot CLI plugin marketplace containing **`wcf-to-grpc`**: five
-agents, seven skills, six artifact schemas, and a dependency-free validator that
+A GitHub Copilot CLI plugin marketplace containing **`wcf-to-grpc`**: eight
+agents, seven skills, seven artifact schemas, and a dependency-free validator that
 take a legacy .NET WCF codebase to **gRPC for .NET** — through
 evidence-backed analysis, an explicit decision record, a reviewable
 specification, gated implementation, and independent parity validation, ending
@@ -82,9 +82,11 @@ copilot plugin install OWNER/REPO
 copilot plugins list --kind plugin --kind skill
 ```
 
-Then start `copilot` and run `/agent`. Five agents should be selectable: **WCF
-Migration Orchestrator**, **WCF Codebase Analyst**, **gRPC Migration
-Architect**, **gRPC Migration Implementer**, and **gRPC Parity Validator**.
+Then start `copilot` and run `/agent`. Eight agents should be selectable: **WCF
+Migration Orchestrator**, **WCF Codebase Analyst**, **WCF Migration Decision
+Interviewer**, **WCF-to-gRPC Mapper**, **gRPC Migration Architect**, **gRPC
+Migration Issue Publisher**, **gRPC Migration Implementer**, and **gRPC Parity
+Validator**.
 
 ### Updating, reinstalling, removing
 
@@ -119,7 +121,9 @@ Orchestrator**. You can start interactively with:
 > gates that require operator action.
 
 The orchestrator will ask for missing Stage 0 values and continue in the same
-conversation after you answer. To supply the complete intake up front, use:
+conversation after you answer. It invokes each specialist agent directly, so
+you stay with the orchestrator instead of switching agents or copying handoff
+envelopes. To supply the complete intake up front, use:
 
 > Orchestrate a WCF to gRPC migration for this repository. Scope it to the
 > Orders solution and exclude the legacy Billing solution. This is a mixed
@@ -180,11 +184,11 @@ and a decision log):
 |---|---|---|---|
 | 0 | Scope and runtime intake | Orchestrator | — |
 | 1 | Read-only inventory | WCF Codebase Analyst | Scope recorded |
-| 2 | Decision interview | `interview-migration-decisions` | Inventory complete for scope |
-| 3 | WCF-to-gRPC mapping | `map-wcf-to-grpc` | Blocking decisions recorded |
+| 2 | Decision interview | WCF Migration Decision Interviewer | Inventory complete for scope |
+| 3 | WCF-to-gRPC mapping | WCF-to-gRPC Mapper | Blocking decisions recorded |
 | 4 | Architecture and specification | gRPC Migration Architect | Inventory + decisions + mapping valid |
 | 5 | **Human approval** | A reviewer | Spec valid, no unresolved blocking item |
-| 6 | Issue publication *(optional)* | `publish-migration-issues` | Spec and work packages approved |
+| 6 | Issue publication *(optional)* | gRPC Migration Issue Publisher | Spec and work packages approved |
 | 7 | Implementation waves | gRPC Migration Implementer | Approved package, satisfied dependencies, disjoint ownership |
 | 8 | Integration checkpoints | Implementation stage | Every covered package reported complete |
 | 9 | Independent parity validation | gRPC Parity Validator | Implementation reports exist |
@@ -202,17 +206,24 @@ The operator-controlled gates are:
 | Decision interview | Answer the evidence-triggered architecture question; the interview stage records the decision |
 | Specification approval | A human reviews and explicitly approves the current specification |
 | Issue publication | Approve the full preview using its matching digest and grant GitHub mutation |
-| Implementation dispatch | Run the exact `/fleet` or individual-agent handoff emitted by the orchestrator |
 | Validation environment | Provide the named environment and explicitly grant any required harness, traffic, load, network, or production permission |
 | WCF retirement | A current `retirement-ready` validation report and a separate human approval |
+
+Inventory, mapping, specification authoring, approved implementation packages,
+integration work, and validation are machine-owned stages that the orchestrator
+delegates directly. It emits a manual `/agent` handoff only as recovery when
+custom-agent delegation is unavailable or fails.
 
 ## Agents
 
 | Agent | Tools | Does | Never |
 |---|---|---|---|
-| [WCF Migration Orchestrator](plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | `read`, `search`, `edit` | Sequences all stages, enforces gates, keeps resumable run state, emits operator handoffs | Does stage work, approves anything, runs commands or slash commands |
-| [WCF Codebase Analyst](plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | `read`, `search`, `execute` | Evidence-backed inventory of contracts, config, hosts, consumers, risks | Writes to the analyzed repository; picks a target |
+| [WCF Migration Orchestrator](plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | `read`, `search`, `edit`, `agent` | Sequences all stages, invokes their owning agents, enforces gates, keeps resumable run state | Does stage work, approves anything, runs commands or slash commands |
+| [WCF Codebase Analyst](plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | `read`, `search`, `edit`, `execute` | Evidence-backed inventory of contracts, config, hosts, consumers, risks | Writes anything except its inventory artifact; picks a target |
+| [WCF Migration Decision Interviewer](plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | `read`, `search`, `edit`, `execute`, `web` | Asks one evidence-backed decision at a time and persists answers | Guesses discoverable facts, answers for the operator, or self-approves decisions |
+| [WCF-to-gRPC Mapper](plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | `read`, `search`, `edit`, `execute` | Produces the complete, persisted WCF-to-gRPC mapping result | Silently drops constructs or authors the target architecture |
 | [gRPC Migration Architect](plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | `read`, `search`, `edit`, `execute` | Target architecture, Protobuf specs, roadmap, fleet-ready work packages | Application code, issues, implementations, self-approval |
+| [gRPC Migration Issue Publisher](plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | `read`, `search`, `edit`, `execute` | Generates previews and performs explicitly confirmed, duplicate-safe publication | Publishes an unapproved package or mutates GitHub before digest confirmation |
 | [gRPC Migration Implementer](plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | `read`, `search`, `edit`, `execute` | One approved work package: protos, hosting, adapters, clients, authn/authz, interceptors, deadlines, telemetry, tests, deployment | Touches other packages' files; edits artifacts; retires WCF |
 | [gRPC Parity Validator](plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | `read`, `search`, `edit`, `execute` | Executes thirteen parity gates, produces findings with evidence, assesses retirement readiness | Fixes anything; modifies product code; grants retirement |
 
@@ -258,12 +269,11 @@ recorded decisions.
   human confirms the exact preview digest, with explicit per-operation
   permission flags. Duplicates are detected by stable id; partial publications
   resume rather than double-post; no credential is ever collected.
-- *Parallel execution* uses Copilot CLI [`/fleet`](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/fleet),
-  enabled and dispatched by **you**, monitored with `/tasks`. No agent here can
-  invoke a slash command; the orchestrator emits an explicit operator handoff
-  instead. Batches contain only work packages with pairwise-disjoint file
-  ownership — shared and schema infrastructure is always sequential and
-  single-owner.
+- *Parallel execution* is delegated by the orchestrator to one implementer per
+  work package. Concurrent calls contain only packages with pairwise-disjoint
+  file ownership; shared and schema infrastructure is always sequential and
+  single-owner. `/fleet` remains available as an optional interactive mode, but
+  it is not required for the orchestrated workflow.
 - *WCF retirement* requires a current `retirement-ready` validation report for
   the deployed revision **and** a separately recorded human approval. Zero
   unknown callers, rehearsed rollback, and production-equivalent operational

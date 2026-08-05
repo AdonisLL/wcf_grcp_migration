@@ -21,17 +21,26 @@ in the [repository README](../../README.md). Deeper documentation:
   dependency-ordered implementation waves, integration checkpoints, independent
   parity validation, and the retirement gate. It enforces every approval and
   artifact-state gate, keeps resumable run state in `orchestration-state.json`,
-  and delegates each stage to its owning agent. It writes no artifact but its
-  own state, executes no commands, approves nothing, and cannot invoke
-  `/fleet`, `/tasks`, or any other slash command — it emits explicit operator
-  handoffs instead.
+  and directly delegates each machine-owned stage to its owning custom agent.
+  It writes no artifact but its own state, executes no commands, approves
+  nothing, and cannot invoke `/fleet`, `/tasks`, or any other slash command.
 - [`agents/wcf-codebase-analyst.agent.md`](agents/wcf-codebase-analyst.agent.md)
-  is a strictly read-only analyst that inventories a WCF codebase.
+  is read-only with respect to application code and writes only its validated
+  inventory artifact.
+- [`agents/wcf-migration-decision-interviewer.agent.md`](agents/wcf-migration-decision-interviewer.agent.md)
+  asks one evidence-triggered architecture question at a time and incrementally
+  persists the operator's answers.
+- [`agents/wcf-to-grpc-mapper.agent.md`](agents/wcf-to-grpc-mapper.agent.md)
+  produces a deterministic, complete mapping artifact from the inventory and
+  decision log.
 - [`agents/grpc-migration-architect.agent.md`](agents/grpc-migration-architect.agent.md)
   turns an approved inventory and decision log into the target architecture,
   Protobuf contract specifications, migration roadmap, and fleet-ready work
   packages. It writes migration artifacts only — never application code,
   issues, or implementations.
+- [`agents/grpc-migration-issue-publisher.agent.md`](agents/grpc-migration-issue-publisher.agent.md)
+  renders the full issue preview and performs duplicate-safe GitHub publication
+  only after exact digest confirmation and explicit mutation permission.
 - [`agents/grpc-migration-implementer.agent.md`](agents/grpc-migration-implementer.agent.md)
   implements exactly one approved, fleet-ready work package at a time from an
   approved `migration-spec.json` — `.proto`/codegen, gRPC for .NET
@@ -90,8 +99,8 @@ in the [repository README](../../README.md). Deeper documentation:
   interceptors/errors, deadlines/retries/idempotency, telemetry/health,
   streaming/state/transaction redesign, tests, and deployment;
   [fleet execution and ownership](skills/implement-grpc-migration/references/fleet-execution-and-ownership.md)
-  (including how the orchestrator plans waves and how a human operator runs
-  Copilot CLI `/fleet` and `/tasks`);
+  (including how the orchestrator plans and directly delegates safe waves, with
+  Copilot CLI `/fleet` and `/tasks` remaining optional operator controls);
   [validation and gates](skills/implement-grpc-migration/references/validation-and-gates.md);
   and the [handoff report contract](skills/implement-grpc-migration/references/handoff-report-contract.md).
 - [`skills/validate-grpc-parity/`](skills/validate-grpc-parity/) defines the
@@ -107,8 +116,8 @@ in the [repository README](../../README.md). Deeper documentation:
 ## Schemas, tests, and tooling
 
 - [`schemas/`](schemas/) contains strict JSON Schema Draft 2020-12 contracts
-  for inventory, decisions, migration specifications/work packages, issue
-  previews, orchestration run state, and the
+  for inventory, decisions, persisted mappings, migration
+  specifications/work packages, issue previews, orchestration run state, and the
   [shared vocabulary](schemas/common.schema.json).
 - [`tests/`](tests/) contains static legacy WCF fixture repositories, expected
   analysis/mapping/specification assertions, local validation instructions,

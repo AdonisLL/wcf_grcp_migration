@@ -23,10 +23,12 @@ architecture, and work-package documents.
 Expected input: the `inventory` object produced by `inventory-wcf-codebase`
 and the `decisions` object produced by `interview-migration-decisions`.
 
-Expected output: a mapping result covering, per construct, a `feature`
-mapping, a `type` mapping, a `security` mapping, an `error`/`streaming`
-mapping, and a list of `unsupported_features` that require an architectural
-decision before specification authoring can proceed.
+Expected output: `docs/wcf-grpc-migration/mapping-result.json` (or the
+configured output path), valid against
+[`../../schemas/mapping-result.schema.json`](../../schemas/mapping-result.schema.json).
+It covers, per construct, the applicable `feature`, Protobuf `type`, `security`,
+and `error`/`streaming` mappings, plus unsupported features that require an
+architectural decision before specification authoring can proceed.
 
 ## Mandatory product rule
 
@@ -52,9 +54,12 @@ safe direct gRPC equivalent, this skill must:
    `references/error-and-streaming-mapping.md`.
 6. For hosting topology, coexistence, and rollout constraints, apply
    `references/hosting-and-rollout.md`.
-7. Assemble the structured mapping result and populate `unsupported_features`
+7. Assemble the structured mapping result and populate `unsupportedFeatures`
    for every `HIGH`-risk or `UNSUPPORTED` construct.
-8. Return the result to `grpc-migration-architect` for specification authoring.
+8. Validate and persist the deterministic mapping artifact. Preserve stable ids
+   and generation metadata when the semantic inputs are unchanged.
+9. Return its path, digest, coverage, blockers, and next required action to the
+   caller for specification authoring.
 
 ## Reference index
 

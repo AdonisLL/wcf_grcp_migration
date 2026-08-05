@@ -14,7 +14,7 @@ $pluginManifestPath = Join-Path $pluginRoot "plugin.json"
 $fixtureRoot = Join-Path $pluginRoot "tests/fixtures"
 $docsRoot = Join-Path $repoRoot "docs"
 $fixtureSchemaPath = Join-Path $fixtureRoot "fixture-expectations.schema.json"
-$stableIdPattern = "^(?:INV|DLOG|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+$stableIdPattern = "^(?:INV|DLOG|MRES|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
 
 function Add-Check {
     param(
@@ -353,6 +353,19 @@ $skillFiles = @(Get-ChildItem -LiteralPath $skillsPath -Recurse -File -Filter "S
 $agentFiles = @(Get-ChildItem -LiteralPath $agentsPath -File -Filter "*.agent.md")
 Add-Check ($skillFiles.Count -gt 0) "No skills were discovered from plugin.json."
 Add-Check ($agentFiles.Count -gt 0) "No agents were discovered from plugin.json."
+Add-Check ($agentFiles.Count -eq 8) "Expected 8 plugin agents, found $($agentFiles.Count)."
+foreach ($requiredAgent in @(
+    "wcf-migration-orchestrator.agent.md",
+    "wcf-codebase-analyst.agent.md",
+    "wcf-migration-decision-interviewer.agent.md",
+    "wcf-to-grpc-mapper.agent.md",
+    "grpc-migration-architect.agent.md",
+    "grpc-migration-issue-publisher.agent.md",
+    "grpc-migration-implementer.agent.md",
+    "grpc-parity-validator.agent.md"
+)) {
+    Add-Check ($agentFiles.Name -contains $requiredAgent) "Required plugin agent '$requiredAgent' is missing."
+}
 
 $skillNames = @()
 foreach ($skillFile in $skillFiles) {
@@ -388,7 +401,11 @@ foreach ($agentFile in $agentFiles) {
             ForEach-Object { $_.Trim() } |
             Where-Object { $_ }
         foreach ($tool in $tools) {
-            Add-Check ($tool -in @("read", "search", "edit", "execute")) "Agent $($agentFile.FullName) declares unsupported tool '$tool'."
+            Add-Check ($tool -in @("read", "search", "edit", "execute", "agent", "web")) "Agent $($agentFile.FullName) declares unsupported tool '$tool'."
+        }
+        if ($agentFile.Name -eq "wcf-migration-orchestrator.agent.md") {
+            Add-Check ($tools -contains "agent") "The migration orchestrator must declare the agent delegation tool."
+            Add-Check ($tools -notcontains "execute") "The migration orchestrator must not declare the execute tool."
         }
     }
 }
@@ -474,6 +491,10 @@ $schemaValidationPairs = @(
     @{
         Json = Join-Path $pluginRoot "skills/publish-migration-issues/examples/issue-set.example.json"
         Schema = Join-Path $pluginRoot "schemas/issue-set.schema.json"
+    },
+    @{
+        Json = Join-Path $pluginRoot "skills/map-wcf-to-grpc/examples/mapping-result.example.json"
+        Schema = Join-Path $pluginRoot "schemas/mapping-result.schema.json"
     }
 )
 foreach ($expectedFile in Get-ChildItem -LiteralPath $fixtureRoot -Recurse -File -Filter "expected.json") {

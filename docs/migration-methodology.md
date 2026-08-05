@@ -52,7 +52,8 @@ it is your first honest view of how hard this migration will be.
 
 ## 3. Stage 2 — Decision interview
 
-**Skill:** `interview-migration-decisions` · **Output:** `decision-log.json`
+**Agent:** WCF Migration Decision Interviewer · **Skill:**
+`interview-migration-decisions` · **Output:** `decision-log.json`
 
 Only questions the repository cannot answer are asked. Each question states the
 evidence that triggered it, the consequence of each option, and a recommended
@@ -71,7 +72,8 @@ is recorded with who approved it — the plugin never infers an approver.
 
 ## 4. Stage 3 — Mapping
 
-**Skill:** `map-wcf-to-grpc` · **Output:** mapping result and redesign risks
+**Agent:** WCF-to-gRPC Mapper · **Skill:** `map-wcf-to-grpc` · **Output:**
+`mapping-result.json`
 
 Every discovered construct receives a feature mapping, a type mapping, a
 security mapping, and an error/streaming mapping. Constructs with no safe
@@ -157,7 +159,8 @@ ownership; retirement criteria; open risks and deferred items.
 
 ## 7. Stage 6 — Optional GitHub Issue publication
 
-**Skill:** `publish-migration-issues` · **Output:** `issue-set.json`, previews
+**Agent:** gRPC Migration Issue Publisher · **Skill:**
+`publish-migration-issues` · **Output:** `issue-set.json`, previews
 
 Publication is optional. When you use it, the safeguards are absolute:
 

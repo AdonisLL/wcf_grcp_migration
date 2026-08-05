@@ -6,7 +6,7 @@
   "$defs": {
     "stableId": {
       "type": "string",
-      "pattern": "^(INV|DLOG|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      "pattern": "^(INV|DLOG|MRES|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF)-[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "relativePath": {
       "type": "string",
@@ -444,6 +444,7 @@
           "enum": [
             "inventory",
             "decision-log",
+            "mapping-result",
             "migration-spec",
             "issue-set",
             "implementation-report",

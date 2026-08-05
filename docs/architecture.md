@@ -30,7 +30,7 @@ generates see [output-contracts.md](output-contracts.md).
 ```text
 plugins/wcf-to-grpc/
 ├── plugin.json          Manifest: name, version, keywords, component paths
-├── agents/*.agent.md    Personas, boundaries, and handoffs (5 agents)
+├── agents/*.agent.md    Personas, boundaries, and handoffs (8 agents)
 ├── skills/*/SKILL.md    Normative procedures, with references/ and templates/
 ├── schemas/*.json       JSON Schema Draft 2020-12 artifact contracts
 ├── tests/               Static WCF fixtures, expectations, smoke-test guidance
@@ -39,7 +39,7 @@ plugins/wcf-to-grpc/
 
 | Layer | Answers | Loaded when |
 |---|---|---|
-| Agent (`.agent.md`) | *Who am I, what may I touch, what do I refuse, who do I hand to?* | The user selects the agent, or an orchestrator handoff names it |
+| Agent (`.agent.md`) | *Who am I, what may I touch, what do I refuse, who do I hand to?* | The user selects it, or the orchestrator invokes it through the `agent` tool |
 | Skill (`SKILL.md`) | *What is the ordered procedure and its completion criteria?* | The agent loads its skill |
 | Reference (`references/*.md`) | *What are the detailed rules, tables, and mappings?* | The skill directs the agent to read it |
 | Template (`templates/*.md`) | *What exact shape does the rendered output take?* | Output is written |
@@ -62,23 +62,27 @@ Frontmatter is deliberately minimal and validated by
 [`Validate-Plugin.ps1`](../plugins/wcf-to-grpc/scripts/Validate-Plugin.ps1):
 
 - Skills: `name` (must equal the directory name) and `description`.
-- Agents: `name`, `description`, and `tools`, where `tools` is a subset of
-  `read`, `search`, `edit`, `execute`.
+- Agents: `name`, `description`, and `tools`, using the narrowest supported
+  aliases from `read`, `search`, `edit`, `execute`, `agent`, and `web`.
 
 ## 3. Agents and their tool boundaries
 
 | Agent | Tools | May write | Never |
 |---|---|---|---|
-| [WCF Codebase Analyst](../plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | `read`, `search`, `execute` | Nothing in the analyzed repository | Mutate files, build, restore, or format; choose a target |
+| [WCF Codebase Analyst](../plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | `read`, `search`, `edit`, `execute` | `inventory.json` only | Mutate application files, build, restore, or format; choose a target |
+| [WCF Migration Decision Interviewer](../plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | `read`, `search`, `edit`, `execute`, `web` | `decision-log.json` | Ask discoverable facts, answer for the operator, infer approval |
+| [WCF-to-gRPC Mapper](../plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | `read`, `search`, `edit`, `execute` | `mapping-result.json` | Drop a construct, resolve a decision, author architecture |
 | [gRPC Migration Architect](../plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | `read`, `search`, `edit`, `execute` | Migration artifacts in the output directory | Application code, issues, implementations, approvals |
+| [gRPC Migration Issue Publisher](../plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | `read`, `search`, `edit`, `execute` | Issue preview and publication artifacts | Mutate GitHub without approved inputs, exact confirmation, and permission |
 | [gRPC Migration Implementer](../plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | `read`, `search`, `edit`, `execute` | Only its assigned work package's `exclusive-write` paths | Migration artifacts, other packages' paths, WCF retirement without evidence |
 | [gRPC Parity Validator](../plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | `read`, `search`, `edit`, `execute` | Only `validation-reports/` | Application code, upstream artifacts, fixing findings, granting retirement |
-| [WCF Migration Orchestrator](../plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | `read`, `search`, `edit` | Only `orchestration-state.json` and the optional status view | Any stage work, any approval, any command execution, any slash command |
+| [WCF Migration Orchestrator](../plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | `read`, `search`, `edit`, `agent` | Only `orchestration-state.json` and the optional status view | Any stage work, any approval, any command execution, any slash command |
 
 The orchestrator deliberately has **no `execute` tool**. It coordinates and
-records; every executed command belongs to a stage agent or to the operator.
-That single omission removes an entire class of failure in which a coordinator
-"just builds it quickly" and silently becomes an implementer.
+records, while `agent` lets it invoke a specialist with a bounded envelope.
+Every executed command belongs to that stage agent or to the operator. Keeping
+`execute` absent removes an entire class of failure in which a coordinator "just
+builds it quickly" and silently becomes an implementer.
 
 `execute` on the analyst is limited by its agent contract to non-mutating
 inspection. The tool alias grants capability; the agent contract, the skill,
@@ -91,7 +95,7 @@ aliases may be declared at all.
 |---|---|---|
 | [`inventory-wcf-codebase`](../plugins/wcf-to-grpc/skills/inventory-wcf-codebase/SKILL.md) | Analysis | `inventory.json` |
 | [`interview-migration-decisions`](../plugins/wcf-to-grpc/skills/interview-migration-decisions/SKILL.md) | Decisions | `decision-log.json` |
-| [`map-wcf-to-grpc`](../plugins/wcf-to-grpc/skills/map-wcf-to-grpc/SKILL.md) | Mapping | Mapping result + redesign risks |
+| [`map-wcf-to-grpc`](../plugins/wcf-to-grpc/skills/map-wcf-to-grpc/SKILL.md) | Mapping | `mapping-result.json` + redesign risks |
 | [`author-migration-specs`](../plugins/wcf-to-grpc/skills/author-migration-specs/SKILL.md) | Specification | `migration-spec.json` + rendered Markdown |
 | [`publish-migration-issues`](../plugins/wcf-to-grpc/skills/publish-migration-issues/SKILL.md) | Publication | `issue-set.json` + previews |
 | [`implement-grpc-migration`](../plugins/wcf-to-grpc/skills/implement-grpc-migration/SKILL.md) | Implementation | Code + `implementation-reports/` |
@@ -159,17 +163,18 @@ substrate for implementation waves — but never as the source of safety.
   configuration, solution and package-management files, host bootstrap and DI,
   the interceptor chain, auth configuration, shared-state migrations,
   gateway/proxy routing, coexistence routing, cutover, and retirement.
-- **A human runs the slash commands.** No agent in this plugin can invoke
-  `/fleet` or `/tasks`; they are interactive CLI features. The orchestrator
-  emits an explicit operator handoff listing exactly which packages may run in
-  the batch and which must run alone.
+- **The orchestrator delegates work packages directly.** It invokes one
+  implementer per package through the `agent` tool and may issue concurrent
+  calls only for the verified parallel-eligible set. `/fleet` and `/tasks`
+  remain optional interactive operator controls, not orchestration
+  prerequisites.
 - **Each implementer is safe in isolation.** Its wave gating, ownership
   claiming (via `<work-package-id>.claim.json`), and conflict detection derive
   entirely from `migration-spec.json` — never from assumptions about how it was
   launched. A wave dispatched by hand is exactly as safe as one dispatched in a
   fleet batch.
-- **Completion is read from reports on disk**, not inferred from `/tasks`
-  output the orchestrator cannot see.
+- **Completion is read from reports on disk**, not inferred from a child-agent
+  summary or `/tasks` output.
 
 Details: [fleet-execution-and-ownership.md](../plugins/wcf-to-grpc/skills/implement-grpc-migration/references/fleet-execution-and-ownership.md).
 

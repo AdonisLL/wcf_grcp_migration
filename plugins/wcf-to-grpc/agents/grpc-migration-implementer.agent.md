@@ -178,31 +178,29 @@ Work through the ordered stages in the skill. In summary:
    applicable) per
    [handoff-report-contract.md](../skills/implement-grpc-migration/references/handoff-report-contract.md).
 
-## Fleet execution: `/fleet` and `/tasks`
+## Delegated and fleet execution
 
 The orchestrator role belongs to
 [`wcf-migration-orchestrator`](wcf-migration-orchestrator.agent.md); a human
-operator may also fill it directly in the Copilot CLI. Either way, the
-orchestrator plans and hands off, and a human runs the slash commands. The
-expected pattern:
+operator may also fill it directly in the Copilot CLI. Normally the orchestrator
+invokes this custom agent through its `agent` tool, once per approved work
+package. It may issue concurrent invocations for a verified set of
+fleet-`eligible`, non-conflicting packages.
 
-- The operator enables **`/fleet`** to run multiple subagents in
-  parallel, then dispatches one subagent per fleet-`eligible` work package
-  within a wave, each given exactly one `WP-*` id as this agent's assignment.
-- The operator uses **`/tasks`** to observe which dispatched subagents
-  are running, finished, or failed; the orchestrator decides when a wave — or
-  an `integrationCheckpoint` — is complete from the handoff reports on disk.
+- Each invocation receives exactly one `WP-*` id as this agent's assignment.
+- The orchestrator decides when a wave or `integrationCheckpoint` is complete
+  from handoff reports on disk, never from child-agent summaries.
 - `sequential`-suitability packages (shared/schema infrastructure,
   coexistence routing, cutover, retirement) are dispatched one at a time,
-  never inside a parallel `/fleet` batch.
+  never in concurrent agent calls.
 
 **This agent cannot invoke `/fleet`, `/tasks`, or any other slash command
 itself** — these are interactive Copilot CLI features, not tools available to
 an agent, and dispatch/sequencing is the orchestrator's responsibility, not
-this agent's. Neither can the orchestrator agent: it emits an operator handoff
-instead. This agent behaves identically and correctly whether it was started
-as a lone invocation, as one of several parallel `/fleet` subagents, or by the
-orchestrator agent — its safety properties come entirely from
+this agent's. The orchestrator's supported `agent` delegation tool is not a
+slash command. This agent behaves identically and correctly whether it was
+started directly, as a `/fleet` subagent, or by the orchestrator — its safety
+properties come entirely from
 correctly reading `migration-spec.json`'s wave, dependency, and ownership
 data, never from assuming anything about how it was launched. Full detail:
 [fleet-execution-and-ownership.md](../skills/implement-grpc-migration/references/fleet-execution-and-ownership.md).

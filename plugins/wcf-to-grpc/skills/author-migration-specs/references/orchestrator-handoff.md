@@ -17,8 +17,9 @@ checked-in JSON Schema; the artifacts it points at are schema-validated.
    the declared scope.
 2. Decision log exists and validates against
    [`decision-log.schema.json`](../../../schemas/decision-log.schema.json).
-3. The mapping result from `map-wcf-to-grpc` is available, including every
-   unsupported-feature risk.
+3. `mapping-result.json` exists, validates against
+   [`mapping-result.schema.json`](../../../schemas/mapping-result.schema.json),
+   and includes every unsupported-feature risk.
 4. The output directory is writable and contains any prior artifacts for this
    repository.
 
@@ -36,10 +37,11 @@ If a precondition fails, the stage returns `status: blocked` with
   "inputs": {
     "inventoryPath": "docs/wcf-grpc-migration/inventory.json",
     "decisionLogPath": "docs/wcf-grpc-migration/decision-log.json",
-    "mappingResult": "<map-wcf-to-grpc result object or path>"
+    "mappingResultPath": "docs/wcf-grpc-migration/mapping-result.json"
   },
   "mode": "full",
   "approvalIntent": "none",
+  "humanApproval": null,
   "constraints": {
     "allowNetwork": false,
     "maxParallelWorkPackages": 4
@@ -49,13 +51,16 @@ If a precondition fails, the stage returns `status: blocked` with
 
 - `mode` is `full` or `incremental`; both preserve stable IDs, field numbers,
   reservations, and approvals.
-- `approvalIntent` is `none` or `request-review`. The stage never sets
-  `approved`; only a human approval recorded in the decision log and artifact
-  approval does that.
+- `approvalIntent` is `none`, `request-review`, or `record-human-approval`.
+  `record-human-approval` requires `humanApproval` with the exact current
+  `artifactDigest`, `approvedArtifactId`, `approvedWorkPackageIds`,
+  `reviewerIdentity`, `approvedAt`, and direct `statement`. The stage verifies
+  those values and persists the human approval without regenerating semantic
+  content. It never chooses or infers approval.
 - Unknown or omitted fields fall back to the documented defaults
   (`outputDirectory` = `docs/wcf-grpc-migration`, `mode` = `full`,
-  `approvalIntent` = `none`, full repository scope). State assumed defaults in
-  the response.
+  `approvalIntent` = `none`, `humanApproval` = `null`, full repository scope).
+  State assumed defaults in the response.
 
 ## Outbound response
 

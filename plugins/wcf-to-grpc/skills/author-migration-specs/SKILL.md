@@ -32,9 +32,10 @@ Issues, implement the migration, execute validation, or claim runtime parity.
    with `analysisState: complete` for every in-scope service.
 2. A decision log conforming to
    [`../../schemas/decision-log.schema.json`](../../schemas/decision-log.schema.json).
-3. The mapping result produced using
-   [`../map-wcf-to-grpc/SKILL.md`](../map-wcf-to-grpc/SKILL.md), including every
-   unsupported-feature risk and its required redesign.
+3. A mapping result conforming to
+   [`../../schemas/mapping-result.schema.json`](../../schemas/mapping-result.schema.json),
+   produced using [`../map-wcf-to-grpc/SKILL.md`](../map-wcf-to-grpc/SKILL.md)
+   and including every unsupported-feature risk and its required redesign.
 4. The analyzed repository root, the migration scope, and an optional output
    directory. Use `docs/wcf-grpc-migration/` when none is supplied.
 5. Any prior artifacts already present in the output directory.
@@ -58,8 +59,11 @@ risk IDs that must resolve them.
   `.proto` files, tests, build scripts, or CI definitions. Specify changes;
   do not make them.
 - **Approved inputs only.** Apply approved decisions. Never answer an open
-  question, promote a `proposed` decision to `approved`, or approve the
-  specification. Approval is a human act recorded in the artifacts.
+  question, promote a `proposed` decision to `approved`, or decide that the
+  specification is approved. Approval is a human act. This skill may persist
+  that act only in `record-human-approval` mode with the exact current digest,
+  explicitly approved ids, reviewer identity, and direct approval statement;
+  it must not change semantic content in that mode.
 - **gRPC is the fixed target.** Every design lands on gRPC over HTTP/2 on
   modern .NET. A queue, cache, gateway, SOAP adapter, JSON-transcoding surface,
   or saga coordinator may appear only as an approved supporting component with
@@ -211,12 +215,11 @@ required human action.
 | `contracts/<spec-id>.md` | Rendered per-service contract specification |
 | `roadmap.md` | Rendered phases, waves, and retirement gates |
 | `work-packages/<work-package-id>.md` | Rendered implementable work packages |
-| `issue-set.json` | Unpublished, issue-ready preview derived from approved work packages |
 
-`inventory.json` and `decision-log.json` are persisted here from the upstream
-stages without semantic change. `issue-set.json` stays `draft`/`previewed`;
-creating issues or labels requires the separate confirmation-gated publication
-skill.
+`inventory.json`, `decision-log.json`, and `mapping-result.json` are validated
+upstream inputs owned by their respective stage agents. This skill reads but
+never rewrites them. Issue previews and `issue-set.json` belong exclusively to
+the confirmation-gated publication agent and skill.
 
 ## Templates
 
@@ -249,7 +252,8 @@ reservations, and a work-package DAG is in
   coexistence, and integration checkpoints.
 - The work-package dependency graph is acyclic and fleet eligibility is granted
   only when dependencies are satisfied and write ownership does not overlap.
-- Issue payloads are derived from approved work packages and remain unpublished.
+- Work packages contain the metadata the publication stage needs to derive issue
+  payloads; this skill does not render or publish them.
 - Validation steps are `not-run`; WCF retirement remains blocked until
   implementation and parity evidence exists.
 

@@ -1,28 +1,29 @@
 # Migration Artifact Contract Reference
 
-This reference defines the artifact surfaces written by
-`author-migration-specs`. Normative machine validation is provided by the
-JSON Schema Draft 2020-12 files in `../../../schemas/`:
+This reference defines the upstream artifacts consumed and the specification
+artifacts written by `author-migration-specs`. Normative machine validation is
+provided by the JSON Schema Draft 2020-12 files in `../../../schemas/`:
 
 - [`common.schema.json`](../../../schemas/common.schema.json)
 - [`inventory.schema.json`](../../../schemas/inventory.schema.json)
 - [`decision-log.schema.json`](../../../schemas/decision-log.schema.json)
+- [`mapping-result.schema.json`](../../../schemas/mapping-result.schema.json)
 - [`migration-spec.schema.json`](../../../schemas/migration-spec.schema.json)
-- [`issue-set.schema.json`](../../../schemas/issue-set.schema.json)
 
 All relative paths in artifacts use `/`, are repository-relative, and must
 not contain drive letters, leading slashes, or `..` traversal.
 
 ## Default output layout
 
-When no output directory is specified, write:
+When no output directory is specified, read the three upstream inputs and write
+only the specification outputs shown below:
 
 ```text
 docs/wcf-grpc-migration/
-  inventory.json
-  decision-log.json
+  inventory.json                    read-only input (analyst-owned)
+  decision-log.json                 read-only input (interviewer-owned)
+  mapping-result.json               read-only input (mapper-owned)
   migration-spec.json
-  issue-set.json
   assessment.md
   decisions.md
   target-architecture.md
@@ -35,8 +36,8 @@ docs/wcf-grpc-migration/
 
 Lowercase stable IDs are safe filenames, for example
 `contracts/spec-order-service.md` and
-`work-packages/wp-order-service-server.md`. `issue-set.json` is an
-issue-ready preview only; this skill never publishes it.
+`work-packages/wp-order-service-server.md`. `issue-set.json` and its previews
+are owned and written only by the publication agent and skill.
 
 ## Shared envelope
 
@@ -45,7 +46,7 @@ Every structured artifact contains:
 | Field | Meaning |
 |---|---|
 | `schemaVersion` | Contract version. Initially `1.0.0`. |
-| `artifactType` | `inventory`, `decision-log`, `migration-spec`, or `issue-set`. |
+| `artifactType` | The schema-specific type, including `inventory`, `decision-log`, `mapping-result`, or `migration-spec` for this stage's inputs and outputs. |
 | `artifactId` | Stable artifact identifier. |
 | `generation` | Generator identity/version, UTC generation time, source revision, canonical source digest, and full/incremental mode. |
 | `approval` | Explicit artifact state: draft, review requested, approved, rejected, or superseded. |

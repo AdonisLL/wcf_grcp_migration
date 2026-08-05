@@ -1,0 +1,554 @@
+{
+  "schemaVersion": "1.0.0",
+  "artifactType": "mapping-result",
+  "artifactId": "MRES-contoso-orders",
+  "approval": {
+    "state": "draft"
+  },
+  "generation": {
+    "generator": "map-wcf-to-grpc",
+    "generatorVersion": "1.0.0",
+    "generatedAt": "2025-06-15T10:30:00Z",
+    "sourceRevision": {
+      "state": "unknown",
+      "reason": "The example is not tied to a repository revision."
+    },
+    "sourceDigest": "sha256:a3f2c1d4e5b6a7f8e9d0c1b2a3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2",
+    "mode": "full"
+  },
+  "inventoryId": "INV-contoso-orders",
+  "decisionLogId": "DLOG-contoso-orders",
+  "repository": {
+    "repositoryId": "REPO-contoso-orders",
+    "root": ".",
+    "analyzedPaths": [
+      "src/Contoso.Orders",
+      "src/Contoso.Orders.Host",
+      "src/Contoso.Orders.Client"
+    ]
+  },
+  "status": {
+    "state": "blocked",
+    "blockedReason": "Duplex callback redesign decision DEC-duplex-strategy is still unresolved.",
+    "blockingItemIds": [
+      "MBLK-duplex-decision"
+    ]
+  },
+  "citations": [
+    {
+      "id": "EVD-order-service-contract",
+      "kind": "code",
+      "claim": "IOrderService declares SubmitOrder (unary) and SubscribeOrderStatus (duplex callback) operations.",
+      "locator": "src/Contoso.Orders/IOrderService.cs#L14-L58",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-order-service-binding",
+      "kind": "configuration",
+      "claim": "The order endpoint uses wsHttpBinding with message-level security and Windows credentials.",
+      "locator": "src/Contoso.Orders.Host/app.config#L22-L64",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-order-request-contract",
+      "kind": "code",
+      "claim": "OrderRequest carries System.Decimal TotalAmount and nullable System.DateTime? RequestedDeliveryDate.",
+      "locator": "src/Contoso.Orders/Contracts/OrderRequest.cs#L10-L44",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-order-validation-fault",
+      "kind": "code",
+      "claim": "OrderValidationFault is declared as a FaultContract on SubmitOrder.",
+      "locator": "src/Contoso.Orders/Faults/OrderValidationFault.cs#L7-L21",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-order-status-callback",
+      "kind": "code",
+      "claim": "IOrderStatusCallback pushes OrderStatusUpdated events back to the connected client.",
+      "locator": "src/Contoso.Orders/IOrderStatusCallback.cs#L8-L19",
+      "confidence": "high"
+    },
+    {
+      "id": "EVD-target-runtime-confirmation",
+      "kind": "user-statement",
+      "claim": "Reviewer confirmed .NET 10 LTS as the target runtime for all migrated services.",
+      "locator": "user-statement:target-runtime-review",
+      "confidence": "high"
+    }
+  ],
+  "traceLinks": [
+    {
+      "id": "TRC-mres-from-inv",
+      "from": {
+        "artifactType": "decision-log",
+        "id": "DLOG-contoso-orders"
+      },
+      "relation": "derived-from",
+      "to": {
+        "artifactType": "inventory",
+        "id": "INV-contoso-orders"
+      },
+      "state": "active",
+      "evidenceIds": [
+        "EVD-order-service-contract"
+      ]
+    }
+  ],
+  "mappings": [
+    {
+      "id": "MMAP-order-service-contract",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "SVC-order-service",
+        "displayName": "IOrderService"
+      },
+      "constructKind": "service-contract",
+      "featureMapping": {
+        "outcome": "mapped-with-changes",
+        "grpcTarget": {
+          "kind": "service",
+          "packageName": {
+            "state": "known",
+            "value": "contoso.orders.v1"
+          },
+          "protoFile": {
+            "state": "known",
+            "value": "proto/contoso/orders/v1/orders.proto"
+          },
+          "symbolName": {
+            "state": "known",
+            "value": "OrderService"
+          }
+        },
+        "adaptationNotes": "SubmitOrder maps to a unary RPC. SubscribeOrderStatus has no direct WCF duplex equivalent in gRPC; see MRSK-duplex-callback for the required redesign.",
+        "riskLevel": "high"
+      },
+      "evidenceIds": [
+        "EVD-order-service-contract"
+      ],
+      "decisionIds": [
+        "DEC-duplex-strategy"
+      ],
+      "redesignRiskIds": [
+        "MRSK-duplex-callback"
+      ],
+      "notes": "Service boundary is preserved 1:1; only the duplex operation requires a streaming redesign."
+    },
+    {
+      "id": "MMAP-submit-order-op",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "OP-submit-order",
+        "displayName": "IOrderService.SubmitOrder"
+      },
+      "constructKind": "operation-contract",
+      "featureMapping": {
+        "outcome": "mapped",
+        "grpcTarget": {
+          "kind": "rpc",
+          "packageName": {
+            "state": "known",
+            "value": "contoso.orders.v1"
+          },
+          "protoFile": {
+            "state": "known",
+            "value": "proto/contoso/orders/v1/orders.proto"
+          },
+          "symbolName": {
+            "state": "known",
+            "value": "OrderService.SubmitOrder"
+          },
+          "rpcPattern": "unary"
+        },
+        "riskLevel": "low"
+      },
+      "errorMapping": {
+        "wcfFaultContractIds": [
+          "DC-order-validation-fault"
+        ],
+        "grpcStatusCode": {
+          "state": "known",
+          "value": "INVALID_ARGUMENT"
+        },
+        "richErrorDetailType": {
+          "state": "known",
+          "value": "contoso.orders.v1.OrderValidationError"
+        },
+        "faultToStatusMapping": [
+          {
+            "wcfFaultType": "OrderValidationFault",
+            "grpcStatusCode": "INVALID_ARGUMENT",
+            "richDetailProtoType": {
+              "state": "known",
+              "value": "contoso.orders.v1.OrderValidationError"
+            }
+          }
+        ]
+      },
+      "evidenceIds": [
+        "EVD-order-service-contract",
+        "EVD-order-validation-fault"
+      ],
+      "decisionIds": [],
+      "redesignRiskIds": []
+    },
+    {
+      "id": "MMAP-subscribe-order-status-op",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "OP-subscribe-order-status",
+        "displayName": "IOrderService.SubscribeOrderStatus"
+      },
+      "constructKind": "operation-contract",
+      "featureMapping": {
+        "outcome": "unsupported",
+        "riskLevel": "high"
+      },
+      "streamingMapping": {
+        "wcfChannelShape": "IDuplexChannel",
+        "grpcStreamingPattern": "server-streaming",
+        "duplexRedesign": {
+          "state": "unknown",
+          "reason": "Redesign pattern (server-streaming vs. bidirectional) depends on DEC-duplex-strategy.",
+          "questionIds": [
+            "QST-duplex-push-or-bidi"
+          ]
+        }
+      },
+      "evidenceIds": [
+        "EVD-order-status-callback"
+      ],
+      "decisionIds": [
+        "DEC-duplex-strategy"
+      ],
+      "redesignRiskIds": [
+        "MRSK-duplex-callback"
+      ],
+      "notes": "Cannot finalize until DEC-duplex-strategy is approved."
+    },
+    {
+      "id": "MMAP-order-request-dc",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "DC-order-request",
+        "displayName": "OrderRequest"
+      },
+      "constructKind": "data-contract",
+      "featureMapping": {
+        "outcome": "mapped-with-changes",
+        "grpcTarget": {
+          "kind": "message",
+          "packageName": {
+            "state": "known",
+            "value": "contoso.orders.v1"
+          },
+          "protoFile": {
+            "state": "known",
+            "value": "proto/contoso/orders/v1/orders.proto"
+          },
+          "symbolName": {
+            "state": "known",
+            "value": "SubmitOrderRequest"
+          }
+        },
+        "adaptationNotes": "System.Decimal TotalAmount maps to a custom DecimalValue message (string-encoded). Nullable DateTime? maps to optional google.protobuf.Timestamp.",
+        "riskLevel": "medium"
+      },
+      "protoTypeMapping": {
+        "wcfClrType": "System.Decimal",
+        "protoType": {
+          "state": "known",
+          "value": "contoso.common.DecimalValue"
+        },
+        "nullabilityStrategy": "not-applicable",
+        "specialHandling": "decimal-as-custom-message"
+      },
+      "evidenceIds": [
+        "EVD-order-request-contract"
+      ],
+      "decisionIds": [
+        "DEC-decimal-encoding"
+      ],
+      "redesignRiskIds": []
+    },
+    {
+      "id": "MMAP-requested-delivery-date-field",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "FLD-requested-delivery-date",
+        "displayName": "OrderRequest.RequestedDeliveryDate"
+      },
+      "constructKind": "field",
+      "featureMapping": {
+        "outcome": "mapped-with-changes",
+        "grpcTarget": {
+          "kind": "field",
+          "packageName": {
+            "state": "known",
+            "value": "contoso.orders.v1"
+          },
+          "protoFile": {
+            "state": "known",
+            "value": "proto/contoso/orders/v1/orders.proto"
+          },
+          "symbolName": {
+            "state": "known",
+            "value": "SubmitOrderRequest.requested_delivery_date"
+          }
+        },
+        "adaptationNotes": "Nullable DateTime? maps to optional google.protobuf.Timestamp; absence encodes the null case.",
+        "riskLevel": "low"
+      },
+      "protoTypeMapping": {
+        "wcfClrType": "System.Nullable<System.DateTime>",
+        "protoType": {
+          "state": "known",
+          "value": "google.protobuf.Timestamp"
+        },
+        "nullabilityStrategy": "optional-field",
+        "specialHandling": "datetime-as-timestamp"
+      },
+      "evidenceIds": [
+        "EVD-order-request-contract"
+      ],
+      "decisionIds": [],
+      "redesignRiskIds": []
+    },
+    {
+      "id": "MMAP-order-validation-fault-dc",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "DC-order-validation-fault",
+        "displayName": "OrderValidationFault"
+      },
+      "constructKind": "fault-contract",
+      "featureMapping": {
+        "outcome": "mapped-with-changes",
+        "grpcTarget": {
+          "kind": "message",
+          "packageName": {
+            "state": "known",
+            "value": "contoso.orders.v1"
+          },
+          "protoFile": {
+            "state": "known",
+            "value": "proto/contoso/orders/v1/errors.proto"
+          },
+          "symbolName": {
+            "state": "known",
+            "value": "OrderValidationError"
+          }
+        },
+        "adaptationNotes": "Carried as google.rpc.Status detail; status code INVALID_ARGUMENT. SOAP FaultCode is dropped.",
+        "riskLevel": "low"
+      },
+      "errorMapping": {
+        "wcfFaultContractIds": [
+          "DC-order-validation-fault"
+        ],
+        "grpcStatusCode": {
+          "state": "known",
+          "value": "INVALID_ARGUMENT"
+        },
+        "richErrorDetailType": {
+          "state": "known",
+          "value": "contoso.orders.v1.OrderValidationError"
+        },
+        "faultToStatusMapping": [
+          {
+            "wcfFaultType": "OrderValidationFault",
+            "grpcStatusCode": "INVALID_ARGUMENT",
+            "richDetailProtoType": {
+              "state": "known",
+              "value": "contoso.orders.v1.OrderValidationError"
+            }
+          }
+        ]
+      },
+      "evidenceIds": [
+        "EVD-order-validation-fault"
+      ],
+      "decisionIds": [],
+      "redesignRiskIds": []
+    },
+    {
+      "id": "MMAP-wshttp-binding",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "END-orders-internal",
+        "displayName": "wsHttpBinding/orders-internal"
+      },
+      "constructKind": "binding",
+      "featureMapping": {
+        "outcome": "mapped-with-changes",
+        "grpcTarget": {
+          "kind": "option",
+          "packageName": {
+            "state": "known",
+            "value": "contoso.orders.v1"
+          },
+          "protoFile": {
+            "state": "known",
+            "value": "proto/contoso/orders/v1/orders.proto"
+          },
+          "symbolName": {
+            "state": "known",
+            "value": "grpc.service_config"
+          }
+        },
+        "adaptationNotes": "wsHttpBinding message security with Windows credentials replaces with TLS + JWT bearer. WS-Security headers are dropped.",
+        "riskLevel": "medium"
+      },
+      "securityMapping": {
+        "wcfSecurityMode": "Message",
+        "wcfCredentialType": {
+          "state": "known",
+          "value": "Windows"
+        },
+        "grpcTransportSecurity": "tls",
+        "grpcAuthMechanism": "jwt-bearer",
+        "wsStarReplacement": {
+          "state": "known",
+          "value": "JWT bearer token via Authorization metadata header; WS-Security headers not applicable to gRPC."
+        },
+        "notes": "Decision DEC-auth-mechanism must be approved before implementation."
+      },
+      "evidenceIds": [
+        "EVD-order-service-binding"
+      ],
+      "decisionIds": [
+        "DEC-auth-mechanism"
+      ],
+      "redesignRiskIds": []
+    },
+    {
+      "id": "MMAP-order-service-behavior",
+      "inventoryRef": {
+        "inventoryId": "INV-contoso-orders",
+        "constructId": "SVC-order-service",
+        "displayName": "IOrderService ServiceBehavior (InstanceContextMode, ConcurrencyMode)"
+      },
+      "constructKind": "behavior",
+      "featureMapping": {
+        "outcome": "mapped-with-changes",
+        "grpcTarget": {
+          "kind": "interceptor",
+          "packageName": {
+            "state": "known",
+            "value": "contoso.orders.v1"
+          },
+          "protoFile": {
+            "state": "not-applicable",
+            "reason": "Interceptors are .NET code, not proto artifacts."
+          },
+          "symbolName": {
+            "state": "known",
+            "value": "OrdersServerInterceptor"
+          }
+        },
+        "adaptationNotes": "PerCall instance mode maps to gRPC's default stateless call handling. Single-threaded ConcurrencyMode maps to scoped DI; OpenTelemetry interceptor replaces WCF message logging behavior.",
+        "riskLevel": "low"
+      },
+      "behaviorMapping": {
+        "wcfInstanceMode": "PerCall",
+        "wcfConcurrencyMode": "Single",
+        "grpcEquivalent": {
+          "state": "known",
+          "value": "Scoped DI per call; no explicit concurrency mode required."
+        },
+        "observabilityMapping": {
+          "state": "known",
+          "value": "OpenTelemetry gRPC instrumentation via Grpc.AspNetCore.Server interceptor."
+        }
+      },
+      "evidenceIds": [
+        "EVD-order-service-contract"
+      ],
+      "decisionIds": [],
+      "redesignRiskIds": []
+    }
+  ],
+  "redesignRisks": [
+    {
+      "id": "MRSK-duplex-callback",
+      "title": "WCF duplex callback has no direct gRPC equivalent",
+      "description": "IOrderStatusCallback is a duplex callback contract. WCF duplex channels have no direct gRPC equivalent; the push-notification pattern must be redesigned as either server-streaming or bidirectional streaming RPCs.",
+      "riskLevel": "high",
+      "wcfFeature": "IDuplexChannel / CallbackContract (IOrderStatusCallback)",
+      "recommendedRedesign": "Replace SubscribeOrderStatus with a server-streaming RPC StreamOrderStatus(StreamOrderStatusRequest) returns (stream OrderStatusEvent). The client opens one long-lived stream per order subscription; the server pushes OrderStatusEvent messages as state changes occur.",
+      "inventoryConstructIds": [
+        "OP-subscribe-order-status",
+        "SVC-order-service"
+      ],
+      "evidenceIds": [
+        "EVD-order-status-callback",
+        "EVD-order-service-contract"
+      ],
+      "questionIds": [
+        "QST-duplex-push-or-bidi"
+      ],
+      "decisionIds": [
+        "DEC-duplex-strategy"
+      ],
+      "blocksProgression": true,
+      "state": "decision-pending"
+    }
+  ],
+  "coverageSummary": {
+    "totalConstructs": 8,
+    "mapped": 2,
+    "mappedWithChanges": 5,
+    "unsupported": 1,
+    "deferred": 0,
+    "notApplicable": 0,
+    "coveragePercent": 87.50,
+    "highRiskCount": 1,
+    "mediumRiskCount": 2,
+    "openRedesignRisks": 1,
+    "blockingItemCount": 1
+  },
+  "blockingItems": [
+    {
+      "id": "MBLK-duplex-decision",
+      "kind": "unresolved-decision",
+      "description": "DEC-duplex-strategy must be resolved before MMAP-subscribe-order-status-op can be finalized and specification authoring can begin.",
+      "affectedMappingIds": [
+        "MMAP-subscribe-order-status-op",
+        "MMAP-order-service-contract"
+      ],
+      "relatedDecisionIds": [
+        "DEC-duplex-strategy"
+      ],
+      "relatedRiskIds": [
+        "MRSK-duplex-callback"
+      ],
+      "state": "open"
+    }
+  ],
+  "deferredItems": [],
+  "validation": [
+    {
+      "id": "VAL-mres-coverage-complete",
+      "kind": "manual",
+      "expectedResult": "Every WCF construct in INV-contoso-orders has a corresponding MMAP entry in this mapping result.",
+      "status": "passed",
+      "evidenceIds": []
+    },
+    {
+      "id": "VAL-mres-blocking-resolved",
+      "kind": "manual",
+      "expectedResult": "All blockingItems have state resolved and coverageSummary.blockingItemCount is 0 before the mapping result is complete.",
+      "status": "not-run",
+      "evidenceIds": []
+    }
+  ],
+  "nextRequiredAction": {
+    "actor": "wcf-migration-decision-interviewer",
+    "action": "Resolve DEC-duplex-strategy (QST-duplex-push-or-bidi), then rerun the mapper so MMAP-subscribe-order-status-op can be finalized and MBLK-duplex-decision closed before invoking the architect.",
+    "prerequisiteIds": [
+      "MBLK-duplex-decision"
+    ]
+  }
+}

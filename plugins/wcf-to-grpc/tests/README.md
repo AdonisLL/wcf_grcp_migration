@@ -42,9 +42,10 @@ not run it.
    ```
 
    All seven plugin skills should appear.
-3. Start `copilot`, run `/agent`, and confirm these five agents are selectable:
-   **WCF Migration Orchestrator**, **WCF Codebase Analyst**,
-   **gRPC Migration Architect**, **gRPC Migration Implementer**, and
+3. Start `copilot`, run `/agent`, and confirm these eight agents are selectable:
+   **WCF Migration Orchestrator**, **WCF Codebase Analyst**, **WCF Migration
+   Decision Interviewer**, **WCF-to-gRPC Mapper**, **gRPC Migration Architect**,
+   **gRPC Migration Issue Publisher**, **gRPC Migration Implementer**, and
    **gRPC Parity Validator**.
 4. Installed plugins are cached copies; editing this working tree does not
    update an already installed copy. Exercise reinstall behavior after a local
@@ -69,6 +70,32 @@ not run it.
    copilot plugin install C:\path\to\wcf_grcp_migration
    copilot plugin list
    ```
+
+## Delegated orchestration smoke test
+
+Run this authenticated test in a disposable copy of
+`fixtures/basic-unary/` so generated migration artifacts do not modify the
+checked-in fixture.
+
+1. Select **WCF Migration Orchestrator** and provide complete Stage 0 intake.
+2. Confirm the orchestrator invokes **WCF Codebase Analyst** itself; it must not
+   ask you to switch agents or paste an inventory envelope.
+3. Confirm interview questions appear in the orchestrator conversation one at a
+   time and answers persist to `decision-log.json`.
+4. Confirm mapping runs through **WCF-to-gRPC Mapper** and writes a
+   schema-valid `mapping-result.json`.
+5. Interrupt and resume the session. The orchestrator must re-read state and
+   artifacts without repeating completed inventory, answered decisions, or
+   mapping work.
+6. Confirm specification approval remains a human gate and issue publication
+   defaults to preview-only. No GitHub mutation may occur without an exact
+   digest confirmation and explicit mutation permission.
+7. For an approved test specification, confirm each implementation invocation
+   receives exactly one `WP-*` id, conflicting/shared packages remain
+   sequential, and completion is derived from reports on disk.
+8. Temporarily make a delegated agent unavailable and confirm the orchestrator
+   records the failure and emits a copyable manual recovery handoff rather than
+   claiming completion.
 
 ## Fixture repositories
 

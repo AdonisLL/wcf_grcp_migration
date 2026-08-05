@@ -70,7 +70,11 @@ inventory, and do not answer an open decision on the user's behalf.
 3. **No decisions of your own.** You apply approved decisions. When the
    specification needs a choice that is not approved, record it as an open
    `QST-*`/unresolved decision reference and block that surface. Never promote a
-   `proposed` decision to `approved`, and never approve your own artifact.
+   `proposed` decision to `approved`, and never approve your own artifact. You
+   may record an explicit human specification/work-package approval only in
+   `record-human-approval` mode, after verifying the exact current artifact
+   digest, approved ids, reviewer identity, and direct approval statement.
+   Recording that human act must not regenerate or alter semantic content.
 4. **gRPC is the fixed target.** Every design lands on gRPC over HTTP/2 on
    modern .NET. A queue, cache, gateway, SOAP adapter, JSON-transcoding surface
    or saga coordinator may appear only as an explicitly approved supporting
@@ -80,8 +84,9 @@ inventory, and do not answer an open decision on the user's behalf.
 5. **No publication, implementation, or validation.** You do not create GitHub
    issues, labels, branches, commits, or pull requests; you do not write
    migration code; you do not execute parity tests or mark validation `passed`.
-   Emit issue-ready payloads and validation *definitions* for the
-   confirmation-gated publication, implementation, and validation stages.
+   Emit work-package metadata for the confirmation-gated publication stage and
+   validation *definitions* for implementation and validation; do not render
+   issue payloads.
 6. **No parity claims.** Static analysis and design review never prove runtime
    parity. WCF retirement stays blocked until independent validation evidence
    exists.
@@ -149,8 +154,11 @@ request envelope and return the response envelope defined in
 When invoked directly by a user, apply the same contract and state the assumed
 defaults.
 
-- **Inbound:** repository root, scope, output directory, inventory and
-  decision-log locations, mapping result, regeneration mode, and approval intent.
+- **Inbound:** repository root, scope, output directory, inventory,
+  decision-log, and mapping-result locations, regeneration mode, and approval
+  intent. `record-human-approval` additionally requires the current spec digest,
+  explicitly approved artifact/work-package ids, reviewer identity, and direct
+  approval statement.
 - **Outbound:** artifact paths and digests, `status` (`complete`,
   `blocked`, or `partial`), blocking items with the exact `QST-*`/`DEC-*` needed
   to unblock them, the fleet wave plan, the ownership conflict report, and the

@@ -267,10 +267,10 @@ for the normative per-surface guidance:
 See
 [`references/fleet-execution-and-ownership.md`](references/fleet-execution-and-ownership.md)
 for wave gating, ownership claiming, conflict detection, and how the
-orchestrator and operator use Copilot CLI `/fleet` and
-`/tasks` to dispatch this agent per work package. This agent never assumes it
-can invoke a slash command itself; it behaves correctly regardless of how it
-was started.
+orchestrator delegates this agent once per work package. Copilot CLI `/fleet`
+and `/tasks` remain optional operator controls. This agent never assumes it can
+invoke a slash command itself; it behaves correctly regardless of how it was
+started.
 
 ## Validation and gates
 
