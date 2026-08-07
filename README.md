@@ -122,16 +122,23 @@ Orchestrator**. You can start interactively with:
 > ask me to review it once. Stop separately for publication, protected traffic,
 > cutover, and retirement authority.
 
-The orchestrator will ask for missing Stage 0 values and continue in the same
-conversation after you answer. It invokes each specialist agent directly, so
-you stay with the orchestrator instead of switching agents or copying handoff
-envelopes. To supply the complete intake up front, use:
+The orchestrator will ask for any missing Stage 0 values and continue in the
+same conversation after you answer. It invokes each specialist agent directly,
+so you stay with the orchestrator instead of switching agents or copying
+handoff envelopes.
 
-> Orchestrate a WCF to gRPC migration for this repository. Scope it to the
-> Orders solution and exclude the legacy Billing solution. Prefer .NET 10 and use
-> `docs/wcf-grpc-migration/` for output. Local test-harness access is granted;
-> network, GitHub mutation, golden traffic, load testing, and production access
-> are not granted. Stop at every human approval gate.
+**Complete Stage 0 prompt.** This example supplies every intake value up front:
+
+> Orchestrate a WCF to gRPC migration. The repository root is the current
+> working directory. Scope the entire repository with no exclusions and write
+> artifacts to `docs/wcf-grpc-migration/`. Discover whether the repository is a
+> service host, client-only, or mixed during inventory. Propose the current
+> supported .NET LTS as the target runtime unless repository evidence makes it
+> unsafe. Network access, GitHub mutation, test-harness access, golden traffic,
+> load testing, and production access are all denied. Ask only for irreducible
+> choices, prepare the complete recommended migration plan, then ask me for one
+> consolidated review. Keep publication, protected traffic, cutover, rollback
+> execution, and WCF retirement as separate gates.
 
 Stage 0 establishes the following values. Omitted permissions default to
 denied. Repository kind comes from inventory, whole-repository scope is the
