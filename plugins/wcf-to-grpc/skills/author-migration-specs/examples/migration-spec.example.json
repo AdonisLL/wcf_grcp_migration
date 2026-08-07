@@ -875,29 +875,6 @@
         ],
         "exitCriteria": [
           {
-            "evidenceRequired": "Routing configuration review plus request traces showing each consumer class reaching its intended stack.",
-            "id": "AC-coexistence-routing",
-            "statement": "Internal consumers reach the gRPC endpoint while external partners keep a working legacy path.",
-            "validationIds": [
-              "VAL-coexistence-routing"
-            ]
-          }
-        ],
-        "id": "PHS-coexistence-and-cutover",
-        "integrationCheckpoint": true,
-        "objective": "Run both stacks side by side and establish the routing configuration that internal consumers will switch to once the external consumer decision is approved.",
-        "sequence": 2,
-        "title": "Coexistence routing configuration",
-        "workPackageIds": [
-          "WP-coexistence-routing"
-        ]
-      },
-      {
-        "dependsOnPhaseIds": [
-          "PHS-coexistence-and-cutover"
-        ],
-        "exitCriteria": [
-          {
             "evidenceRequired": "Full solution build log, parity test results, coexistence routing configuration review, and health probe confirmation.",
             "id": "AC-integration-verification-complete",
             "statement": "The complete solution builds, all parity tests pass, coexistence routing configuration is reviewed, and the gRPC host health probe reports SERVING — producing the integration evidence package for the offline retirement-gate review.",
@@ -912,7 +889,7 @@
         "id": "PHS-integration-verification",
         "integrationCheckpoint": true,
         "objective": "Run the final sequential integration checkpoint: build, test, and evidence-collect across all executable packages before handing integration evidence to the offline retirement-gate review.",
-        "sequence": 3,
+        "sequence": 2,
         "title": "Integration verification",
         "workPackageIds": [
           "WP-integration-verification"
@@ -923,7 +900,7 @@
       "state": "known",
       "value": "SVC-order-service"
     },
-    "retirementCriteria": [
+    "offlineHandoffCriteria": [
       {
         "evidenceRequired": "Independent validation report covering contract, behavior, fault, security, serialization, and streaming parity.",
         "id": "AC-retirement-parity-evidence",
@@ -941,7 +918,7 @@
         ]
       }
     ],
-    "strategy": "Incremental: build the shared foundation sequentially, migrate the order service as the pilot slice, author the coexistence routing configuration, run integration verification, then hand integration evidence to the offline retirement-gate review. Production traffic cutover, WCF endpoint removal, and retirement are non-executable offline guidance executed by the human retirement authority after the integration evidence and parity evidence are reviewed."
+    "strategy": "Incremental: build the shared foundation sequentially, migrate the order service as the pilot slice, run integration verification, then hand integration evidence to the offline retirement-gate review. Production traffic cutover, coexistence routing execution, WCF endpoint removal, and retirement are non-executable offline guidance executed by the human retirement authority after the integration evidence and parity evidence are reviewed."
   },
   "schemaVersion": "1.0.0",
   "targetArchitecture": {
@@ -1333,7 +1310,7 @@
       "state": "unresolved",
       "to": {
         "artifactType": "migration-spec",
-        "id": "WP-coexistence-routing"
+        "id": "ARCH-coexistence"
       }
     }
   ],
@@ -2011,177 +1988,6 @@
     {
       "acceptanceCriteria": [
         {
-          "evidenceRequired": "Approved decision record resolving QST-external-consumer-upgrade-control.",
-          "id": "AC-coexistence-decision-approved",
-          "statement": "The external consumer upgrade-control decision is approved before any routing change is implemented.",
-          "validationIds": [
-            "VAL-coexistence-decision-review"
-          ]
-        },
-        {
-          "evidenceRequired": "Routing configuration review and per-consumer request traces.",
-          "id": "AC-coexistence-routing-correct",
-          "statement": "Internal consumers reach the gRPC endpoint and external partners keep a working legacy path with no request loss.",
-          "validationIds": [
-            "VAL-coexistence-routing"
-          ]
-        }
-      ],
-      "approval": {
-        "state": "draft"
-      },
-      "coexistence": {
-        "durationOrExitCondition": {
-          "questionIds": [
-            "QST-external-consumer-upgrade-control"
-          ],
-          "reason": "The coexistence window depends on external partner upgrade control.",
-          "state": "unknown"
-        },
-        "legacyEndpointRetained": {
-          "state": "known",
-          "value": true
-        },
-        "required": {
-          "state": "known",
-          "value": true
-        },
-        "strategy": {
-          "questionIds": [
-            "QST-external-consumer-upgrade-control"
-          ],
-          "reason": "Side-by-side endpoints, a reverse proxy, or a SOAP adapter cannot be selected until the external consumer decision is approved.",
-          "state": "unknown"
-        },
-        "trafficControl": {
-          "questionIds": [
-            "QST-external-consumer-upgrade-control"
-          ],
-          "reason": "The traffic-shifting mechanism depends on the selected coexistence topology.",
-          "state": "unknown"
-        },
-        "validationIds": [
-          "VAL-coexistence-routing"
-        ]
-      },
-      "decisionIds": [],
-      "deliverables": [
-        {
-          "action": "modify",
-          "description": "Routing rules directing internal consumers to gRPC while external partners continue to reach the WCF endpoint.",
-          "path": "deploy/routing/orders.yaml"
-        }
-      ],
-      "dependencies": [
-        {
-          "reason": "Routing can only be reconciled once the host is deployable.",
-          "state": "pending",
-          "type": "integration",
-          "workPackageId": "WP-foundation-host-bootstrap"
-        },
-        {
-          "reason": "Traffic may only shift after the service implementation is validated.",
-          "state": "pending",
-          "type": "hard",
-          "workPackageId": "WP-order-service-server"
-        }
-      ],
-      "evidenceIds": [
-        "EVD-external-partner-endpoint"
-      ],
-      "fleet": {
-        "conflictsWithWorkPackageIds": [],
-        "fileOwnership": [],
-        "parallelGroup": {
-          "questionIds": [
-            "QST-external-consumer-upgrade-control"
-          ],
-          "reason": "Parallel grouping cannot be assigned while the coexistence topology is unresolved.",
-          "state": "unknown"
-        },
-        "rationale": "The coexistence topology is unresolved, so neither ownership nor parallel safety can be established; the package is not executable yet.",
-        "suitability": "unknown",
-        "wave": {
-          "questionIds": [
-            "QST-external-consumer-upgrade-control"
-          ],
-          "reason": "Wave assignment depends on the unresolved coexistence topology.",
-          "state": "unknown"
-        }
-      },
-      "id": "WP-coexistence-routing",
-      "kind": "code-implementation",
-      "integrationCheckpoints": [
-        "Cutover checkpoint: routing, monitoring, and rollback triggers are reviewed together before any traffic shift."
-      ],
-      "nonGoals": [
-        "Do not retire the WCF endpoint.",
-        "Do not change service contracts or implementations."
-      ],
-      "objective": "Route internal consumers to gRPC while keeping external partner traffic on the legacy endpoint until its cutover decision is approved.",
-      "riskIds": [
-        "RSK-external-soap-consumers"
-      ],
-      "rollback": {
-        "dataImpact": {
-          "state": "known",
-          "value": "None; both stacks share the same additive data schema."
-        },
-        "owner": {
-          "state": "known",
-          "value": "Platform operations owner"
-        },
-        "steps": [
-          "Restore the previous routing configuration.",
-          "Confirm every consumer class reaches the WCF endpoint.",
-          "Record the failure and reopen the coexistence decision."
-        ],
-        "strategy": {
-          "state": "known",
-          "value": "Revert routing so all traffic returns to the WCF endpoint."
-        },
-        "triggers": [
-          "Error rate or latency regression after a traffic shift.",
-          "Any external partner request failing on the retained path."
-        ],
-        "validationIds": [
-          "VAL-coexistence-routing"
-        ]
-      },
-      "scope": [
-        "Implement the approved coexistence topology once the external consumer decision is resolved.",
-        "Define traffic control, monitoring, and the rollback trigger for the shift.",
-        "Record the coexistence exit condition and its owner."
-      ],
-      "sourceIds": [
-        "CON-external-partner",
-        "CON-order-portal"
-      ],
-      "specIds": [
-        "SPEC-order-service"
-      ],
-      "status": "draft",
-      "title": "Coexistence routing and internal consumer cutover",
-      "validation": [
-        {
-          "evidenceIds": [],
-          "expectedResult": "The decision log contains an approved decision resolving QST-external-consumer-upgrade-control.",
-          "id": "VAL-coexistence-decision-review",
-          "kind": "manual",
-          "status": "not-run"
-        },
-        {
-          "evidenceIds": [],
-          "expectedResult": "Each consumer class reaches its intended stack with no failed requests during the observation window.",
-          "id": "VAL-coexistence-routing",
-          "kind": "manual",
-          "status": "not-run"
-        }
-      ]
-    },
-    {
-      "acceptanceCriteria": [
-        {
           "evidenceRequired": "Build log showing the full solution compiling with no new warnings.",
           "id": "AC-integration-full-build",
           "statement": "The complete solution builds cleanly from a clean clone.",
@@ -2249,12 +2055,6 @@
         }
       ],
       "dependencies": [
-        {
-          "reason": "All preceding executable packages must be complete before integration verification runs.",
-          "state": "pending",
-          "type": "hard",
-          "workPackageId": "WP-coexistence-routing"
-        },
         {
           "reason": "Implementation and parity tests must be complete.",
           "state": "pending",
