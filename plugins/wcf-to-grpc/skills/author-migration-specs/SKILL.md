@@ -2,14 +2,16 @@
 name: author-migration-specs
 description: >
   Authors deterministic, evidence-backed WCF-to-gRPC migration specifications
-  from an approved inventory, decision log, and mapping result. Produces target
+  from a validated inventory, proposed or approved decisions, and a mapping
+  result. Produces target
   architecture, Protobuf contracts, a dependency-ordered roadmap, and
   independently implementable work packages conforming to
   schemas/migration-spec.schema.json. Covers RPC and message design, errors,
   resilience, security, state, transactions, telemetry, hosting, deployment,
   coexistence, cutover, rollback, parity tests, and WCF retirement gates. Blocks
-  on unresolved decisions and never publishes issues, implements code, or claims
-  runtime parity.
+  only affected surfaces on irreducible unresolved decisions and emits a
+  digest-bound consolidated review. It never publishes issues, implements code,
+  or claims runtime parity.
 ---
 
 # Skill: Author WCF-to-gRPC Migration Specifications
@@ -58,9 +60,11 @@ risk IDs that must resolve them.
   edit, or delete application source, projects, configuration, product
   `.proto` files, tests, build scripts, or CI definitions. Specify changes;
   do not make them.
-- **Approved inputs only.** Apply approved decisions. Never answer an open
-  question, promote a `proposed` decision to `approved`, or decide that the
-  specification is approved. Approval is a human act. This skill may persist
+- **Proposed inputs produce drafts.** Apply proposed decisions as visible,
+  reviewable assumptions and approved decisions as authoritative inputs. Never
+  answer an open question, promote a `proposed` decision to `approved`, or
+  decide that the specification is approved. Approval is a human act. This
+  skill may persist
   that act only in `record-human-approval` mode with the exact current digest,
   explicitly approved ids, reviewer identity, and direct approval statement;
   it must not change semantic content in that mode.
@@ -70,7 +74,8 @@ risk IDs that must resolve them.
   exit criteria. A WCF construct with no safe direct gRPC equivalent becomes a
   visible redesign risk with a specified gRPC-centered replacement — never a
   silent target change.
-- **Blocking unknowns block.** An unresolved blocking decision leaves its
+- **Irreducible unknowns block their surface.** An unresolved
+  `immediate-answer-required` decision leaves its
   architecture section `unresolved` with `design: null` and at least one
   `QST-*`, leaves the affected contract and work packages unapproved, and is
   reported as a blocking item. Never write a plausible placeholder design.
@@ -104,7 +109,10 @@ unchanged and semantics are unchanged, do not rewrite files.
 Classify each open `QST-*` and unresolved/proposed `DEC-*` per affected surface
 using the blocking rules in
 [`references/architecture-design-checklist.md`](references/architecture-design-checklist.md).
-Blocking items stop that surface only — keep specifying everything else. Detect
+Proposed decisions enable draft design and are included in the review bundle.
+Immediate blockers stop that surface only — keep specifying everything else.
+Deferred operational values become work-package or validation prerequisites,
+not guessed designs. Detect
 stale approvals: when new evidence contradicts an approved decision's
 assumptions, mark the dependent surface stale and block it rather than
 overwriting approved content.
@@ -197,7 +205,25 @@ fleet-eligible packages in a wave claim the same `exclusive-write` path.
 Render from the structured artifacts with the templates below. Markdown
 introduces no claim absent from JSON.
 
-### 9. Validate and report
+### 9. Build the consolidated review
+
+Write `migration-review.json` conforming to
+[`../../schemas/migration-review.schema.json`](../../schemas/migration-review.schema.json)
+and render `migration-review.md`. Include every proposed decision in approval
+scope with evidence, assumptions, alternatives, consequences, confidence, and
+interaction class; summarize architecture, contracts, roadmap, work packages,
+blockers, and deferred operational gates; and explicitly exclude GitHub
+mutation, protected traffic, production access, cutover, rollback execution,
+and WCF retirement.
+
+Compute semantic digests from canonical content while excluding approval-event
+metadata. Recording approval must not alter semantic content or invalidate the
+reviewed digest. Any semantic change creates a new review digest and invalidates
+prior bundle approval. Verify every `approvalScope.workPackageIds` entry exists
+in the bound source migration specification; the source specification ID is
+defined only by the required `migration-spec` entry in `sourceArtifacts`.
+
+### 10. Validate and report
 
 Run the validation gate, then return the handoff response envelope with
 artifacts, coverage, blocking items, deferred items, the fleet wave plan,
@@ -209,6 +235,8 @@ required human action.
 | Output | Content |
 |---|---|
 | `migration-spec.json` | Source of truth: assessment, target architecture, contracts, roadmap, work packages |
+| `migration-review.json` | Digest-bound consolidated decision/specification/work-package review |
+| `migration-review.md` | Human-readable rendering of the complete review bundle |
 | `assessment.md` | Rendered current-state assessment |
 | `decisions.md` | Rendered decision log view |
 | `target-architecture.md` | Rendered architecture and topology |
@@ -230,6 +258,7 @@ the confirmation-gated publication agent and skill.
 | `target-architecture.md` | [`templates/target-architecture.md`](templates/target-architecture.md) |
 | `contracts/<spec-id>.md` | [`templates/contract-specification.md`](templates/contract-specification.md) |
 | `roadmap.md` | [`templates/migration-roadmap.md`](templates/migration-roadmap.md) |
+| `migration-review.md` | [`templates/migration-review.md`](templates/migration-review.md) |
 | `work-packages/<work-package-id>.md` | [`templates/work-package.md`](templates/work-package.md) |
 
 A minimal, schema-valid `migration-spec.json` showing the envelope, resolved

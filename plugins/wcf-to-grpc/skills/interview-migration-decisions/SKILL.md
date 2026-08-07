@@ -1,12 +1,10 @@
 ---
 name: interview-migration-decisions
 description: >
-  Conducts an evidence-driven WCF-to-gRPC architecture interview from a
-  validated inventory. Asks only migration decisions that code and
-  configuration cannot establish, explains each evidence trigger and
-  consequence, recommends a gRPC-centered option when justified, and
-  incrementally persists stable, traceable decisions conforming to
-  schemas/decision-log.schema.json.
+  Prepares evidence-driven WCF-to-gRPC migration decisions from a validated
+  inventory. Records safe recommendations as proposed assumptions, asks only
+  irreducible focused questions, and supports digest-matched bundle approval
+  while preserving human authority.
 ---
 
 # Skill: Interview Migration Decisions
@@ -15,8 +13,8 @@ description: >
 
 Turn an evidence-backed WCF inventory into an explicit, reviewable decision
 log for a migration whose mandatory destination is **gRPC for .NET**.
-The interview closes business, architecture, operational, and rollout choices
-that static analysis cannot establish confidently. It does not repeat
+The default workflow prepares a complete set of evidence-backed proposals and
+interrupts only for choices that have no safe default. It does not repeat
 repository-discoverable questions, author the migration specification,
 implement an architect agent, publish issues, or modify application code.
 
@@ -52,19 +50,22 @@ before starting.
   framework, binding, endpoint, timeout, contract shape, security setting, or
   consumer that code/configuration can establish. Return missing
   repository-discoverable facts as inventory-analysis gaps instead.
-- **Ask the target runtime every migration.** Even when repository evidence
-  suggests a target, ask for confirmation because it is a future-state
-  decision. Recommend the current supported .NET LTS after checking the
-  current support policy; as of 2026-07-30 that is .NET 10 LTS.
-- **One focused question at a time.** Ask a single atomic architectural
-  choice, wait for its answer, persist it, then rebuild and reprioritize the
-  queue. Combine subparts only when they cannot be decided independently.
+- **Evaluate the target runtime every migration.** Propose the current
+  supported .NET LTS after checking the current support policy; as of
+  2026-07-30 that is .NET 10 LTS. Ask only when evidence makes that default
+  unsafe.
+- **Draft first.** In `prepare-draft` mode, classify every triggered topic and
+  persist every safe recommendation as `proposed` in one pass.
+- **One irreducible question at a time.** In `resolve-blocker` mode, ask one
+  atomic `immediate-answer-required` choice, persist the answer, then rebuild
+  and reprioritize the remaining blockers.
 - **Evidence before prompt.** State why the choice matters, the precise
   `EVD-*`, `RSK-*`, `QST-*`, and affected inventory IDs that triggered it,
   and what downstream design is blocked.
-- **Recommend without pretending certainty.** Offer one recommended option
-  only when inventory evidence and the mapping references justify it. State
-  assumptions and trade-offs. Never auto-select or auto-approve it.
+- **Propose without pretending certainty.** Select a recommendation as
+  `proposed` only when it meets the catalog's safe-default criteria. Record
+  provenance, interaction class, confidence, reversibility, assumptions,
+  authority requirement, and downstream gate. Never auto-approve it.
 - **Persist every outcome.** Selected answers become `proposed` decisions
   unless explicitly approved. Unknown, unanswered, and deferred outcomes
   remain `unresolved` with a reason, owner when known, and concrete next
@@ -78,7 +79,41 @@ before starting.
   renumber or recycle `QST-*`, `DEC-*`, `OPT-*`, `APV-*`, `EVD-*`, or
   `TRC-*` IDs.
 
-## Interview preparation
+## Operating modes
+
+### `prepare-draft` (default)
+
+Validate and reconcile the inputs, classify the complete candidate set, and
+persist all safe recommendations in one atomic update. Return categorized
+counts and IDs for `agent-proposed`, `review-required`,
+`immediate-answer-required`, `deferred-operational`, and
+`separate-authority-gate`. Return `partial-draft-ready` with one focused
+question, blocked surface IDs, and draftable surface IDs when an immediate
+blocker remains. Otherwise return `ready-for-draft`, even though proposed
+decisions are not approved. Partial readiness allows downstream work on
+independent surfaces while the question is relayed.
+
+### `resolve-blocker`
+
+Accept an answer to the current blocker, persist it as proposed unless the
+human explicitly approves it, regenerate the queue, and return the next single
+`partial-draft-ready` blocker or `ready-for-draft`.
+
+### `record-bundle-approval`
+
+Require the exact current `migration-review` semantic digest, included decision
+IDs, reviewer identity, approval time, and direct statement. Verify every ID
+and selected option against the review bundle, then add approval events
+carrying the bundle digest. Do not change semantics, approve excluded IDs, or
+treat this as publication, protected-traffic, cutover, rollback, or retirement
+authority. Resume a partial prior recording idempotently.
+
+### `interactive-compatibility`
+
+When explicitly requested, retain the historical one-question-at-a-time
+experience for all triggered topics. It is not the orchestrator default.
+
+## Decision preparation
 
 ### 1. Validate and index the inventory
 
@@ -132,7 +167,8 @@ Deduplicate before asking:
    choose different designs.
 5. Prefer an existing stable decision ID over a newly generated ID.
 
-Prioritize in this order, then re-run priority after every answer:
+Prioritize immediate blockers in this order, then re-run priority after every
+answer:
 
 1. stale approved decisions and inventory validity blockers;
 2. target runtime;
@@ -149,7 +185,7 @@ Prioritize in this order, then re-run priority after every answer:
 Dependencies override this order. Ask a parent decision before its dependent
 details. Skip dependent questions made irrelevant by an answer.
 
-## Question interaction
+## Focused blocker interaction
 
 Use this compact shape for each turn:
 
@@ -163,7 +199,9 @@ Options: <short list, including "defer" when allowed>
 Approval needed: <who/what gate, if known>
 ```
 
-Do not dump the full catalog or ask a questionnaire batch. The user may:
+Do not dump the full catalog or ask a questionnaire batch. Non-blocking
+recommendations belong in the consolidated review bundle. For an immediate
+blocker, the user may:
 
 - select an option;
 - provide a custom gRPC-centered answer;
@@ -226,17 +264,18 @@ Within the decision log:
 
 ## Approval gates
 
-- A user answer is not automatically approval. It creates or updates a
-  `proposed` decision.
+- A safe agent recommendation or user answer is not automatically approval. It
+  creates or updates a `proposed` decision.
 - Move a decision to `approved` only after an explicit approval statement
   identifies the reviewer/role. Add an `APV-*` event and sanitized citation.
 - High-risk supporting redesign components require explicit approval,
   including their role, owner, operational consequence, and exit condition
   when temporary.
-- Keep the decision-log artifact `draft` while any blocking decision is
-  unresolved, stale, or merely proposed.
-- Request artifact review only when all blocking decisions are approved and
-  all non-blocking deferrals have owners and next actions.
+- Keep the decision-log artifact `draft` while immediate blockers remain.
+  Proposed decisions may feed mapping and draft specification authoring.
+- Request consolidated review when no immediate blocker remains. Deferred
+  operational decisions need a concrete next action and later gate; a role may
+  stand in until implementation assignment requires a named owner.
 - The containing artifact and its decisions require separate approval. Do not
   treat one as approval of the other.
 - WCF retirement and cutover require their own approval; architecture approval
@@ -244,17 +283,17 @@ Within the decision log:
 
 ## Completion criteria
 
-The interview is ready for handoff only when:
+Decision preparation is ready for draft handoff when:
 
 - [ ] the input inventory validates and analysis gaps are reported separately;
-- [ ] target runtime was asked for this migration and the current .NET LTS was
-      recommended unless constraints justify another supported runtime;
-- [ ] every triggered catalog topic is answered, deferred, unresolved,
-      skipped by evidence, or made irrelevant by an approved parent decision;
+- [ ] target runtime was evaluated and the current .NET LTS was proposed unless
+      evidence required an immediate runtime choice;
+- [ ] every triggered topic is proposed, deferred to a named later gate,
+      unresolved as an immediate blocker, skipped, or made irrelevant;
 - [ ] no repository-discoverable fact was unnecessarily asked;
 - [ ] each prompt showed why it mattered and its evidence trigger;
-- [ ] all high/critical unsupported WCF features have explicit decisions or
-      blocking unresolved entries;
+- [ ] all high/critical unsupported WCF features have proposed or approved
+      decisions, or blocking unresolved entries;
 - [ ] gRPC remains the target in every proposed/approved option;
 - [ ] all answers, unresolved items, and deferrals conform to
       `decision-log.schema.json`;
@@ -268,10 +307,10 @@ The interview is ready for handoff only when:
 ## Outputs
 
 1. Updated `decision-log.json`.
-2. A concise interview status summary:
+2. A concise preparation status summary:
    - approved, proposed, unresolved, deferred, and stale counts;
-   - next highest-priority question or “interview complete”;
+   - interaction-class counts and IDs;
+   - next immediate blocker or `ready-for-draft`;
    - inventory-analysis gaps;
    - blocking approval gates.
 3. No architect agent, migration specification, issues, or implementation.
-

@@ -6,7 +6,7 @@
   "$defs": {
     "stableId": {
       "type": "string",
-      "pattern": "^(INV|DLOG|MRES|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      "pattern": "^(INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF)-[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "relativePath": {
       "type": "string",
@@ -373,6 +373,10 @@
             },
             "note": {
               "type": "string"
+            },
+            "reviewBundleDigest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
             }
           },
           "required": [
@@ -446,6 +450,7 @@
             "decision-log",
             "mapping-result",
             "migration-spec",
+            "migration-review",
             "issue-set",
             "implementation-report",
             "validation-report"

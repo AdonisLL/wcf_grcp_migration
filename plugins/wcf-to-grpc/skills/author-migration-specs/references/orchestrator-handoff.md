@@ -20,6 +20,8 @@ checked-in JSON Schema; the artifacts it points at are schema-validated.
 3. `mapping-result.json` exists, validates against
    [`mapping-result.schema.json`](../../../schemas/mapping-result.schema.json),
    and includes every unsupported-feature risk.
+   Proposed decisions are valid draft inputs; unresolved immediate blockers
+   may leave only their affected surfaces incomplete.
 4. The output directory is writable and contains any prior artifacts for this
    repository.
 
@@ -40,7 +42,7 @@ If a precondition fails, the stage returns `status: blocked` with
     "mappingResultPath": "docs/wcf-grpc-migration/mapping-result.json"
   },
   "mode": "full",
-  "approvalIntent": "none",
+  "approvalIntent": "request-review",
   "humanApproval": null,
   "constraints": {
     "allowNetwork": false,
@@ -52,11 +54,15 @@ If a precondition fails, the stage returns `status: blocked` with
 - `mode` is `full` or `incremental`; both preserve stable IDs, field numbers,
   reservations, and approvals.
 - `approvalIntent` is `none`, `request-review`, or `record-human-approval`.
+  `request-review` writes `migration-review.json` and
+  `migration-review.md` with an exact semantic digest and approval scope.
   `record-human-approval` requires `humanApproval` with the exact current
-  `artifactDigest`, `approvedArtifactId`, `approvedWorkPackageIds`,
+  `reviewBundleDigest`, `approvedDecisionIds`, `approvedArtifactId`,
+  `approvedWorkPackageIds`,
   `reviewerIdentity`, `approvedAt`, and direct `statement`. The stage verifies
   those values and persists the human approval without regenerating semantic
-  content. It never chooses or infers approval.
+  content. Artifact and work-package approval records carry the same
+  `reviewBundleDigest`. It never chooses or infers approval.
 - Unknown or omitted fields fall back to the documented defaults
   (`outputDirectory` = `docs/wcf-grpc-migration`, `mode` = `full`,
   `approvalIntent` = `none`, `humanApproval` = `null`, full repository scope).
@@ -69,7 +75,8 @@ If a precondition fails, the stage returns `status: blocked` with
   "stage": "author-migration-specs",
   "status": "blocked",
   "artifacts": [
-    { "path": "docs/wcf-grpc-migration/migration-spec.json", "artifactId": "MSPEC-contoso-orders", "approval": "draft", "sourceDigest": "sha256:<64 hex>", "changed": true }
+    { "path": "docs/wcf-grpc-migration/migration-spec.json", "artifactId": "MSPEC-contoso-orders", "approval": "draft", "sourceDigest": "sha256:<64 hex>", "semanticDigest": "sha256:<64 hex>", "changed": true },
+    { "path": "docs/wcf-grpc-migration/migration-review.json", "artifactId": "MREV-contoso-orders", "approval": "review-requested", "sourceDigest": "sha256:<64 hex>", "semanticDigest": "sha256:<64 hex>", "changed": true }
   ],
   "coverage": {
     "servicesInScope": 3,
@@ -112,7 +119,7 @@ If a precondition fails, the stage returns `status: blocked` with
 
 | `status` | Meaning |
 |---|---|
-| `complete` | Every in-scope service is specified, all fifteen architecture sections are `proposed` or `approved`, every work package is ready, and all validations passed. Approval is still a separate human gate. |
+| `complete` | Every in-scope service is drafted, all fifteen architecture sections are `proposed` or `approved`, every work package is ready, the review bundle is current, and all validations passed. Approval is still a separate human gate. |
 | `partial` | Artifacts were written and are internally valid, but coverage is incomplete for a non-blocking reason (for example an out-of-scope service or a deferred, non-blocking decision). |
 | `blocked` | A blocking precondition or decision prevents a required surface. Written artifacts remain valid and unapproved; the blocked surfaces stay `unresolved`. |
 
@@ -121,9 +128,10 @@ If a precondition fails, the stage returns `status: blocked` with
 `dependency-cycle`, or `validation-failure`. Every entry names what it blocks and
 the exact next action that unblocks it.
 
-`deferredItems` carries non-blocking unknowns that were consciously postponed,
-each with an owner or next action. Anything without an owner is blocking, not
-deferred.
+`deferredItems` carries non-blocking operational unknowns postponed to an
+explicit implementation, validation, or cutover gate. Each has a role or owner
+and a concrete next action; a named individual is required when executable
+work is assigned.
 
 ## Invariants the stage guarantees
 
@@ -134,6 +142,9 @@ deferred.
   and semantics are unchanged.
 - Stable IDs, Protobuf field numbers, reservations, approvals, and supersession
   history are preserved across runs.
+- Semantic digests exclude approval-event metadata. A semantic change
+  invalidates the review bundle; recording the exact reviewed approval does
+  not.
 - No decision is answered, approved, or silently retargeted away from gRPC.
 - No GitHub mutation, no implementation, no validation execution, no parity
   claim.

@@ -39,10 +39,13 @@ safe direct gRPC equivalent, this skill must:
 2. Document the gRPC-centered redesign required (for example, replacing
    duplex callbacks with bidirectional streaming, or replacing distributed
    transactions with saga/outbox patterns).
-3. Record an open architectural decision for the orchestrator to resolve with
-   the user before the mapping is treated as final.
+3. Record an architectural decision reference. A safe proposal may drive the
+   draft mapping; an unresolved immediate blocker keeps only its affected
+   surface incomplete.
 4. **Never** emit a mapping that targets REST, CoreWCF, MSMQ, or any
-   non-gRPC replacement without an explicit, approved decision-log entry.
+   non-gRPC replacement. A high-risk supporting component requires an explicit
+   approved decision before implementation, even when its proposed design is
+   shown in a draft.
 
 ## Workflow
 
@@ -56,6 +59,9 @@ safe direct gRPC equivalent, this skill must:
    `references/hosting-and-rollout.md`.
 7. Assemble the structured mapping result and populate `unsupportedFeatures`
    for every `HIGH`-risk or `UNSUPPORTED` construct.
+   Proposed decisions are valid draft inputs. An unresolved
+   `immediate-answer-required` decision blocks the affected entry and is
+   reported without suppressing independent mappings.
 8. Validate and persist the deterministic mapping artifact. Preserve stable ids
    and generation metadata when the semantic inputs are unchanged.
 9. Return its path, digest, coverage, blockers, and next required action to the

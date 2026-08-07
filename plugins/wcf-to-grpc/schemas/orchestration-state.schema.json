@@ -67,6 +67,16 @@
         "$ref": "#/$defs/approvalObservation"
       }
     },
+    "reviewBundle": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/reviewBundleState"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "observations": {
       "type": "array",
       "items": {
@@ -105,6 +115,7 @@
         },
         "kind": {
           "enum": [
+            "unknown",
             "service-host",
             "client-only",
             "mixed"
@@ -253,6 +264,10 @@
           "$ref": "./common.schema.json#/$defs/relativePath"
         },
         "sourceDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "semanticDigest": {
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$"
         },
@@ -513,6 +528,8 @@
         "subject": {
           "enum": [
             "migration-spec",
+            "migration-review",
+            "decision-bundle",
             "work-package",
             "issue-preview",
             "retirement"
@@ -543,6 +560,71 @@
         "state",
         "recordedIn",
         "observedAt"
+      ],
+      "additionalProperties": false
+    },
+    "reviewBundleState": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^MREV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "semanticDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "freshness": {
+          "enum": [
+            "current",
+            "stale",
+            "missing"
+          ]
+        },
+        "decisionApprovalState": {
+          "enum": [
+            "not-requested",
+            "pending",
+            "partial",
+            "recorded"
+          ]
+        },
+        "specificationApprovalState": {
+          "enum": [
+            "not-requested",
+            "pending",
+            "recorded"
+          ]
+        },
+        "approvedDecisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "approvedWorkPackageIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "path",
+        "artifactId",
+        "semanticDigest",
+        "freshness",
+        "decisionApprovalState",
+        "specificationApprovalState",
+        "approvedDecisionIds",
+        "approvedWorkPackageIds"
       ],
       "additionalProperties": false
     },

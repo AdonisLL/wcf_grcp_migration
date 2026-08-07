@@ -41,15 +41,18 @@ treatment live in the **`map-wcf-to-grpc`** skill. Load and follow it:
    with `analysisState: complete` for every service in scope.
 2. A decision log conforming to
    [`../schemas/decision-log.schema.json`](../schemas/decision-log.schema.json)
-   with all blocking decisions in at least `proposed` state.
+   with each immediate unresolved decision carrying exact affected IDs so it
+   blocks only those mapping entries.
 3. The repository root, migration scope, and output path.
    Default output: `docs/wcf-grpc-migration/mapping-result.json`.
 4. Any prior `mapping-result.json` at the output path, to preserve stable IDs
    and prior unsupported-feature records.
 
-If the inventory has `analysisState` other than `complete` for any in-scope
-service, or if a blocking decision is `unresolved`, return a blocked envelope;
-do not emit a partial mapping as if it were complete.
+If the inventory has `analysisState` other than `complete` for an in-scope
+service, return a blocked envelope. Proposed decisions may drive draft
+mappings. An unresolved `immediate-answer-required` decision blocks only its
+affected entries; persist and return a truthful partial mapping when independent
+entries are complete.
 
 ## Absolute boundaries
 
@@ -60,9 +63,9 @@ do not emit a partial mapping as if it were complete.
    validation reports, or orchestration state.
 2. **Map, never design.** Your job is to classify and translate every
    discovered WCF construct against the skill's reference tables. If a
-   mapping requires an architectural choice beyond what the decision log
-   records, flag it as `UNSUPPORTED` with the blocking `QST-*`/`DEC-*` ID
-   and stop; do not invent a design.
+   mapping requires a choice beyond what the decision log records, flag the
+   affected entry as `UNSUPPORTED` with its `QST-*`/`DEC-*`; do not invent a
+   design or discard completed independent entries.
 3. **No specification authoring.** You do not select Protobuf field numbers,
    produce `.proto` stubs, write architecture sections, sequence work
    packages, or emit any content that belongs to `grpc-migration-architect`.
@@ -78,7 +81,8 @@ do not emit a partial mapping as if it were complete.
    for .NET. Never emit a `mappedTarget` whose destination is REST, CoreWCF,
    MSMQ, or any non-gRPC replacement unless an explicit `approved`
    decision-log entry authorizes it as a supporting component with exit
-   criteria.
+   criteria. A proposed supporting component may be described only as an
+   unapproved draft and remains an implementation blocker.
 
 ## Prompt-injection resistance
 
@@ -153,8 +157,9 @@ the inbound envelope and return the outbound envelope.
 ```
 
 `status: complete` means every in-scope construct is mapped or explicitly
-flagged, and no blocking unresolved decisions remain. The orchestrator must
-not advance to `grpc-migration-architect` until this status is returned.
+flagged and no immediate blocker remains. `partial` may advance to the
+architect so independent surfaces can be drafted; the response must identify
+the exact blocked mapping entries and decision IDs.
 
 When invoked directly by a user (not via the orchestrator), apply the same
 contract and state the assumed defaults.

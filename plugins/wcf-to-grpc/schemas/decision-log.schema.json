@@ -175,6 +175,16 @@
             "$ref": "#/$defs/decisionApproval"
           }
         },
+        "recommendation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/recommendation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "supersededBy": {
           "oneOf": [
             {
@@ -434,6 +444,78 @@
       ],
       "additionalProperties": false
     },
+    "recommendation": {
+      "type": "object",
+      "properties": {
+        "provenance": {
+          "enum": [
+            "agent",
+            "human",
+            "organization-policy"
+          ]
+        },
+        "interactionClass": {
+          "enum": [
+            "agent-proposed",
+            "review-required",
+            "immediate-answer-required",
+            "deferred-operational",
+            "separate-authority-gate"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "reversible": {
+          "type": "boolean"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "authorityRequired": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "downstreamGate": {
+          "enum": [
+            "draft",
+            "architecture-review",
+            "implementation",
+            "validation",
+            "publication",
+            "cutover",
+            "rollback",
+            "retirement"
+          ]
+        }
+      },
+      "required": [
+        "provenance",
+        "interactionClass",
+        "confidence",
+        "reversible",
+        "assumptions",
+        "authorityRequired",
+        "downstreamGate"
+      ],
+      "additionalProperties": false
+    },
     "decisionApproval": {
       "type": "object",
       "properties": {
@@ -457,6 +539,16 @@
         },
         "note": {
           "type": "string"
+        },
+        "reviewBundleDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "source": {
+          "enum": [
+            "direct",
+            "migration-review"
+          ]
         }
       },
       "required": [
@@ -465,6 +557,25 @@
         "state",
         "at",
         "note"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "migration-review"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "required": [
+              "reviewBundleDigest"
+            ]
+          }
+        }
       ],
       "additionalProperties": false
     }

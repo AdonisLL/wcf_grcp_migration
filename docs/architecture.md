@@ -70,9 +70,9 @@ Frontmatter is deliberately minimal and validated by
 | Agent | Tools | May write | Never |
 |---|---|---|---|
 | [WCF Codebase Analyst](../plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | `read`, `search`, `edit`, `execute` | `inventory.json` only | Mutate application files, build, restore, or format; choose a target |
-| [WCF Migration Decision Interviewer](../plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | `read`, `search`, `edit`, `execute`, `web` | `decision-log.json` | Ask discoverable facts, answer for the operator, infer approval |
+| [WCF Migration Decision Interviewer](../plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | `read`, `search`, `edit`, `execute`, `web` | `decision-log.json` | Fabricate organizational facts, infer approval, alter a review bundle |
 | [WCF-to-gRPC Mapper](../plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | `read`, `search`, `edit`, `execute` | `mapping-result.json` | Drop a construct, resolve a decision, author architecture |
-| [gRPC Migration Architect](../plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | `read`, `search`, `edit`, `execute` | Migration artifacts in the output directory | Application code, issues, implementations, approvals |
+| [gRPC Migration Architect](../plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | `read`, `search`, `edit`, `execute` | `migration-spec.json`, `migration-review.json/.md`, rendered design docs | Application code, issues, implementations, inferred approvals |
 | [gRPC Migration Issue Publisher](../plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | `read`, `search`, `edit`, `execute` | Issue preview and publication artifacts | Mutate GitHub without approved inputs, exact confirmation, and permission |
 | [gRPC Migration Implementer](../plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | `read`, `search`, `edit`, `execute` | Only its assigned work package's `exclusive-write` paths | Migration artifacts, other packages' paths, WCF retirement without evidence |
 | [gRPC Parity Validator](../plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | `read`, `search`, `edit`, `execute` | Only `validation-reports/` | Application code, upstream artifacts, fixing findings, granting retirement |
@@ -96,7 +96,7 @@ aliases may be declared at all.
 | [`inventory-wcf-codebase`](../plugins/wcf-to-grpc/skills/inventory-wcf-codebase/SKILL.md) | Analysis | `inventory.json` |
 | [`interview-migration-decisions`](../plugins/wcf-to-grpc/skills/interview-migration-decisions/SKILL.md) | Decisions | `decision-log.json` |
 | [`map-wcf-to-grpc`](../plugins/wcf-to-grpc/skills/map-wcf-to-grpc/SKILL.md) | Mapping | `mapping-result.json` + redesign risks |
-| [`author-migration-specs`](../plugins/wcf-to-grpc/skills/author-migration-specs/SKILL.md) | Specification | `migration-spec.json` + rendered Markdown |
+| [`author-migration-specs`](../plugins/wcf-to-grpc/skills/author-migration-specs/SKILL.md) | Specification | `migration-spec.json`, `migration-review.json/.md`, rendered design docs |
 | [`publish-migration-issues`](../plugins/wcf-to-grpc/skills/publish-migration-issues/SKILL.md) | Publication | `issue-set.json` + previews |
 | [`implement-grpc-migration`](../plugins/wcf-to-grpc/skills/implement-grpc-migration/SKILL.md) | Implementation | Code + `implementation-reports/` |
 | [`validate-grpc-parity`](../plugins/wcf-to-grpc/skills/validate-grpc-parity/SKILL.md) | Validation | `validation-reports/` |
@@ -110,7 +110,10 @@ The orchestrator drives eleven stages. Each transition is gated on artifact
 state that can be read back from disk, which is what makes a run resumable.
 
 ```text
-intake ──▶ inventory ──▶ interview ──▶ mapping ──▶ specification ──▶ approval
+intake ──▶ inventory ──▶ proposals/blockers ──▶ mapping ──▶ draft + review bundle
+                                                                    │
+                                                                    ▼
+                                                        consolidated approval
                                                                         │
                        ┌────────────────────────────────────────────────┘
                        ▼
@@ -136,8 +139,8 @@ resumed migration reaches the same next action.
 
 | Gate | Enforced by |
 |---|---|
-| No specification without a complete inventory and the decisions it needs | Architect required inputs; orchestrator stage 4 gate |
-| No implementation before an approved specification | Implementer boundary 2; orchestrator stage 7 gate |
+| No draft surface without complete inventory evidence and a proposal or explicit blocker | Architect required inputs; orchestrator stage 4 gate |
+| No implementation before bundle-scoped decision, specification, and work-package approval | Interviewer/architect approval recording; orchestrator stage 7 gate |
 | No GitHub mutation before a full-set preview and digest-matched confirmation | Publication skill; orchestrator stage 6 gate |
 | No parallel batch with overlapping or shared ownership | `fleetPlan` ownership data; implementer boundaries 3–5; orchestrator wave partitioning |
 | No next wave before its integration checkpoint reconciles | Fleet reference §5; orchestrator stage 8 gate |

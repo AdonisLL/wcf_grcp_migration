@@ -20,6 +20,8 @@ docs/wcf-grpc-migration/
 ├── decision-log.json                 Decisions, options, approvals
 ├── mapping-result.json               Complete WCF-to-gRPC construct mapping
 ├── migration-spec.json               Architecture, contracts, roadmap, work packages
+├── migration-review.json             Digest-bound consolidated review
+├── migration-review.md               Human-readable consolidated review
 ├── issue-set.json                    Issue-ready payloads and publication state
 ├── assessment.md                     Rendered current-state assessment
 ├── decisions.md                      Rendered decision view
@@ -56,6 +58,7 @@ Exactly one stage may write each artifact. Every other stage reads it.
 | `decision-log.json` | Interview stage | Mapping, architect, implementer, validator |
 | `mapping-result.json` | Mapping stage | Architect, orchestrator, validator |
 | `migration-spec.json` | Architect | Publication, implementer, validator |
+| `migration-review.json`, `migration-review.md` | Architect | Interview, orchestrator, humans |
 | `issue-set.json` | Publication stage | Humans, GitHub |
 | `implementation-reports/*` | Implementer | Orchestrator, validator, humans |
 | `validation-reports/*` | Validator | Orchestrator, architect, implementer, humans |
@@ -76,6 +79,7 @@ Strict JSON Schema Draft 2020-12, `additionalProperties: false` throughout, in
 | [`decision-log.schema.json`](../plugins/wcf-to-grpc/schemas/decision-log.schema.json) | `decision-log.json` |
 | [`mapping-result.schema.json`](../plugins/wcf-to-grpc/schemas/mapping-result.schema.json) | `mapping-result.json` |
 | [`migration-spec.schema.json`](../plugins/wcf-to-grpc/schemas/migration-spec.schema.json) | `migration-spec.json` |
+| [`migration-review.schema.json`](../plugins/wcf-to-grpc/schemas/migration-review.schema.json) | `migration-review.json` |
 | [`issue-set.schema.json`](../plugins/wcf-to-grpc/schemas/issue-set.schema.json) | `issue-set.json` |
 | [`orchestration-state.schema.json`](../plugins/wcf-to-grpc/schemas/orchestration-state.schema.json) | `orchestration-state.json` |
 | [`fixture-expectations.schema.json`](../plugins/wcf-to-grpc/tests/fixtures/fixture-expectations.schema.json) | Test fixture `expected.json` files |
@@ -110,7 +114,7 @@ survives moves, renames, and regeneration.
 
 | Prefix | Meaning |
 |---|---|
-| `INV-`, `DLOG-`, `MSPEC-`, `ISET-` | The four core artifacts |
+| `INV-`, `DLOG-`, `MRES-`, `MREV-`, `MSPEC-`, `ISET-` | Core migration artifacts |
 | `ORUN-` | Orchestration run |
 | `REPO-`, `SOL-`, `PRJ-`, `HOST-` | Repository topology |
 | `SVC-`, `OP-`, `DC-`, `FLD-` | WCF service, operation, data contract, field |
@@ -170,6 +174,13 @@ Rules that hold everywhere:
 - **Artifact approval and item approval are separate.** Publishing an issue
   needs the `migration-spec.json` artifact approved *and* the individual work
   package approved.
+- **One review, scoped recording.** `migration-review.json` binds proposed
+  decisions, specification, and work packages to one semantic digest. The
+  interviewer and architect record the same human approval in their owned
+  artifacts; partial recording is resumable.
+- **Action authority is excluded.** Bundle approval never grants GitHub
+  mutation, protected traffic, production access, cutover, rollback execution,
+  or WCF retirement.
 - **Retirement approval is separate again** — a distinct decision in the
   decision log referencing the `VRPT-*` report it relies on.
 - `draft`, `review-requested`, `rejected`, `superseded`, and absent all mean
@@ -184,6 +195,9 @@ Every artifact carries a `generation` block: `generator`, `generatorVersion`,
 - **Determinism.** Re-running a stage with unchanged inputs produces
   byte-identical output and reports `changed: false`. `generatedAt` is not
   bumped when the source digest and semantics are unchanged.
+- **Semantic digest.** Review digests exclude approval-event metadata, so
+  recording the exact reviewed approval does not stale the content. Any
+  architecture, decision, contract, roadmap, or work-package change does.
 - **Staleness.** If an upstream artifact's digest changes after a downstream
   artifact was produced, the downstream artifact is `stale`, and any approval
   that depended on it is invalidated. The owning stage must re-run before

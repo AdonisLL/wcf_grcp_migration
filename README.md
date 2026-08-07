@@ -1,15 +1,16 @@
 # WCF to gRPC migration plugin for GitHub Copilot CLI
 
 A GitHub Copilot CLI plugin marketplace containing **`wcf-to-grpc`**: eight
-agents, seven skills, seven artifact schemas, and a dependency-free validator that
+agents, seven skills, eight artifact schemas, and a dependency-free validator that
 take a legacy .NET WCF codebase to **gRPC for .NET** — through
 evidence-backed analysis, an explicit decision record, a reviewable
 specification, gated implementation, and independent parity validation, ending
 at a WCF retirement gate that will not open without proof.
 
-The plugin never guesses. When it needs operator input, it asks for the missing
-value and waits; when an artifact or approval gate blocks progress, it names who
-must resolve it and the exact action needed to resume.
+The plugin drafts before it interrupts. It selects only high-confidence,
+reversible, evidence-backed recommendations as proposed assumptions, then asks
+for one consolidated review. It still pauses for choices with no safe default
+and for action-specific permissions, cutover, and retirement.
 
 <p align="center">
   <img src="assets/wcf-to-grpc-migration-pipeline.svg"
@@ -117,8 +118,9 @@ pick an agent with `/agent` and prompt it.
 Orchestrator**. You can start interactively with:
 
 > Orchestrate a WCF to gRPC migration for this repository. Ask me for any
-> required intake values, then continue through the workflow and stop only at
-> gates that require operator action.
+> irreducible choices, prepare the complete recommended migration plan, then
+> ask me to review it once. Stop separately for publication, protected traffic,
+> cutover, and retirement authority.
 
 The orchestrator will ask for missing Stage 0 values and continue in the same
 conversation after you answer. It invokes each specialist agent directly, so
@@ -126,20 +128,21 @@ you stay with the orchestrator instead of switching agents or copying handoff
 envelopes. To supply the complete intake up front, use:
 
 > Orchestrate a WCF to gRPC migration for this repository. Scope it to the
-> Orders solution and exclude the legacy Billing solution. This is a mixed
-> service-and-client repository. Target .NET 10 and use
+> Orders solution and exclude the legacy Billing solution. Prefer .NET 10 and use
 > `docs/wcf-grpc-migration/` for output. Local test-harness access is granted;
 > network, GitHub mutation, golden traffic, load testing, and production access
 > are not granted. Stop at every human approval gate.
 
-Stage 0 collects the following values. Omitted permissions default to denied;
-the repository kind, scope, and target runtime are never guessed.
+Stage 0 establishes the following values. Omitted permissions default to
+denied. Repository kind comes from inventory, whole-repository scope is the
+default, and the decision stage proposes the current supported .NET LTS unless
+evidence makes it unsafe.
 
 | Intake value | Accepted values or example |
 |---|---|
-| Repository kind | `service-host`, `client-only`, or `mixed` |
-| Scope | A service, solution, or bounded slice, plus explicit exclusions |
-| Target runtime | A specific supported .NET version; confirm the current .NET LTS rather than copying an old example |
+| Repository kind | Discovered as `service-host`, `client-only`, or `mixed` |
+| Scope | Defaults to the whole repository; name a bounded slice and exclusions when needed |
+| Target runtime | Current supported .NET LTS is proposed; override it in review or when constraints require |
 | Output directory | Defaults to `docs/wcf-grpc-migration/` |
 | Network | Grant only when a stage may access external resources |
 | GitHub mutation | Grant only for confirmation-gated Issue publication |
@@ -159,12 +162,13 @@ eligible stage.
 > unsupported feature in this repository. Cite file and line evidence, and list
 > the questions that static analysis cannot answer.
 
-**Design the target.** Select **gRPC Migration Architect** (needs an inventory
-and a decision log):
+**Design the target.** Select **gRPC Migration Architect** (needs a validated
+inventory, decision log, and mapping result):
 
 > Author the gRPC target architecture, Protobuf contract specifications,
-> roadmap, and fleet-ready work packages from the approved inventory and
-> decision log. Block anything that depends on an unresolved decision.
+> roadmap, fleet-ready work packages, and consolidated review bundle from the
+> proposed decisions. Block only surfaces with an irreducible unresolved
+> decision.
 
 **Build one work package.** Select **gRPC Migration Implementer**:
 
@@ -184,10 +188,10 @@ and a decision log):
 |---|---|---|---|
 | 0 | Scope and runtime intake | Orchestrator | — |
 | 1 | Read-only inventory | WCF Codebase Analyst | Scope recorded |
-| 2 | Decision interview | WCF Migration Decision Interviewer | Inventory complete for scope |
-| 3 | WCF-to-gRPC mapping | WCF-to-gRPC Mapper | Blocking decisions recorded |
+| 2 | Decision proposals and focused blockers | WCF Migration Decision Interviewer | Inventory complete for scope |
+| 3 | WCF-to-gRPC mapping | WCF-to-gRPC Mapper | A proposal or explicit blocker exists for each affected surface |
 | 4 | Architecture and specification | gRPC Migration Architect | Inventory + decisions + mapping valid |
-| 5 | **Human approval** | A reviewer | Spec valid, no unresolved blocking item |
+| 5 | **Consolidated review** | A reviewer | Spec and migration-review bundle valid; no immediate blocker in scope |
 | 6 | Issue publication *(optional)* | gRPC Migration Issue Publisher | Spec and work packages approved |
 | 7 | Implementation waves | gRPC Migration Implementer | Approved package, satisfied dependencies, disjoint ownership |
 | 8 | Integration checkpoints | Implementation stage | Every covered package reported complete |
@@ -202,9 +206,9 @@ The operator-controlled gates are:
 
 | Gate | What clears it |
 |---|---|
-| Stage 0 intake | Provide repository kind, scope, target runtime, output directory, and any permission grants |
-| Decision interview | Answer the evidence-triggered architecture question; the interview stage records the decision |
-| Specification approval | A human reviews and explicitly approves the current specification |
+| Stage 0 intake | Clarify scope only when the whole-repository default is not intended |
+| Focused decision blocker | Answer only when no safe behavior-preserving recommendation exists |
+| Consolidated architecture review | Approve, reject, or override the exact digest-bound decisions, specification, and work packages |
 | Issue publication | Approve the full preview using its matching digest and grant GitHub mutation |
 | Validation environment | Provide the named environment and explicitly grant any required harness, traffic, load, network, or production permission |
 | WCF retirement | A current `retirement-ready` validation report and a separate human approval |
@@ -220,7 +224,7 @@ custom-agent delegation is unavailable or fails.
 |---|---|---|---|
 | [WCF Migration Orchestrator](plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | `read`, `search`, `edit`, `agent` | Sequences all stages, invokes their owning agents, enforces gates, keeps resumable run state | Does stage work, approves anything, runs commands or slash commands |
 | [WCF Codebase Analyst](plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | `read`, `search`, `edit`, `execute` | Evidence-backed inventory of contracts, config, hosts, consumers, risks | Writes anything except its inventory artifact; picks a target |
-| [WCF Migration Decision Interviewer](plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | `read`, `search`, `edit`, `execute`, `web` | Asks one evidence-backed decision at a time and persists answers | Guesses discoverable facts, answers for the operator, or self-approves decisions |
+| [WCF Migration Decision Interviewer](plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | `read`, `search`, `edit`, `execute`, `web` | Batch-proposes safe defaults, asks focused blockers, records bundle approvals | Fabricates organizational facts or self-approves decisions |
 | [WCF-to-gRPC Mapper](plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | `read`, `search`, `edit`, `execute` | Produces the complete, persisted WCF-to-gRPC mapping result | Silently drops constructs or authors the target architecture |
 | [gRPC Migration Architect](plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | `read`, `search`, `edit`, `execute` | Target architecture, Protobuf specs, roadmap, fleet-ready work packages | Application code, issues, implementations, self-approval |
 | [gRPC Migration Issue Publisher](plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | `read`, `search`, `edit`, `execute` | Generates previews and performs explicitly confirmed, duplicate-safe publication | Publishes an unapproved package or mutates GitHub before digest confirmation |
@@ -246,7 +250,8 @@ migrated:
 
 ```text
 orchestration-state.json   inventory.json      decision-log.json
-migration-spec.json        issue-set.json      assessment.md
+mapping-result.json        migration-spec.json migration-review.json
+migration-review.md        issue-set.json      assessment.md
 decisions.md               target-architecture.md   roadmap.md
 contracts/<spec-id>.md     work-packages/<work-package-id>.md
 implementation-reports/<work-package-id>.md
@@ -264,7 +269,9 @@ recorded decisions.
 
 **Nothing irreversible happens implicitly.**
 
-- *Specification approval* is a human act. No implementation starts before it.
+- *Consolidated review approval* is a human act. No implementation starts until
+  its listed decisions, specification, and work packages are all recorded as
+  approved.
 - *GitHub Issues* are never mutated before the complete set is previewed and a
   human confirms the exact preview digest, with explicit per-operation
   permission flags. Duplicates are detected by stable id; partial publications

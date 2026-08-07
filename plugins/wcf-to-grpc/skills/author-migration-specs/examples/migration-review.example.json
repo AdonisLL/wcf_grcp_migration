@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "1.0.0",
+  "artifactType": "migration-review",
+  "artifactId": "MREV-example-orders",
+  "generation": {
+    "generator": "author-migration-specs",
+    "generatorVersion": "1.1.0",
+    "generatedAt": "2026-08-08T12:00:00Z",
+    "sourceRevision": {
+      "state": "known",
+      "value": "git:0123456789abcdef"
+    },
+    "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "mode": "full"
+  },
+  "approval": {
+    "state": "review-requested",
+    "requestedAt": "2026-08-08T12:00:00Z",
+    "requestedFrom": [
+      "Migration reviewer"
+    ]
+  },
+  "citations": [],
+  "traceLinks": [],
+  "sourceArtifacts": [
+    {
+      "artifact": {
+        "artifactType": "inventory",
+        "id": "INV-example-orders"
+      },
+      "semanticDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "artifact": {
+        "artifactType": "decision-log",
+        "id": "DLOG-example-orders"
+      },
+      "semanticDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "artifact": {
+        "artifactType": "mapping-result",
+        "id": "MRES-example-orders"
+      },
+      "semanticDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "artifact": {
+        "artifactType": "migration-spec",
+        "id": "MSPEC-example-orders"
+      },
+      "semanticDigest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    }
+  ],
+  "semanticDigest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "decisionReviews": [
+    {
+      "decisionId": "DEC-target-runtime",
+      "selectedOptionId": "OPT-target-runtime-net10",
+      "interactionClass": "agent-proposed",
+      "recommendation": "Host the gRPC service on the current supported .NET LTS.",
+      "rationale": "No repository constraint conflicts with the supported LTS default.",
+      "confidence": "high",
+      "assumptions": [
+        "The deployment platform supports the current .NET LTS."
+      ],
+      "alternatives": [
+        "Use another supported .NET release when an evidenced platform constraint requires it."
+      ],
+      "consequences": [
+        "The service adopts the current gRPC for .NET hosting and support lifecycle."
+      ],
+      "evidenceIds": []
+    }
+  ],
+  "architectureSummary": {
+    "summary": "All architecture sections are drafted from evidence-backed proposed decisions.",
+    "includedIds": [
+      "DEC-target-runtime"
+    ],
+    "unresolvedIds": []
+  },
+  "contractSummary": {
+    "summary": "The Orders service has a draft unary gRPC contract.",
+    "includedIds": [
+      "SPEC-orders"
+    ],
+    "unresolvedIds": []
+  },
+  "roadmapSummary": {
+    "summary": "Foundation and Orders pilot work are dependency ordered.",
+    "includedIds": [
+      "PHS-foundation",
+      "WP-orders-server"
+    ],
+    "unresolvedIds": []
+  },
+  "workPackageIds": [
+    "WP-orders-server"
+  ],
+  "blockingDecisionIds": [],
+  "deferredOperationalItems": [
+    {
+      "decisionId": "DEC-sla-objectives",
+      "gate": "validation",
+      "nextAction": "The service owner records measurable SLOs before cutover validation.",
+      "owner": {
+        "state": "known",
+        "value": "Service owner"
+      }
+    }
+  ],
+  "excludedAuthorityGates": [
+    "github-mutation",
+    "protected-traffic",
+    "production-access",
+    "cutover",
+    "rollback-execution",
+    "wcf-retirement"
+  ],
+  "approvalScope": {
+    "decisionIds": [
+      "DEC-target-runtime"
+    ],
+    "workPackageIds": [
+      "WP-orders-server"
+    ],
+    "excludedActions": [
+      "GitHub mutation",
+      "Protected traffic or production access",
+      "Cutover, rollback execution, and WCF retirement"
+    ]
+  }
+}

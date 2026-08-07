@@ -1,0 +1,53 @@
+{
+  "fixture": "wcf-sample-40-decisions",
+  "totalDecisions": 40,
+  "bundledForReview": [
+    "DEC-authorization-policy",
+    "DEC-baseline-source",
+    "DEC-coexistence-exit-gates",
+    "DEC-compatibility-policy",
+    "DEC-cutover-gates",
+    "DEC-cutover-unit",
+    "DEC-deadline-policy",
+    "DEC-error-disclosure",
+    "DEC-external-consumer-support",
+    "DEC-fault-status-map",
+    "DEC-hosting-model",
+    "DEC-http-coexistence-strategy",
+    "DEC-identity-provider",
+    "DEC-operating-system",
+    "DEC-package-versioning",
+    "DEC-parity-oracle",
+    "DEC-payload-logging",
+    "DEC-presence-semantics",
+    "DEC-proto-ownership",
+    "DEC-retry-policy",
+    "DEC-rollback-data",
+    "DEC-rollback-trigger",
+    "DEC-service-authentication",
+    "DEC-target-runtime",
+    "DEC-telemetry-standard",
+    "DEC-transport-security"
+  ],
+  "immediateOnlyIfEvidenceCannotSupportPreservation": [
+    "DEC-audit-requirements",
+    "DEC-state-concurrency",
+    "DEC-state-lifetime",
+    "DEC-state-storage"
+  ],
+  "deferredOperational": [
+    "DEC-capacity-scaling",
+    "DEC-certificate-operations",
+    "DEC-configuration-ownership",
+    "DEC-deployment-strategy",
+    "DEC-payload-limit-policy",
+    "DEC-service-discovery",
+    "DEC-sla-objectives",
+    "DEC-test-environments"
+  ],
+  "separateAuthorityGates": [
+    "DEC-golden-traffic",
+    "DEC-retirement-approval"
+  ],
+  "expectedMaximumImmediatePrompts": 4
+}

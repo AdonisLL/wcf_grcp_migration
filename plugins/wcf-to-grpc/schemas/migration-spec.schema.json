@@ -78,6 +78,11 @@
       },
       "then": {
         "properties": {
+          "approval": {
+            "required": [
+              "reviewBundleDigest"
+            ]
+          },
           "targetArchitecture": {
             "properties": {
               "sections": {
@@ -99,7 +104,10 @@
                     "state": {
                       "const": "approved"
                     }
-                  }
+                  },
+                  "required": [
+                    "reviewBundleDigest"
+                  ]
                 }
               }
             }
@@ -120,7 +128,10 @@
                     "state": {
                       "const": "approved"
                     }
-                  }
+                  },
+                  "required": [
+                    "reviewBundleDigest"
+                  ]
                 }
               }
             }

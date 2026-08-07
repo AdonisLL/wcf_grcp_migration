@@ -23,6 +23,42 @@ replacement target.
 - **Gate:** whether unresolved state blocks specification or only later
   cutover/implementation.
 
+## Interaction classes
+
+The catalog is a design checklist, not an instruction to interrupt the user
+for every row. Classify each triggered topic before choosing an interaction:
+
+| Class | Default topics |
+|---|---|
+| `agent-proposed` | `target-runtime`, `service-process-layout`, `service-boundaries`, `coexistence-strategy`, `coexistence-duration`, `package-versioning`, `compatibility-policy`, `guid-format`, `fault-status-map`, `error-disclosure`, `stream-backpressure`, `deadline-policy`, `retry-policy`, `cancellation-semantics`, `baseline-source`, `telemetry-standard`, `parity-oracle`, `fleet-parallelism`, `pilot-selection` |
+| `review-required` | `hosting-model`, `operating-system`, `browser-or-http-clients`, `service-authentication`, `transport-security`, `authorization-policy`, `proto-ownership`, `polymorphism-policy`, `decimal-representation`, `presence-semantics`, `timestamp-semantics`, `duration-semantics`, `xml-payload`, `partial-failure`, `session-state`, `duplex-lifecycle`, `duplex-reconnect-delivery`, `large-payload-streaming`, `one-way-acknowledgement`, `one-way-failure`, `idempotency-policy`, `deployment-strategy`, `service-discovery`, `gateway-proxy`, `payload-logging`, `cutover-unit`, `cutover-gates`, `rollback-trigger`, `rollback-data`, `repository-strategy` |
+| `immediate-answer-required` | `migration-scope`, `operation-scope`, `external-consumer-support`, `identity-provider`, `message-security-replacement`, `state-lifetime`, `transaction-redesign`, `consistency-requirement`, `reliable-delivery`, `queue-redesign`, `ordering-scope`, `named-pipe-transport`, `audit-requirements`, `compliance-constraints`, `delivery-constraints` |
+| `deferred-operational` | `consumer-upgrade-ownership`, `secret-certificate-ownership`, `shared-contract-distribution`, `sla-objectives`, `payload-limits`, `capacity-scaling`, `certificate-operations`, `configuration-ownership`, `test-environments`, `compatibility-matrix`, `shared-foundation-owner` |
+| `separate-authority-gate` | `golden-traffic`, `retirement-approval` |
+
+These are defaults, not blind outcomes. Promote an `agent-proposed` or
+`review-required` topic to `immediate-answer-required` when evidence conflicts,
+confidence is below high, a wire-significant choice has no behavior-preserving
+option, or a supporting component introduces material security, consistency,
+cost, or operational risk. Demote an immediate topic to `review-required` only
+when high-confidence evidence supports a reversible, behavior-preserving
+recommendation and every assumption is explicit.
+
+An agent may select a recommendation as `proposed` only when it:
+
+1. preserves observed behavior and the mandatory gRPC target;
+2. is supported by high-confidence evidence or a cited applicable policy;
+3. is reversible before cutover without destructive data conversion;
+4. does not invent provider capability, organizational commitment, numeric
+   production objectives, or permission;
+5. records assumptions, alternatives, consequences, confidence, and the later
+   gate that will test or approve it.
+
+`deferred-operational` values become owned implementation, validation, or
+cutover prerequisites. They do not block a complete draft merely because a
+specific product, number, environment, or individual is not yet known.
+`separate-authority-gate` topics are never cleared by architecture approval.
+
 ## 1. Target runtime and hosting platform
 
 | Topic key | Trigger and evidence | Focused question | Why / recommendation | Category / gate / skip |

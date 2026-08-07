@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./migration-review.schema.json",
+  "title": "WCF to gRPC consolidated migration review",
+  "description": "Digest-bound review bundle for proposed decisions, draft architecture, contracts, roadmap, and work packages. Approval excludes publication, protected traffic, cutover, rollback execution, and WCF retirement.",
+  "allOf": [
+    {
+      "$ref": "./common.schema.json#/$defs/artifactBase"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "const": "migration-review"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^MREV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "sourceArtifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceArtifact"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "artifact": {
+                    "properties": {
+                      "artifactType": {
+                        "const": "inventory"
+                      }
+                    },
+                    "required": [
+                      "artifactType"
+                    ]
+                  }
+                },
+                "required": [
+                  "artifact"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "artifact": {
+                    "properties": {
+                      "artifactType": {
+                        "const": "decision-log"
+                      }
+                    },
+                    "required": [
+                      "artifactType"
+                    ]
+                  }
+                },
+                "required": [
+                  "artifact"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "artifact": {
+                    "properties": {
+                      "artifactType": {
+                        "const": "mapping-result"
+                      }
+                    },
+                    "required": [
+                      "artifactType"
+                    ]
+                  }
+                },
+                "required": [
+                  "artifact"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "artifact": {
+                    "properties": {
+                      "artifactType": {
+                        "const": "migration-spec"
+                      }
+                    },
+                    "required": [
+                      "artifactType"
+                    ]
+                  }
+                },
+                "required": [
+                  "artifact"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ],
+          "uniqueItems": true
+        },
+        "semanticDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "decisionReviews": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decisionReview"
+          }
+        },
+        "architectureSummary": {
+          "$ref": "#/$defs/summary"
+        },
+        "contractSummary": {
+          "$ref": "#/$defs/summary"
+        },
+        "roadmapSummary": {
+          "$ref": "#/$defs/summary"
+        },
+        "workPackageIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "blockingDecisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "deferredOperationalItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deferredItem"
+          }
+        },
+        "excludedAuthorityGates": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "github-mutation",
+              "protected-traffic",
+              "production-access",
+              "cutover",
+              "rollback-execution",
+              "wcf-retirement"
+            ]
+          },
+          "minItems": 6,
+          "uniqueItems": true
+        },
+        "approvalScope": {
+          "$ref": "#/$defs/approvalScope"
+        }
+      },
+      "required": [
+        "sourceArtifacts",
+        "semanticDigest",
+        "decisionReviews",
+        "architectureSummary",
+        "contractSummary",
+        "roadmapSummary",
+        "workPackageIds",
+        "blockingDecisionIds",
+        "deferredOperationalItems",
+        "excludedAuthorityGates",
+        "approvalScope"
+      ]
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "sourceArtifact": {
+      "type": "object",
+      "properties": {
+        "artifact": {
+          "$ref": "./common.schema.json#/$defs/artifactRef"
+        },
+        "semanticDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "artifact",
+        "semanticDigest"
+      ],
+      "additionalProperties": false
+    },
+    "decisionReview": {
+      "type": "object",
+      "properties": {
+        "decisionId": {
+          "type": "string",
+          "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "selectedOptionId": {
+          "type": "string",
+          "pattern": "^OPT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "interactionClass": {
+          "enum": [
+            "agent-proposed",
+            "review-required",
+            "immediate-answer-required"
+          ]
+        },
+        "recommendation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "consequences": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidenceIds": {
+          "$ref": "./common.schema.json#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "decisionId",
+        "selectedOptionId",
+        "interactionClass",
+        "recommendation",
+        "rationale",
+        "confidence",
+        "assumptions",
+        "alternatives",
+        "consequences",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "includedIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "unresolvedIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        }
+      },
+      "required": [
+        "summary",
+        "includedIds",
+        "unresolvedIds"
+      ],
+      "additionalProperties": false
+    },
+    "deferredItem": {
+      "type": "object",
+      "properties": {
+        "decisionId": {
+          "type": "string",
+          "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "gate": {
+          "enum": [
+            "implementation",
+            "validation",
+            "cutover"
+          ]
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        }
+      },
+      "required": [
+        "decisionId",
+        "gate",
+        "nextAction",
+        "owner"
+      ],
+      "additionalProperties": false
+    },
+    "approvalScope": {
+      "type": "object",
+      "properties": {
+        "decisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "workPackageIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "excludedActions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "decisionIds",
+        "workPackageIds",
+        "excludedActions"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

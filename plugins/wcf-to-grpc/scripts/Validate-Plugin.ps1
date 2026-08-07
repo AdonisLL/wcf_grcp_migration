@@ -14,7 +14,7 @@ $pluginManifestPath = Join-Path $pluginRoot "plugin.json"
 $fixtureRoot = Join-Path $pluginRoot "tests/fixtures"
 $docsRoot = Join-Path $repoRoot "docs"
 $fixtureSchemaPath = Join-Path $fixtureRoot "fixture-expectations.schema.json"
-$stableIdPattern = "^(?:INV|DLOG|MRES|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+$stableIdPattern = "^(?:INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
 
 function Add-Check {
     param(
@@ -431,6 +431,56 @@ if ((Test-Path -LiteralPath $pluginReadmePath -PathType Leaf) -and (Test-Path -L
         Add-Check ($pluginReadme -like "*$($agentFile.Name)*") "Plugin README does not document agent '$($agentFile.Name)'."
         Add-Check ($repoReadme -like "*$($agentFile.Name)*") "Repository README does not document agent '$($agentFile.Name)'."
     }
+
+    $interviewerPath = Join-Path $agentsPath "wcf-migration-decision-interviewer.agent.md"
+    $orchestratorPath = Join-Path $agentsPath "wcf-migration-orchestrator.agent.md"
+    $architectPath = Join-Path $agentsPath "grpc-migration-architect.agent.md"
+    $catalogPath = Join-Path $pluginRoot "skills/interview-migration-decisions/references/question-catalog.md"
+    foreach ($requiredText in @("prepare-draft", "resolve-blocker", "record-bundle-approval", "partial-draft-ready", "ready-for-draft")) {
+        Add-Check ((Get-Content -LiteralPath $interviewerPath -Raw) -like "*$requiredText*") "Decision interviewer is missing '$requiredText' workflow guidance."
+    }
+    foreach ($requiredClass in @("agent-proposed", "review-required", "immediate-answer-required", "deferred-operational", "separate-authority-gate")) {
+        Add-Check ((Get-Content -LiteralPath $catalogPath -Raw) -like "*$requiredClass*") "Question catalog is missing '$requiredClass'."
+    }
+    Add-Check ((Get-Content -LiteralPath $architectPath -Raw) -like "*migration-review.schema.json*") "Architect does not reference the migration-review schema."
+    Add-Check ((Get-Content -LiteralPath $orchestratorPath -Raw) -like "*record-bundle-approval*") "Orchestrator does not coordinate bundle decision approval."
+    Add-Check ((Get-Content -LiteralPath $orchestratorPath -Raw) -like "*does not grant GitHub mutation*") "Orchestrator does not preserve action-specific authority gates."
+
+    $streamliningFixturePath = Join-Path $fixtureRoot "decision-streamlining.json"
+    $streamliningFixture = $jsonDocuments[$streamliningFixturePath]
+    $streamliningGroups = @(
+        @(Get-PropertyValue $streamliningFixture "bundledForReview"),
+        @(Get-PropertyValue $streamliningFixture "immediateOnlyIfEvidenceCannotSupportPreservation"),
+        @(Get-PropertyValue $streamliningFixture "deferredOperational"),
+        @(Get-PropertyValue $streamliningFixture "separateAuthorityGates")
+    )
+    $streamliningIds = @($streamliningGroups | ForEach-Object { $_ })
+    Add-Check ((Get-PropertyValue $streamliningFixture "totalDecisions") -eq 40) "Decision streamlining regression fixture must cover 40 decisions."
+    Add-Check ($streamliningIds.Count -eq 40) "Decision streamlining groups must contain all 40 decisions."
+    Add-Check (($streamliningIds | Sort-Object -Unique).Count -eq 40) "Decision streamlining groups contain duplicate decision IDs."
+    Add-Check (@(Get-PropertyValue $streamliningFixture "bundledForReview").Count -ge 25) "Decision streamlining fixture must bundle standard defaults rather than prompt individually."
+    Add-Check ((Get-PropertyValue $streamliningFixture "expectedMaximumImmediatePrompts") -le 4) "Decision streamlining fixture permits too many immediate prompts."
+    $immediateDecisionIds = @(Get-PropertyValue $streamliningFixture "immediateOnlyIfEvidenceCannotSupportPreservation")
+    Add-Check ($immediateDecisionIds.Count -le (Get-PropertyValue $streamliningFixture "expectedMaximumImmediatePrompts")) "Decision streamlining fixture exceeds its immediate-prompt limit."
+    $expectedImmediateIds = @("DEC-audit-requirements", "DEC-state-concurrency", "DEC-state-lifetime", "DEC-state-storage")
+    Add-Check (@(Compare-Object ($immediateDecisionIds | Sort-Object) ($expectedImmediateIds | Sort-Object)).Count -eq 0) "Decision streamlining fixture changed the authoritative immediate-decision set."
+    $expectedStreamliningIds = @(
+        "DEC-audit-requirements", "DEC-authorization-policy", "DEC-baseline-source",
+        "DEC-capacity-scaling", "DEC-certificate-operations", "DEC-coexistence-exit-gates",
+        "DEC-compatibility-policy", "DEC-configuration-ownership", "DEC-cutover-gates",
+        "DEC-cutover-unit", "DEC-deadline-policy", "DEC-deployment-strategy",
+        "DEC-error-disclosure", "DEC-external-consumer-support", "DEC-fault-status-map",
+        "DEC-golden-traffic", "DEC-hosting-model", "DEC-http-coexistence-strategy",
+        "DEC-identity-provider", "DEC-operating-system", "DEC-package-versioning",
+        "DEC-parity-oracle", "DEC-payload-limit-policy", "DEC-payload-logging",
+        "DEC-presence-semantics", "DEC-proto-ownership", "DEC-retirement-approval",
+        "DEC-retry-policy", "DEC-rollback-data", "DEC-rollback-trigger",
+        "DEC-service-authentication", "DEC-service-discovery", "DEC-sla-objectives",
+        "DEC-state-concurrency", "DEC-state-lifetime", "DEC-state-storage",
+        "DEC-target-runtime", "DEC-telemetry-standard", "DEC-test-environments",
+        "DEC-transport-security"
+    )
+    Add-Check (@(Compare-Object ($streamliningIds | Sort-Object) ($expectedStreamliningIds | Sort-Object)).Count -eq 0) "Decision streamlining fixture does not match the authoritative 40-decision sample."
     foreach ($skillFile in $skillFiles) {
         $skillReference = "skills/$($skillFile.Directory.Name)/"
         Add-Check ($pluginReadme -like "*$skillReference*") "Plugin README does not document skill '$($skillFile.Directory.Name)'."
@@ -487,6 +537,10 @@ $schemaValidationPairs = @(
     @{
         Json = Join-Path $pluginRoot "skills/author-migration-specs/examples/migration-spec.example.json"
         Schema = Join-Path $pluginRoot "schemas/migration-spec.schema.json"
+    },
+    @{
+        Json = Join-Path $pluginRoot "skills/author-migration-specs/examples/migration-review.example.json"
+        Schema = Join-Path $pluginRoot "schemas/migration-review.schema.json"
     },
     @{
         Json = Join-Path $pluginRoot "skills/publish-migration-issues/examples/issue-set.example.json"

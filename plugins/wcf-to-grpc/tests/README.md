@@ -77,19 +77,23 @@ Run this authenticated test in a disposable copy of
 `fixtures/basic-unary/` so generated migration artifacts do not modify the
 checked-in fixture.
 
-1. Select **WCF Migration Orchestrator** and provide complete Stage 0 intake.
+1. Select **WCF Migration Orchestrator**; accept whole-repository scope or name
+   a narrower slice. Leave permissions denied unless a later action needs one.
 2. Confirm the orchestrator invokes **WCF Codebase Analyst** itself; it must not
    ask you to switch agents or paste an inventory envelope.
-3. Confirm interview questions appear in the orchestrator conversation one at a
-   time and answers persist to `decision-log.json`.
+3. Confirm safe recommendations are proposed in one pass. At most one
+   irreducible blocker appears at a time and answers persist to
+   `decision-log.json`.
 4. Confirm mapping runs through **WCF-to-gRPC Mapper** and writes a
    schema-valid `mapping-result.json`.
 5. Interrupt and resume the session. The orchestrator must re-read state and
    artifacts without repeating completed inventory, answered decisions, or
    mapping work.
-6. Confirm specification approval remains a human gate and issue publication
-   defaults to preview-only. No GitHub mutation may occur without an exact
-   digest confirmation and explicit mutation permission.
+6. Confirm `migration-review.json/.md` contains the full plan and exact
+   semantic digest. One human approval records only its listed decisions,
+   specification, and work packages. Issue publication remains preview-only;
+   protected traffic, production, cutover, rollback execution, and retirement
+   remain separate gates.
 7. For an approved test specification, confirm each implementation invocation
    receives exactly one `WP-*` id, conflicting/shared packages remain
    sequential, and completion is derived from reports on disk.

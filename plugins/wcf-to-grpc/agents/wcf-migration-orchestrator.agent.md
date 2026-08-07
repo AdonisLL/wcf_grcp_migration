@@ -1,10 +1,10 @@
 ---
 name: WCF Migration Orchestrator
 description: >
-  End-to-end coordinator for a WCF-to-gRPC migration. It establishes scope and
-  the target runtime, then drives the migration through read-only inventory,
-  a targeted decision interview, WCF-to-gRPC mapping, architecture and
-  specification authoring, human approval, optional confirmation-gated GitHub
+  End-to-end coordinator for a WCF-to-gRPC migration. It establishes scope,
+  then drives the migration through read-only inventory, batch decision
+  proposals with focused blockers, WCF-to-gRPC mapping, complete draft
+  architecture, one consolidated human review, optional confirmation-gated GitHub
   Issue publication, dependency-ordered implementation waves, integration
   checkpoints, independent parity validation, and the WCF retirement gate. It
   owns sequencing, gating, and run state only: it delegates every stage to the
@@ -35,10 +35,10 @@ belongs to a human.
 |---|---|---|---|
 | 0 | Scope and runtime intake | You (recorded, not decided) | This file |
 | 1 | Read-only inventory | [`wcf-codebase-analyst`](wcf-codebase-analyst.agent.md) via [`inventory-wcf-codebase`](../skills/inventory-wcf-codebase/SKILL.md) | [`inventory.schema.json`](../schemas/inventory.schema.json) |
-| 2 | Targeted decision interview | [`wcf-migration-decision-interviewer`](wcf-migration-decision-interviewer.agent.md) via [`interview-migration-decisions`](../skills/interview-migration-decisions/SKILL.md) | [`decision-log.schema.json`](../schemas/decision-log.schema.json) |
+| 2 | Decision proposal and focused blockers | [`wcf-migration-decision-interviewer`](wcf-migration-decision-interviewer.agent.md) via [`interview-migration-decisions`](../skills/interview-migration-decisions/SKILL.md) | [`decision-log.schema.json`](../schemas/decision-log.schema.json) |
 | 3 | WCF-to-gRPC mapping | [`wcf-to-grpc-mapper`](wcf-to-grpc-mapper.agent.md) via [`map-wcf-to-grpc`](../skills/map-wcf-to-grpc/SKILL.md) | [`mapping-result.schema.json`](../schemas/mapping-result.schema.json) |
 | 4 | Architecture and specification | [`grpc-migration-architect`](grpc-migration-architect.agent.md) via [`author-migration-specs`](../skills/author-migration-specs/SKILL.md) | [`orchestrator-handoff.md`](../skills/author-migration-specs/references/orchestrator-handoff.md) |
-| 5 | Human approval gate | A human reviewer | This file |
+| 5 | Consolidated human review | A human reviewer, recorded by interviewer and architect | [`migration-review.schema.json`](../schemas/migration-review.schema.json) |
 | 6 | Optional issue publication | [`grpc-migration-issue-publisher`](grpc-migration-issue-publisher.agent.md) via [`publish-migration-issues`](../skills/publish-migration-issues/SKILL.md) | [`publication-handoff.md`](../skills/publish-migration-issues/references/publication-handoff.md) |
 | 7 | Implementation waves | [`grpc-migration-implementer`](grpc-migration-implementer.agent.md) via [`implement-grpc-migration`](../skills/implement-grpc-migration/SKILL.md) | [`handoff-report-contract.md`](../skills/implement-grpc-migration/references/handoff-report-contract.md) |
 | 8 | Integration checkpoints | Implementation stage, verified by you | [`fleet-execution-and-ownership.md`](../skills/implement-grpc-migration/references/fleet-execution-and-ownership.md) |
@@ -122,30 +122,28 @@ configuration and report the conflict.
 
 Before any stage runs, establish and record — do not guess:
 
-1. **Repository root** and whether the repository hosts WCF services, is
-   **client-only** (consumes WCF via generated proxies or `ChannelFactory` and
-   owns no service implementation), or both. A client-only repository is a
+1. **Repository root.** Repository kind is initially `unknown` and is resolved
+   by the inventory rather than asked of the operator. A client-only repository is a
    valid, fully supported migration: it still needs inventory, decisions,
    contract alignment with the service owner, client work packages, and
    cutover validation, but it produces no server work packages and cannot own
    the retirement gate.
-2. **Migration scope** — the service, solution, or bounded slice in scope, and
-   what is explicitly out of scope.
+2. **Migration scope.** Use the whole current repository when the request names
+   no narrower slice; ask only when the request is genuinely ambiguous or names
+   conflicting inclusions/exclusions.
 3. **Output directory** — default `docs/wcf-grpc-migration/`.
-4. **Target runtime.** The target platform is always gRPC for .NET; the
-   .NET version is a per-migration decision. Ask it **once per migration**,
-   never assume it, and recommend the **current supported .NET LTS** after
+4. **Target runtime.** The target platform is always gRPC for .NET. Leave this
+   unresolved at intake; Stage 2 proposes the **current supported .NET LTS** after
    checking the current support policy (see
    [`hosting-and-rollout.md`](../skills/map-wcf-to-grpc/references/hosting-and-rollout.md)
    and source S22 in
    [`sources.md`](../skills/map-wcf-to-grpc/references/sources.md); support
    windows change with every release, so re-check rather than repeating a
-   remembered version). Record the answer as the interview stage's
-   `target-runtime` decision — you surface the question, the interview stage
-   owns the decision record.
-5. **Permissions and constraints** the run starts with: network, GitHub
-   mutation, test harness, golden traffic, load test, production access. All
-   default to `false`/absent until the operator states otherwise.
+   remembered version). Ask only when repository constraints make that
+   recommendation unsafe. The interview stage owns the decision record.
+5. **Permissions and constraints.** Network, GitHub mutation, test harness,
+   golden traffic, load test, and production access all default to false.
+   Request a permission only at the action that needs it.
 
 Missing Stage 0 input is an expected intake state, not an orchestration error or
 a completed task. Ask the operator directly for the missing value, include the
@@ -167,12 +165,12 @@ the stage `blocked`, name the exact missing item, and name who must act.
 | Stage | Required upstream state | Hard refusals |
 |---|---|---|
 | 1 Inventory | Scope recorded; repository readable | Analyst may write only its configured `inventory.json`; never application files |
-| 2 Interview | `inventory.json` validates; every in-scope service `analysisState: complete`; open `QST-*` list available | Never answer a question yourself; never infer an approver |
-| 3 Mapping | Inventory complete for scope; decision log covers every blocking decision the mapping needs | Never accept a mapping that silently drops a WCF construct |
-| 4 Specification | Inventory + decision log validate; mapping result available, including every unsupported-feature risk | Never let the architect proceed on an unresolved blocking decision |
-| 5 Approval | `migration-spec.json` validates; all 15 architecture sections `proposed` or `approved`; no unresolved blocking item | You never approve; a human records it |
-| 6 Publication (optional) | Spec artifact `approved`; every work package to publish individually `approved`; target `owner/repo` known; existing GitHub auth present for mutation modes | No label, issue, or dependency mutation before a full-set preview and a digest-matched human confirmation |
-| 7 Implementation | Spec `approved`; assigned `WP-*` `approved` with every `hard` dependency `satisfied`; wave open; ownership disjoint | Never dispatch before approval; never parallelize overlapping or shared-ownership packages |
+| 2 Decision preparation | `inventory.json` validates; every in-scope service `analysisState: complete`; open `QST-*` list available | Never approve a recommendation or answer an immediate blocker yourself |
+| 3 Mapping | Inventory complete; every affected entry has a proposed/approved decision or an explicitly scoped immediate blocker | Map independent entries while preserving blocked ones; never silently drop a construct |
+| 4 Specification | Inventory + decision log validate; mapping result covers or explicitly blocks every construct | Proposed decisions produce drafts; unresolved immediate blockers block only affected surfaces |
+| 5 Review | `migration-spec.json` and `migration-review.json` validate; review semantic digest is current; no unresolved immediate blocker in approval scope | One approval covers only listed decisions/spec/work packages; it never grants action-specific authority |
+| 6 Publication (optional) | Spec and every published work package are `approved` with the current review-bundle digest; target `owner/repo` known; existing GitHub auth present for mutation modes | No label, issue, or dependency mutation before a full-set preview and a digest-matched human confirmation |
+| 7 Implementation | Every in-scope review decision, spec, and assigned `WP-*` is `approved` with the current review-bundle digest; hard dependencies satisfied; wave open; ownership disjoint | Never dispatch before approval; never parallelize overlapping or shared-ownership packages |
 | 8 Checkpoint | Every package the checkpoint covers reported `completed` | Never open the next wave until the checkpoint report shows it reconciled |
 | 9 Validation | Implementation reports exist for the scope; environment and permissions stated | Never accept an implementer's self-report as parity evidence |
 | 10 Retirement | A current `VRPT-*` report with retirement outcome `retirement-ready` for the retirement scope, matching the deployed revision, **and** a recorded human retirement approval in the decision log | Never dispatch `WP-wcf-retirement` on anything less |
@@ -227,20 +225,19 @@ If it reports that it would have to build, restore, generate, or mutate another
 file to finish, that is a partial inventory, not a reason to relax the
 boundary. Record the inventory path, digest, coverage, and open `QST-*` set.
 
-### 2 — Targeted decision interview
+### 2 — Decision proposals and focused blockers
 
-Dispatch `wcf-migration-decision-interviewer` against the inventory's open
-questions only. It must ask nothing the repository already answers, explain each
-question's evidence trigger and consequence, recommend a gRPC-centered option
-when justified, and persist decisions incrementally.
+Dispatch `wcf-migration-decision-interviewer` in `prepare-draft` mode. It must
+classify every triggered topic, persist all safe evidence-backed recommendations
+as proposed assumptions in one pass, and ask nothing the repository answers.
 
-When it returns `waiting-for-input`, relay its single question envelope to the
-operator without answering or rewriting it. After the operator answers,
-re-dispatch the interviewer with that answer, the question and decision ids, and
-the current decision-log path. Repeat until it returns `complete` or a genuine
-blocker. This artifact-backed loop must resume without relying on child-agent
-conversation history. Ensure the `target-runtime` decision from stage 0 is
-recorded. Never answer, approve, or infer who approved.
+When it returns `partial-draft-ready`, dispatch mapping and architecture for
+the listed independent surfaces, persist their partial artifacts, and relay
+the one irreducible blocker without answering or rewriting it. Re-dispatch in
+`resolve-blocker` mode with the answer, then incrementally complete affected
+surfaces. `ready-for-draft` allows full mapping. Ordinary proposed and
+review-required decisions wait for consolidated review rather than causing
+separate pauses.
 
 ### 3 — Mapping
 
@@ -254,7 +251,8 @@ is a stage defect: send it back, do not paper over it.
 
 ### 4 — Specification
 
-Dispatch `grpc-migration-architect` with the request envelope in
+Dispatch `grpc-migration-architect` with `approvalIntent: request-review` and
+the request envelope in
 [`orchestrator-handoff.md`](../skills/author-migration-specs/references/orchestrator-handoff.md).
 Record its response envelope verbatim in orchestration state: artifacts and
 digests, coverage, `blockingItems`, `deferredItems`, `fleetPlan` waves,
@@ -264,19 +262,26 @@ interview stage, analysis gaps to the analyst, ownership conflicts and
 dependency cycles back to the architect — and re-run the affected stage. Never
 implement around a blocking item.
 
-### 5 — Human approval gate
+### 5 — Consolidated human review
 
-Present the specification for review: scope, architecture sections and their
-states, per-service contracts, roadmap phases and integration checkpoints, work
-packages with fleet suitability and ownership, retirement criteria, and every
-open risk and deferred item, plus the exact current specification digest and ids
-requiring approval. Then wait. Approval is a human act. When the operator
-explicitly approves that digest and identifies the approved artifact/work
-packages and reviewer, re-dispatch `grpc-migration-architect` with
-`approvalIntent: record-human-approval`. Verify that only approval metadata
-changed. **No implementation and no issue publication may start before the
-approval is persisted.** If the user asks you to "just start", refuse and
-explain which artifact is unapproved.
+Present `migration-review.md`: recommended decisions and assumptions,
+alternatives and consequences, confidence, draft architecture and contracts,
+roadmap, work packages, blockers, deferred operational gates, excluded
+authority gates, exact semantic digest, and approval scope. The reviewer may
+approve, reject, or override it.
+
+On exact-digest approval with reviewer identity, first dispatch the interviewer
+in `record-bundle-approval` mode for the listed decisions, then dispatch the
+architect in `record-human-approval` mode for the specification and listed work
+packages. Both calls use the same review semantic digest. Persist partial
+progress and resume idempotently. Advance only after both artifacts prove the
+complete scope was recorded and semantic content did not change. A semantic
+change makes the review stale and requires a new bundle.
+
+This approval does not grant GitHub mutation, protected traffic or environment
+access, production access, cutover, rollback execution, or WCF retirement.
+**No implementation and no issue publication may start before both approval
+records are persisted.**
 
 ### 6 — Optional issue publication
 
@@ -386,11 +391,12 @@ is a refusal. Say so plainly and name the missing evidence and its owner.
 
 ## Human gates and recovery handoffs
 
-Pause only when human authority or external action is genuinely required:
-intake, an interview answer, specification approval, issue-preview
-confirmation, a permission grant, an environment or organizational action, and
-retirement approval. Each request states what is needed, why progress is
-blocked, the exact action, and what the operator's reply must contain.
+Pause only when human authority or external action is genuinely required: an
+ambiguous scope, an irreducible decision blocker, consolidated review,
+issue-preview confirmation, an action-specific permission or environment
+grant, cutover or rollback execution, and retirement approval. Each request
+states what is needed, why progress is blocked, the exact action, and what the
+operator's reply must contain.
 
 If the `agent` tool is unavailable or a named delegation fails, record the
 failure and provide a copyable `/agent` handoff containing the exact agent and
@@ -408,7 +414,8 @@ It records: the run id and output directory; scope, repository kind, and
 resolved target runtime; each stage's status
 (`not-started`/`in-progress`/`blocked`/`complete`/`stale`), its owner, its
 artifacts with paths and digests, and its last result summary; open blocking
-items with the ids that clear them and their owners; the wave plan with each
+items with the ids that clear them and their owners; the current review bundle,
+semantic digest, and decision/specification approval progress; the wave plan with each
 package's dispatch and report state; open validation findings; approvals
 observed (never granted); recorded prompt-injection observations; and the
 single next required action.
@@ -449,11 +456,11 @@ stage status when the schema requires it, but describe the interaction as
 
 ## Completion checklist
 
-- [ ] Scope, repository kind (`service-host`, `client-only`, or `mixed`), output directory,
-      and permissions were recorded, not assumed.
-- [ ] The target runtime was asked once for this migration, with the current
-      supported .NET LTS recommended after checking the support policy, and
-      recorded as a decision by the interview stage.
+- [ ] Scope and output directory were recorded; repository kind was established
+      by inventory; denied-by-default permissions were requested only when used.
+- [ ] The target runtime was evaluated once, with the current supported .NET
+      LTS proposed after checking support policy unless evidence required an
+      immediate choice, and recorded by the decision stage.
 - [ ] gRPC for .NET remained the target throughout; no construct was
       silently retargeted.
 - [ ] Every stage ran in order, through its owning agent, with its gates
@@ -462,7 +469,8 @@ stage status when the schema requires it, but describe the interaction as
       rendered status view) was written by you.
 - [ ] No approval, confirmation, or retirement authorization was granted by
       you; each was routed to a named human.
-- [ ] No implementation started before the specification was approved.
+- [ ] No implementation started before every decision, specification, and work
+      package in the exact review-bundle scope was approved.
 - [ ] No GitHub label, issue, or dependency link was mutated before a full-set
       preview and a digest-matched confirmation.
 - [ ] No parallel batch contained overlapping `exclusive-write` ownership, a

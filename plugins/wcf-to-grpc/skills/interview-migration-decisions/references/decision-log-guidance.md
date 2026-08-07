@@ -104,8 +104,12 @@ approval has not occurred:
 - `nextAction` may identify the required reviewer;
 - `approvals` may contain `requested` events.
 
-A conversational answer is proposed by default, even when it accepts the
-skill's recommendation.
+A conversational answer is proposed by default. In `prepare-draft` mode, a
+safe recommendation may also be proposed without fabricating a user statement.
+It carries `recommendation.provenance: agent`, interaction class, confidence,
+reversibility, assumptions, authority requirement, and downstream gate. Its
+rationale cites repository evidence and mapping guidance, never a fictitious
+operator answer.
 
 ### Approved
 
@@ -120,6 +124,13 @@ Move to `approved` only after an explicit approval statement:
 
 Approval of a decision does not approve the containing artifact, authorize
 cutover, or prove runtime parity.
+
+When approval comes from a consolidated migration review, each approval event
+uses `source: migration-review` and carries the exact `reviewBundleDigest`.
+Verify the decision and selected option
+are in that bundle's approval scope. Recording approval must not alter semantic
+decision content; repeat calls with the same reviewer, decision, and bundle
+digest are idempotent.
 
 ### Rejected
 
@@ -415,4 +426,3 @@ Before each persisted update:
 - verify no secret-like values were persisted;
 - verify the inventory ID and source basis are current;
 - verify local Markdown links in the skill package resolve.
-

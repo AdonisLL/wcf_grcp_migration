@@ -28,16 +28,15 @@ in the [repository README](../../README.md). Deeper documentation:
   is read-only with respect to application code and writes only its validated
   inventory artifact.
 - [`agents/wcf-migration-decision-interviewer.agent.md`](agents/wcf-migration-decision-interviewer.agent.md)
-  asks one evidence-triggered architecture question at a time and incrementally
-  persists the operator's answers.
+  batch-proposes safe evidence-backed recommendations, asks only irreducible
+  focused blockers, and records exact-digest bundle approvals.
 - [`agents/wcf-to-grpc-mapper.agent.md`](agents/wcf-to-grpc-mapper.agent.md)
   produces a deterministic, complete mapping artifact from the inventory and
   decision log.
 - [`agents/grpc-migration-architect.agent.md`](agents/grpc-migration-architect.agent.md)
-  turns an approved inventory and decision log into the target architecture,
-  Protobuf contract specifications, migration roadmap, and fleet-ready work
-  packages. It writes migration artifacts only — never application code,
-  issues, or implementations.
+  turns validated evidence and proposed decisions into the target architecture,
+  Protobuf contract specifications, migration roadmap, fleet-ready work
+  packages, and consolidated review bundle. It writes migration artifacts only.
 - [`agents/grpc-migration-issue-publisher.agent.md`](agents/grpc-migration-issue-publisher.agent.md)
   renders the full issue preview and performs duplicate-safe GitHub publication
   only after exact digest confirmation and explicit mutation permission.
@@ -116,7 +115,7 @@ in the [repository README](../../README.md). Deeper documentation:
 ## Schemas, tests, and tooling
 
 - [`schemas/`](schemas/) contains strict JSON Schema Draft 2020-12 contracts
-  for inventory, decisions, persisted mappings, migration
+  for inventory, decisions, persisted mappings, migration reviews,
   specifications/work packages, issue previews, orchestration run state, and the
   [shared vocabulary](schemas/common.schema.json).
 - [`tests/`](tests/) contains static legacy WCF fixture repositories, expected

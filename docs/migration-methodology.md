@@ -13,8 +13,8 @@ files it produces see [output-contracts.md](output-contracts.md).
 |---|---|
 | What is in scope? | One service, one solution, or a bounded slice. Everything downstream is scoped by this answer. |
 | Does this repository host WCF services, only consume them, or both? | A client-only repository is fully supported but produces no server work packages and cannot own the retirement gate (§8). |
-| Which .NET version will host the gRPC services? | Asked once per migration. The plugin recommends the current supported .NET LTS after checking the support policy; it never assumes a version. |
-| Who approves the specification, the issue preview, and the retirement? | Each is a distinct human act; the plugin will stop and ask by name. |
+| Which .NET version will host the gRPC services? | The plugin proposes the current supported .NET LTS and highlights constraints; override it in consolidated review. |
+| Who approves architecture, publication, and retirement? | Architecture decisions/spec/work packages share one scoped review; publication and retirement remain distinct acts. |
 | What may the agents do? Network, GitHub mutation, test harness, golden traffic, load test, production access? | All default to off. Nothing is granted implicitly. |
 
 The **target is always gRPC for .NET**. This is a fixed product
@@ -50,15 +50,15 @@ Three rules make the inventory trustworthy:
 **What you do:** confirm the scope looks right, and look at the `risks` list —
 it is your first honest view of how hard this migration will be.
 
-## 3. Stage 2 — Decision interview
+## 3. Stage 2 — Decision proposals and focused blockers
 
 **Agent:** WCF Migration Decision Interviewer · **Skill:**
 `interview-migration-decisions` · **Output:** `decision-log.json`
 
-Only questions the repository cannot answer are asked. Each question states the
-evidence that triggered it, the consequence of each option, and a recommended
-gRPC-centered option where one is justified. Answers persist incrementally, so
-an interrupted interview resumes without re-asking what you already answered.
+The agent evaluates the complete decision catalog in one pass. High-confidence,
+reversible, behavior-preserving recommendations become proposed assumptions.
+They are not approvals. The agent interrupts only when no safe default exists;
+each such focused question states its evidence and blocked design surface.
 
 Typical topics: target runtime; service boundaries; transport security and
 authentication model; authorization model; error model and status mapping;
@@ -66,9 +66,9 @@ deadlines, retries, and idempotency; session-state redesign; transaction
 redesign; streaming shape; observability; hosting platform; coexistence and
 consumer cutover; rollback; golden-traffic permission; retirement criteria.
 
-**What you do:** answer, or explicitly defer with an owner. A deferral without
-an owner is a blocker, not a deferral. Approving a decision is a human act and
-is recorded with who approved it — the plugin never infers an approver.
+**What you do:** answer an irreducible blocker when one exists; otherwise review
+all proposals later in one bundle. Operational numbers and platform details may
+be deferred to a concrete implementation, validation, or cutover gate.
 
 ## 4. Stage 3 — Mapping
 
@@ -135,27 +135,30 @@ contract specifications, a dependency-ordered roadmap with integration
 checkpoints, and independently implementable work packages with acceptance
 criteria, validation steps, non-goals, rollback, and coexistence plans.
 
-It **blocks rather than guesses**. An unresolved blocking decision leaves that
+It applies proposed decisions as labeled assumptions and **blocks rather than
+guesses**. An unresolved immediate decision leaves that
 architecture section `unresolved` with a `null` design and an open `QST-*`,
 leaves the affected contract or work package unapproved, and is reported. There
 are no plausible-looking placeholder designs.
 
-**What you do:** clear blocking items by answering the named question or
-re-running the analysis, then re-run the architect in incremental mode. Stable
-identifiers, Protobuf field numbers, reservations, and approvals survive
-re-runs.
+It also emits `migration-review.json` and `migration-review.md`, binding every
+proposal, architecture section, contract, roadmap item, and work package to one
+semantic digest.
 
-## 6. Stage 5 — Approval gate
+## 6. Stage 5 — Consolidated review
 
-Approval is a human act, recorded in the decision log and in the artifact's
-`approval` object. **Nothing is implemented and no issue is published before
-it.** If you ask an agent to "just start", it will refuse and tell you which
-artifact is unapproved.
+Approval is one human act over the exact review-bundle digest. The interviewer
+records its listed decisions and the architect records the specification and
+listed work packages. Partial recording resumes safely. **Nothing is
+implemented and no issue is published before both records are complete.**
 
-Review at minimum: scope; each architecture section and its state; per-service
+Review at minimum: recommendations, assumptions, confidence and alternatives;
+scope; each architecture section and its state; per-service
 contracts including field numbering and reservations; roadmap phases and
 integration checkpoints; work packages with fleet suitability and file
-ownership; retirement criteria; open risks and deferred items.
+ownership; retirement criteria; open risks and deferred items. This approval
+explicitly excludes publication mutation, protected traffic, production,
+cutover, rollback execution, and retirement.
 
 ## 7. Stage 6 — Optional GitHub Issue publication
 
