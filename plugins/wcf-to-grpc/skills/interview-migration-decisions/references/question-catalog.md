@@ -31,10 +31,10 @@ for every row. Classify each triggered topic before choosing an interaction:
 | Class | Default topics |
 |---|---|
 | `agent-proposed` | `target-runtime`, `service-process-layout`, `service-boundaries`, `coexistence-strategy`, `coexistence-duration`, `package-versioning`, `compatibility-policy`, `guid-format`, `fault-status-map`, `error-disclosure`, `stream-backpressure`, `deadline-policy`, `retry-policy`, `cancellation-semantics`, `baseline-source`, `telemetry-standard`, `parity-oracle`, `fleet-parallelism`, `pilot-selection` |
-| `review-required` | `hosting-model`, `operating-system`, `browser-or-http-clients`, `service-authentication`, `transport-security`, `authorization-policy`, `proto-ownership`, `polymorphism-policy`, `decimal-representation`, `presence-semantics`, `timestamp-semantics`, `duration-semantics`, `xml-payload`, `partial-failure`, `session-state`, `duplex-lifecycle`, `duplex-reconnect-delivery`, `large-payload-streaming`, `one-way-acknowledgement`, `one-way-failure`, `idempotency-policy`, `deployment-strategy`, `service-discovery`, `gateway-proxy`, `payload-logging`, `cutover-unit`, `cutover-gates`, `rollback-trigger`, `rollback-data`, `repository-strategy` |
+| `review-required` | `hosting-model`, `operating-system`, `browser-or-http-clients`, `service-authentication`, `transport-security`, `authorization-policy`, `proto-ownership`, `polymorphism-policy`, `decimal-representation`, `presence-semantics`, `timestamp-semantics`, `duration-semantics`, `xml-payload`, `partial-failure`, `session-state`, `duplex-lifecycle`, `duplex-reconnect-delivery`, `large-payload-streaming`, `one-way-acknowledgement`, `one-way-failure`, `idempotency-policy`, `deployment-mechanism`, `service-discovery-mechanism`, `gateway-proxy-mechanism`, `payload-logging`, `rollback-data`, `repository-strategy` |
 | `immediate-answer-required` | `migration-scope`, `operation-scope`, `external-consumer-support`, `identity-provider`, `message-security-replacement`, `state-lifetime`, `transaction-redesign`, `consistency-requirement`, `reliable-delivery`, `queue-redesign`, `ordering-scope`, `named-pipe-transport`, `audit-requirements`, `compliance-constraints`, `delivery-constraints` |
-| `deferred-operational` | `consumer-upgrade-ownership`, `secret-certificate-ownership`, `shared-contract-distribution`, `sla-objectives`, `payload-limits`, `capacity-scaling`, `certificate-operations`, `configuration-ownership`, `test-environments`, `compatibility-matrix`, `shared-foundation-owner` |
-| `separate-authority-gate` | `golden-traffic`, `retirement-approval` |
+| `deferred-operational` | `consumer-upgrade-ownership`, `secret-certificate-ownership`, `shared-contract-distribution`, `sla-objectives`, `payload-limits`, `capacity-scaling`, `certificate-operations`, `configuration-ownership`, `test-environments`, `compatibility-matrix`, `shared-foundation-owner`, `cutover-unit`, `cutover-gates`, `rollback-trigger`, `deployment-environment-progression` |
+| `out-of-scope-handoff` | `golden-traffic`, `retirement-approval` |
 
 These are defaults, not blind outcomes. Promote an `agent-proposed` or
 `review-required` topic to `immediate-answer-required` when evidence conflicts,
@@ -57,7 +57,11 @@ An agent may select a recommendation as `proposed` only when it:
 `deferred-operational` values become owned implementation, validation, or
 cutover prerequisites. They do not block a complete draft merely because a
 specific product, number, environment, or individual is not yet known.
-`separate-authority-gate` topics are never cleared by architecture approval.
+`out-of-scope-handoff` topics (`golden-traffic`, `retirement-approval`) are
+**never entered into the decision log, never assigned a decision state, never
+cleared by architecture approval, and never included in the consolidated review
+approval scope**. They are handled exclusively through their own authority
+processes. Note them in the outbound `outOfScopeHandoff` list only.
 
 ## 1. Target runtime and hosting platform
 
@@ -185,11 +189,19 @@ Use
 
 ## 13. Deployment, discovery, TLS, and gateways
 
+> **Code/abstraction vs. environment split.** Each entry below asks for the
+> code-observable mechanism choice (which tool, technology, or abstraction the
+> service code and local configuration will use). **Specific environment
+> hostnames, registry URLs, production addresses, environment progression
+> schedules, approvals, and deployment-environment values are
+> `deferred-operational`** (`deployment-environment-progression`) and do not
+> block a complete specification draft.
+
 | Topic key | Trigger and evidence | Focused question | Why / recommendation | Category / gate / skip |
 |---|---|---|---|---|
-| `deployment-strategy` | Existing platform/deployment evidence or multiple environments. | Which deployment mechanism and environment progression will release the gRPC service? | Determines artifacts, approvals, health checks, configuration, and rollback. Recommend existing standard automation when it supports HTTP/2 and TLS. | `deployment`; blocking. |
-| `service-discovery` | Dynamic replicas, containers, current endpoint config, client-side addresses. | How will gRPC clients discover and load-balance service instances? | Static WCF addresses may not survive scaling. Recommend the platform's supported DNS/service discovery and documented load-balancing policy. | `deployment`; blocking. |
-| `gateway-proxy` | External ingress, TLS termination, browser clients, path routing, service mesh. | Which gateway/proxy, if any, is approved and confirmed to support end-to-end gRPC/HTTP2 requirements? | Misconfigured proxies break streaming, deadlines, headers, and message sizes. | `deployment`; blocking. |
+| `deployment-mechanism` | Existing platform/deployment evidence or multiple environments. | Which deployment mechanism and tooling integration (container image, install script, Windows Service wrapper, k8s manifest) will the gRPC service use? | Determines the artifacts the implementer must produce (Dockerfile, helm chart, service installer) and which health-check and rollout hooks are needed. Recommend the existing standard automation when it supports HTTP/2 and TLS. Environment progression schedules and approvals are deferred. | `deployment`; code-side mechanism is `review-required`; environment-specific values are `deferred-operational`. |
+| `service-discovery-mechanism` | Dynamic replicas, containers, current endpoint config, client-side addresses. | Which service-discovery mechanism (DNS SRV, platform service registry, static address list) will gRPC clients use? | Determines the configuration shape the implementer must write. Recommend the platform's supported DNS/service-discovery mechanism and documented load-balancing policy. Specific registry addresses and environments are deferred. | `deployment`; mechanism is `review-required`; specific values are `deferred-operational`. |
+| `gateway-proxy-mechanism` | External ingress, TLS termination, browser clients, path routing, service mesh. | Which gateway or proxy type, if any, is approved and confirmed to support end-to-end gRPC/HTTP2 requirements? | Misconfigured proxies break streaming, deadlines, headers, and message sizes. The code must emit the correct headers and handle the proxy's behaviors. Specific gateway instance configuration is deferred. | `deployment`; mechanism is `review-required`; instance config is `deferred-operational`. |
 | `certificate-operations` | TLS/mTLS required. | Which managed certificate source and rotation process will the deployment use? | Asks ownership/process only, never certificate contents or private keys. | `security`; implementation blocker. |
 | `configuration-ownership` | Environment transforms, secrets, endpoint/timeouts vary by environment. | Which settings are deploy-time configuration, and who approves environment-specific values? | Prevents embedding environment details in contracts or code. | `deployment`; implementation blocker. |
 
@@ -207,19 +219,30 @@ Use
 | Topic key | Trigger and evidence | Focused question | Why / recommendation | Category / gate / skip |
 |---|---|---|---|---|
 | `parity-oracle` | Existing tests, WSDL/sample messages, business logic, unknown expected equivalence. | What is the authoritative oracle for contract and behavioral parity? | Defines acceptance beyond compilation. Recommend automated legacy-vs-gRPC comparison with explicit allowed semantic differences. | `other`; specification blocker. |
-| `golden-traffic` | Production-like samples needed, complex faults/serialization/edge cases. | Can sanitized representative WCF traffic be captured and approved for replay/comparison? | Golden traffic finds undocumented semantics but may contain sensitive data. Recommend sanitized or synthetic equivalents under compliance approval; never collect secrets. | `other`; validation blocker. |
+| `golden-traffic` | Production-like samples needed, complex faults/serialization/edge cases. | Can sanitized representative WCF traffic be captured and approved for replay/comparison? | Golden traffic finds undocumented semantics but may contain sensitive data. Recommend sanitized or synthetic equivalents under compliance approval; never collect secrets. | `other`; `out-of-scope-handoff`. Never entered into the decision log; handled exclusively through the compliance/data-governance authority process. |
 | `test-environments` | External dependencies, queues, identity, transactions, streams. | Which test environment and dependency substitutes are approved for end-to-end parity? | Determines whether failures, identity, retries, and rollback can be exercised safely. | `other`; implementation blocker. |
 | `compatibility-matrix` | Multiple consumer languages/frameworks/versions. | Which client languages and supported versions must generated-client compatibility tests cover? | Prevents a C#-only design from breaking external consumers. | `protobuf`; validation blocker. |
 
 ## 16. Rollback, cutover, and retirement
 
+> **Offline guidance.** All topics in this section describe deployment-era
+> operational decisions that cannot be answered by code analysis and cannot
+> create executable `WP-*` implementation packages. `cutover-unit`,
+> `cutover-gates`, and `rollback-trigger` are `deferred-operational` —
+> documented as offline prerequisites in the roadmap but not included in the
+> consolidated review approval scope. `rollback-data` has a code-observable
+> side (additive schema constraint during coexistence) that stays in the
+> specification; only the production data-recovery procedure is offline.
+> `retirement-approval` is `out-of-scope-handoff` — recognized but never
+> entered into the decision log.
+
 | Topic key | Trigger and evidence | Focused question | Why / recommendation | Category / gate / skip |
 |---|---|---|---|---|
-| `cutover-unit` | Multiple services/consumers, coexistence, shared data. | Will traffic move by service, operation, consumer cohort, or percentage? | Defines routing, blast radius, and validation checkpoints. Recommend the smallest independently observable slice. | `consumer-cutover`; blocking. |
-| `cutover-gates` | Any production migration. | Which measured conditions must pass before increasing gRPC traffic? | Converts rollout into an auditable decision. Recommend contract/behavior/security parity, SLA thresholds, error budget, and rollback readiness. | `consumer-cutover`; blocking. |
-| `rollback-trigger` | Any cutover; data/schema changes increase priority. | Which signals require traffic to return to WCF, and who may trigger rollback? | Avoids debate during incidents. | `coexistence`; blocking. |
-| `rollback-data` | Writes, dual write/read, schema migrations, async processing. | How will data remain compatible and recoverable during rollback? | Routing rollback is insufficient if state has diverged. Recommend additive/backward-compatible changes during coexistence. | `coexistence`; blocking. |
-| `retirement-approval` | Planned WCF shutdown. | Who approves WCF retirement after parity and zero-traffic evidence, and what quiesce period is required? | Retirement is irreversible for uncontrolled clients. Recommend explicit approval after all consumers migrate and monitoring proves no legacy traffic. | `retirement`; retirement blocker. |
+| `cutover-unit` | Multiple services/consumers, coexistence, shared data. | Will traffic move by service, operation, consumer cohort, or percentage? | Defines routing blast radius and validation checkpoints. Recommend the smallest independently observable slice. | `consumer-cutover`; `deferred-operational`. Not a code choice; documented as a named offline prerequisite gate. |
+| `cutover-gates` | Any production migration. | Which measured conditions must pass before increasing gRPC traffic? | Converts rollout into an auditable decision. Recommend contract/behavior/security parity, SLA thresholds, error budget, and rollback readiness. | `consumer-cutover`; `deferred-operational`. Not a code choice; documented as an offline gate. |
+| `rollback-trigger` | Any cutover; data/schema changes increase priority. | Which signals require traffic to return to WCF, and who may trigger rollback? | Avoids debate during incidents. | `coexistence`; `deferred-operational`. Not a code choice; documented as an offline gate. |
+| `rollback-data` | Writes, dual write/read, schema migrations, async processing. | How will data remain compatible and recoverable during rollback? | The code-side answer (additive-only schema changes during coexistence) belongs in the architecture specification. The production data-recovery procedure is an offline operational gate. Ask only the code-observable constraint: must schema changes be additive and backward-compatible throughout the coexistence window? | `coexistence`; `review-required` for the code-observable constraint; production data-recovery procedure is `deferred-operational`. |
+| `retirement-approval` | Planned WCF shutdown. | Who approves WCF retirement after parity and zero-traffic evidence, and what quiesce period is required? | Retirement is irreversible for uncontrolled clients. Recommend explicit approval after all consumers migrate and monitoring proves no legacy traffic. | `retirement`; `out-of-scope-handoff`. Never entered into the decision log; handled exclusively through the retirement authority process. |
 
 ## 17. Implementation and fleet constraints
 

@@ -10,6 +10,27 @@ It is complete when a competent agent can execute it from the package alone,
 using only the linked specification, without asking a new question and without
 touching a file another package owns.
 
+## Executable boundary
+
+**Every `WP-*` package must produce repository source code, compiled tests, or
+checked-in local configuration.** A work package's `deliverables` may only
+`create`, `modify`, `delete`, or `verify` files in the repository. Work
+packages may not:
+
+- perform production traffic shifts or cutover actions;
+- retire, remove, or deactivate WCF endpoints in a live environment;
+- mutate running deployment environments;
+- capture or replay production traffic;
+- authorize any action that requires a separate operational authority.
+
+Deployment-era operations (production cutover, WCF endpoint removal, WCF
+retirement) are **non-executable offline guidance** recorded in
+`roadmap.retirementCriteria` and the `deployment`, `coexistence`,
+`consumer-cutover`, and `retirement` architecture sections. They describe
+observable gates and named approval prerequisites; they never become `WP-*`
+packages. A final integration-verification work package (see canonical catalog)
+is the last executable wave before offline guidance takes over.
+
 ## Definition of ready
 
 A package may leave `draft` only when all of the following hold.
@@ -90,10 +111,19 @@ repository does not have. Waves are typical, not fixed.
 | `WP-<service>-state-redesign` | 3–4 | sequential when shared store | Session/instance-state replacement, store schema, TTL, concurrency |
 | `WP-<service>-consistency-redesign` | 3–4 | sequential | Saga/outbox/compensation replacing distributed transactions or reliable sessions |
 | `WP-<service>-parity-tests` | 4 | eligible per service | Contract, behavior, fault, serialization, authorization, deadline, and streaming tests defined by the spec |
-| `WP-coexistence-routing` | 3 | sequential | Side-by-side endpoints, proxy/adapter/transcoding routing, traffic control, exit criteria |
+| `WP-coexistence-routing` | 3 | sequential | Side-by-side endpoint routing configuration and consumer-switchable traffic control (produces repository-resident routing config and health probes, not live traffic changes) |
 | `WP-consumer-<consumer>-client` | 4–5 | eligible per consumer | Client migration to the generated gRPC client, configuration, retry/deadline policy, rollout |
-| `WP-cutover-<service>` | 5 | sequential | Traffic shift, monitoring window, rollback trigger |
-| `WP-wcf-retirement` | 6 | sequential | Legacy endpoint removal after every retirement gate is satisfied and approved |
+| `WP-integration-verification` | highest+1 | sequential | Final sequential checkpoint: builds the complete solution, runs all parity-test suites, verifies coexistence routing configuration, confirms health probes pass, and produces the integration evidence report that feeds the offline retirement-gate review |
+
+> **Retired from the executable catalog:** `WP-cutover-<service>` and
+> `WP-wcf-retirement` are no longer executable work packages. Production
+> traffic cutover and WCF endpoint removal require human operational authority,
+> monitoring windows, and rollback readiness verification that cannot be
+> executed by an implementer agent from a work package alone. These are
+> documented as non-executable offline guidance in `roadmap.retirementCriteria`
+> and the `retirement` and `consumer-cutover` architecture sections.
+> `WP-integration-verification` is the final executable wave; what comes after
+> is outside the code-only boundary.
 
 ## Acceptance criteria
 
@@ -155,7 +185,8 @@ spec deviations).
 Changed files, commands executed with results, acceptance evidence per `AC-*`,
 assumptions, newly discovered risks or decisions, deviations from the package,
 coexistence state, and rollback readiness. A completion report never authorizes
-WCF retirement and never approves its own package.
+WCF retirement, never performs production traffic shifts, and never marks its
+own package as approved.
 
 The [`implement-grpc-migration`](../../implement-grpc-migration/SKILL.md)
 skill executes exactly this contract per work package, including the fuller

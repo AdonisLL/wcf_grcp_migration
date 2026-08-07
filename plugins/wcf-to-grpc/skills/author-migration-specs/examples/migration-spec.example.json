@@ -885,11 +885,37 @@
         ],
         "id": "PHS-coexistence-and-cutover",
         "integrationCheckpoint": true,
-        "objective": "Run both stacks side by side and cut internal consumers over once the external consumer decision is approved.",
+        "objective": "Run both stacks side by side and establish the routing configuration that internal consumers will switch to once the external consumer decision is approved.",
         "sequence": 2,
-        "title": "Coexistence and consumer cutover",
+        "title": "Coexistence routing configuration",
         "workPackageIds": [
           "WP-coexistence-routing"
+        ]
+      },
+      {
+        "dependsOnPhaseIds": [
+          "PHS-coexistence-and-cutover"
+        ],
+        "exitCriteria": [
+          {
+            "evidenceRequired": "Full solution build log, parity test results, coexistence routing configuration review, and health probe confirmation.",
+            "id": "AC-integration-verification-complete",
+            "statement": "The complete solution builds, all parity tests pass, coexistence routing configuration is reviewed, and the gRPC host health probe reports SERVING — producing the integration evidence package for the offline retirement-gate review.",
+            "validationIds": [
+              "VAL-integration-full-build",
+              "VAL-integration-parity-tests",
+              "VAL-integration-coexistence-review",
+              "VAL-integration-health-probe"
+            ]
+          }
+        ],
+        "id": "PHS-integration-verification",
+        "integrationCheckpoint": true,
+        "objective": "Run the final sequential integration checkpoint: build, test, and evidence-collect across all executable packages before handing integration evidence to the offline retirement-gate review.",
+        "sequence": 3,
+        "title": "Integration verification",
+        "workPackageIds": [
+          "WP-integration-verification"
         ]
       }
     ],
@@ -915,7 +941,7 @@
         ]
       }
     ],
-    "strategy": "Incremental: build the shared foundation sequentially, migrate the order service as the pilot slice, run WCF and gRPC side by side, then cut consumers over and retire WCF only after independent parity evidence and explicit approval."
+    "strategy": "Incremental: build the shared foundation sequentially, migrate the order service as the pilot slice, author the coexistence routing configuration, run integration verification, then hand integration evidence to the offline retirement-gate review. Production traffic cutover, WCF endpoint removal, and retirement are non-executable offline guidance executed by the human retirement authority after the integration evidence and parity evidence are reviewed."
   },
   "schemaVersion": "1.0.0",
   "targetArchitecture": {
@@ -2130,6 +2156,199 @@
           "id": "VAL-coexistence-routing",
           "kind": "manual",
           "status": "not-run"
+        }
+      ]
+    },
+    {
+      "acceptanceCriteria": [
+        {
+          "evidenceRequired": "Build log showing the full solution compiling with no new warnings.",
+          "id": "AC-integration-full-build",
+          "statement": "The complete solution builds cleanly from a clean clone.",
+          "validationIds": [
+            "VAL-integration-full-build"
+          ]
+        },
+        {
+          "evidenceRequired": "Test output showing all parity-test suites passing.",
+          "id": "AC-integration-parity-tests",
+          "statement": "All parity tests — covering contract, fault, authorization, deadline, streaming, and decimal edge cases — pass.",
+          "validationIds": [
+            "VAL-integration-parity-tests"
+          ]
+        },
+        {
+          "evidenceRequired": "Review record confirming coexistence routing configuration routes each consumer class correctly.",
+          "id": "AC-integration-coexistence-review",
+          "statement": "A reviewer confirms the coexistence routing configuration matches the approved topology.",
+          "validationIds": [
+            "VAL-integration-coexistence-review"
+          ]
+        },
+        {
+          "evidenceRequired": "Health probe output confirming the gRPC host reports SERVING.",
+          "id": "AC-integration-health-probe",
+          "statement": "The gRPC host starts and reports SERVING for contoso.orders.v1.OrderService.",
+          "validationIds": [
+            "VAL-integration-health-probe"
+          ]
+        }
+      ],
+      "approval": {
+        "state": "draft"
+      },
+      "coexistence": {
+        "durationOrExitCondition": {
+          "state": "known",
+          "value": "This package does not change traffic; it collects evidence that the implementation is ready."
+        },
+        "legacyEndpointRetained": {
+          "state": "known",
+          "value": true
+        },
+        "required": {
+          "state": "known",
+          "value": true
+        },
+        "strategy": {
+          "state": "known",
+          "value": "Read-only verification; no production traffic is touched."
+        },
+        "trafficControl": {
+          "reason": "No traffic is shifted by this package.",
+          "state": "not-applicable"
+        },
+        "validationIds": []
+      },
+      "decisionIds": [],
+      "deliverables": [
+        {
+          "action": "create",
+          "description": "Integration evidence report capturing build output, test results, coexistence routing review, and health probe confirmation.",
+          "path": "docs/wcf-grpc-migration/integration-evidence.md"
+        }
+      ],
+      "dependencies": [
+        {
+          "reason": "All preceding executable packages must be complete before integration verification runs.",
+          "state": "pending",
+          "type": "hard",
+          "workPackageId": "WP-coexistence-routing"
+        },
+        {
+          "reason": "Implementation and parity tests must be complete.",
+          "state": "pending",
+          "type": "hard",
+          "workPackageId": "WP-order-service-server"
+        }
+      ],
+      "evidenceIds": [],
+      "fleet": {
+        "conflictsWithWorkPackageIds": [],
+        "fileOwnership": [
+          {
+            "mode": "exclusive-write",
+            "path": "docs/wcf-grpc-migration/integration-evidence.md",
+            "reason": "Integration evidence report is written only by this package."
+          }
+        ],
+        "parallelGroup": {
+          "reason": "Final sequential checkpoint; no parallel execution permitted.",
+          "state": "not-applicable"
+        },
+        "rationale": "This is the final sequential integration checkpoint and must run after all other executable packages complete.",
+        "suitability": "sequential",
+        "wave": {
+          "state": "known",
+          "value": 5
+        }
+      },
+      "id": "WP-integration-verification",
+      "integrationCheckpoints": [
+        "Final integration checkpoint: solution builds, all parity tests pass, coexistence configuration reviewed, health probe confirmed. Output feeds the offline retirement-gate review."
+      ],
+      "nonGoals": [
+        "Do not perform production traffic shifts.",
+        "Do not retire or remove WCF endpoints.",
+        "Do not approve the migration or authorize retirement."
+      ],
+      "objective": "Run the final sequential integration checkpoint and produce the integration evidence package for the offline retirement-gate review.",
+      "riskIds": [],
+      "rollback": {
+        "dataImpact": {
+          "state": "known",
+          "value": "None; this package writes only the evidence report."
+        },
+        "owner": {
+          "state": "known",
+          "value": "Migration lead"
+        },
+        "steps": [
+          "Delete the evidence report if the checkpoint fails.",
+          "Reopen the failing package and re-run after fixes."
+        ],
+        "strategy": {
+          "state": "known",
+          "value": "Re-run after fixing the failing package; no deployment is affected."
+        },
+        "triggers": [
+          "Any parity test failure.",
+          "Health probe failure.",
+          "Coexistence routing configuration rejected in review."
+        ],
+        "validationIds": [
+          "VAL-integration-full-build"
+        ]
+      },
+      "scope": [
+        "Build the complete solution from a clean clone.",
+        "Run all parity-test suites and record results.",
+        "Conduct a coexistence routing configuration review.",
+        "Run the gRPC host health probe and record the response.",
+        "Produce the integration-evidence.md report linking all evidence."
+      ],
+      "sourceIds": [
+        "SVC-order-service"
+      ],
+      "specIds": [
+        "SPEC-order-service"
+      ],
+      "status": "draft",
+      "title": "Integration verification and evidence collection",
+      "validation": [
+        {
+          "command": "dotnet build Contoso.Orders.sln -c Release",
+          "evidenceIds": [],
+          "expectedResult": "Full solution build succeeds with no new warnings.",
+          "id": "VAL-integration-full-build",
+          "kind": "build",
+          "status": "not-run",
+          "workingDirectory": "."
+        },
+        {
+          "command": "dotnet test tests/Contoso.Orders.Grpc.Tests/Contoso.Orders.Grpc.Tests.csproj",
+          "evidenceIds": [],
+          "expectedResult": "All parity tests pass.",
+          "id": "VAL-integration-parity-tests",
+          "kind": "test",
+          "status": "not-run",
+          "workingDirectory": "."
+        },
+        {
+          "evidenceIds": [],
+          "expectedResult": "A reviewer confirms the coexistence routing configuration routes each consumer class to its intended stack.",
+          "id": "VAL-integration-coexistence-review",
+          "kind": "manual",
+          "status": "not-run"
+        },
+        {
+          "command": "dotnet run --project src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj -c Release -- --healthcheck",
+          "evidenceIds": [],
+          "expectedResult": "The host reports SERVING for contoso.orders.v1.OrderService and exits zero.",
+          "id": "VAL-integration-health-probe",
+          "kind": "operational",
+          "status": "not-run",
+          "workingDirectory": "."
         }
       ]
     }

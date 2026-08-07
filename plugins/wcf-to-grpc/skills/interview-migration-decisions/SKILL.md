@@ -87,7 +87,7 @@ Validate and reconcile the inputs, classify the complete candidate set, and
 persist all safe recommendations in one atomic update. Return categorized
 counts and IDs for `agent-proposed`, `review-required`,
 `immediate-answer-required`, `deferred-operational`, and
-`separate-authority-gate`. Return `partial-draft-ready` with one focused
+`out-of-scope-handoff`. Return `partial-draft-ready` with one focused
 question, blocked surface IDs, and draftable surface IDs when an immediate
 blocker remains. Otherwise return `ready-for-draft`, even though proposed
 decisions are not approved. Partial readiness allows downstream work on
@@ -280,6 +280,14 @@ Within the decision log:
   treat one as approval of the other.
 - WCF retirement and cutover require their own approval; architecture approval
   does not authorize production cutover.
+- **`out-of-scope-handoff` topics are never decisions.** Topics in the
+  `out-of-scope-handoff` class (currently `golden-traffic` and
+  `retirement-approval`) are recognized and counted in the outbound envelope
+  but are **never entered into the decision log**, never assigned a `DEC-*` or
+  `proposed`/`approved` state, never cleared by architecture review, and never
+  included in the consolidated review approval scope. They are handled
+  exclusively through their own authority processes. Note them in the outbound
+  `outOfScopeHandoff` list for orchestrator awareness only.
 
 ## Completion criteria
 
@@ -302,6 +310,8 @@ Decision preparation is ready for draft handoff when:
 - [ ] no secrets were requested or persisted;
 - [ ] `decision-log.json` validates against the checked-in Draft 2020-12
       schema;
+- [ ] `out-of-scope-handoff` topics are reported in the outbound envelope but
+      not recorded as decisions in the decision log;
 - [ ] every local Markdown link in this skill and its references resolves.
 
 ## Outputs
@@ -309,7 +319,7 @@ Decision preparation is ready for draft handoff when:
 1. Updated `decision-log.json`.
 2. A concise preparation status summary:
    - approved, proposed, unresolved, deferred, and stale counts;
-   - interaction-class counts and IDs;
+   - interaction-class counts and IDs (including `outOfScopeHandoff` topics, which are noted but not recorded);
    - next immediate blocker or `ready-for-draft`;
    - inventory-analysis gaps;
    - blocking approval gates.

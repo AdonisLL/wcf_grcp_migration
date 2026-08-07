@@ -176,12 +176,15 @@ in-flight and streaming calls end cleanly.
 
 ## 12. `deployment`
 
-Must state: the deployment unit and pipeline; environment/configuration
-management; TLS material provisioning; service discovery and load balancing
-(client-side, proxy, or mesh) with HTTP/2 connection-affinity implications;
-scaling and resource baselines; rollout mechanics (blue/green, canary, ring) and
-the rollback action; database or shared-state migration ordering; and the
-network/firewall changes the new endpoints require.
+Must state: the deployment unit and pipeline mechanism (container image, installer, k8s manifest — the code-observable choice); environment/configuration management approach; TLS material provisioning by reference (never values); service discovery and load balancing (client-side, proxy, or mesh) with HTTP/2 connection-affinity implications; scaling and resource baselines; rollout mechanics (blue/green, canary, ring) and the rollback action; database or shared-state migration ordering; and the network/firewall changes the new endpoints require.
+
+> **Environment-specific values are deferred-operational offline guidance.**
+> Specific production hostnames, environment-progression schedules, cloud
+> regions, and deployment-approval chains are not blocking for a complete
+> specification draft. Record them as named offline prerequisites with a
+> concrete next action, not as unresolved architecture facts. The architecture
+> section must answer the code-observable mechanism; it does not specify
+> environment-specific deployment values.
 
 ## 13. `coexistence`
 
@@ -192,6 +195,12 @@ data-consistency rule while both stacks are live; the additive-only schema
 constraint during the window; the exit condition and the owner who declares it;
 and the risk that any adapter becomes permanent. A coexistence component is a
 temporary supporting element, never the migration target.
+
+> The coexistence routing configuration is code and may appear in an executable
+> `WP-coexistence-routing` package that writes repository-resident config files.
+> The traffic-shifting execution (moving live production traffic from WCF to
+> gRPC) is an offline operational action and must not appear as an executable
+> work package.
 
 ## 14. `consumer-cutover`
 
@@ -214,6 +223,14 @@ readiness (alerts, dashboards, runbooks, on-call) accepted; coexistence
 components removed or given a dated removal plan; and explicit human approval of
 the retirement decision. Retirement is never approved by the architect and never
 by static analysis.
+
+> **Non-executable offline guidance.** This section defines observable
+> retirement *criteria* only. It does not generate executable `WP-*` packages,
+> does not authorize WCF endpoint removal, and does not constitute a production
+> retirement decision. The criteria become `roadmap.retirementCriteria` entries
+> in the migration specification and are presented to the human retirement
+> authority as a checklist. Actual retirement execution is an out-of-scope
+> authority action that must occur outside this workflow.
 
 ## Cross-cutting redesigns carried by the sections
 

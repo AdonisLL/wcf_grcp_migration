@@ -139,7 +139,7 @@ the inbound envelope and return the outbound envelope on every turn.
     "reviewRequired": ["DEC-transport-security"],
     "immediateAnswerRequired": ["DEC-state-lifetime"],
     "deferredOperational": ["DEC-sla-objectives"],
-    "separateAuthorityGate": ["DEC-retirement-approval"]
+    "outOfScopeHandoff": ["DEC-retirement-approval"]
   },
   "blockedSurfaces": ["architecture:state"],
   "draftableAffectedIds": ["SVC-orders", "OP-orders-get"],
@@ -169,6 +169,13 @@ is `approval-recorded`, every requested decision has a matching approval event
 with `source: migration-review` for the exact review-bundle digest.
 When `status` is `blocked`, return `blockingReasons` with the exact IDs
 and inventory gaps that prevent the interview from proceeding.
+
+`outOfScopeHandoff` topics (such as golden-traffic capture and retirement
+approval) are recognized and reported but are **never entered into the decision
+log, never promoted to any decision state, never cleared by architecture review,
+and never included in the consolidated review approval scope**. They are handled
+exclusively through their own authority processes outside this workflow. The
+agent notes them in the outbound envelope for orchestrator awareness only.
 
 When invoked directly by a user (not via the orchestrator), apply the same
 per-question discipline: show the outbound envelope fields in a readable
