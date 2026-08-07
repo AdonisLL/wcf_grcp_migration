@@ -4,7 +4,8 @@
 
 This review approves only the decision, specification, and work-package IDs
 listed in **Approval scope**. It does not grant GitHub mutation, protected
-traffic, production access, cutover, rollback execution, or WCF retirement.
+traffic, production access, production cutover, WCF retirement, or any other
+out-of-scope action listed under **Out-of-scope actions**.
 
 ## Recommended decisions
 
@@ -54,15 +55,29 @@ traffic, production access, cutover, rollback execution, or WCF retirement.
 - {{this}}
 {{/each}}
 
-## Deferred operational gates
+## Offline handoff items and deferred prerequisites
 
-{{#each deferredOperationalItems}}
-- {{decisionId}} — resolve before {{gate}}: {{nextAction}}
+Items in this section are not in the approval scope and do not block the
+consolidated review. Each carries a `gate` value:
+
+- `implementation` — must be resolved before or during implementation so the
+  implementer can write correct code (e.g., deadline thresholds, load-test SLOs).
+- `final-local-checkpoint` — must be resolved before `WP-integration-verification`
+  can complete its evidence report.
+- `offline-handoff` — resolved exclusively through a human authority process
+  after the code is complete (e.g., environment-progression approvals, cutover
+  gates, retirement authorization).
+
+{{#each offlineHandoffItems}}
+- {{decisionId}} — gate `{{gate}}`: {{nextAction}}
 {{/each}}
 
-## Excluded authority gates
+## Out-of-scope actions
 
-{{#each excludedAuthorityGates}}
+The following actions are outside the authority of this review and must not be
+performed as a result of approving this bundle:
+
+{{#each outOfScopeActions}}
 - {{this}}
 {{/each}}
 

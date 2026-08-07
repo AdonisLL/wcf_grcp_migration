@@ -957,7 +957,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "target-runtime"
+        "topic": "target-runtime",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -970,7 +971,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "hosting"
+        "topic": "hosting",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -985,7 +987,8 @@
           "RSK-duplex-callback"
         ],
         "state": "proposed",
-        "topic": "service-boundaries"
+        "topic": "service-boundaries",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -998,7 +1001,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "protobuf-versioning"
+        "topic": "protobuf-versioning",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1013,7 +1017,8 @@
           "RSK-order-total-decimal"
         ],
         "state": "proposed",
-        "topic": "data-types"
+        "topic": "data-types",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1026,7 +1031,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "errors"
+        "topic": "errors",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1039,7 +1045,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "security"
+        "topic": "security",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1052,7 +1059,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "authorization"
+        "topic": "authorization",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1065,7 +1073,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "deadlines-retries"
+        "topic": "deadlines-retries",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1078,7 +1087,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "observability"
+        "topic": "observability",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1091,7 +1101,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "health-checks"
+        "topic": "health-checks",
+        "scope": "code"
       },
       {
         "decisionIds": [
@@ -1104,7 +1115,8 @@
         "questionIds": [],
         "riskIds": [],
         "state": "proposed",
-        "topic": "deployment"
+        "topic": "deployment",
+        "scope": "offline-handoff"
       },
       {
         "decisionIds": [],
@@ -1119,7 +1131,8 @@
           "RSK-external-soap-consumers"
         ],
         "state": "unresolved",
-        "topic": "coexistence"
+        "topic": "coexistence",
+        "scope": "offline-handoff"
       },
       {
         "decisionIds": [],
@@ -1134,7 +1147,8 @@
           "RSK-external-soap-consumers"
         ],
         "state": "unresolved",
-        "topic": "consumer-cutover"
+        "topic": "consumer-cutover",
+        "scope": "offline-handoff"
       },
       {
         "decisionIds": [],
@@ -1149,7 +1163,8 @@
           "RSK-external-soap-consumers"
         ],
         "state": "proposed",
-        "topic": "retirement"
+        "topic": "retirement",
+        "scope": "offline-handoff"
       }
     ],
     "summary": "A single stateless gRPC service on .NET 10 replaces the WCF order host. The duplex status callback becomes a server-streaming RPC, decimal totals use a shared DecimalValue message, and message-level WS-* security is replaced by TLS plus OIDC bearer tokens. The WCF endpoint stays routable for external partners until their cutover decision is approved.",
@@ -1409,6 +1424,7 @@
         }
       },
       "id": "WP-foundation-proto-conventions",
+      "kind": "code-implementation",
       "integrationCheckpoints": [
         "Foundation checkpoint: shared protos build and the numbering policy is published before any service contract starts."
       ],
@@ -1574,6 +1590,7 @@
         }
       },
       "id": "WP-foundation-host-bootstrap",
+      "kind": "code-implementation",
       "integrationCheckpoints": [
         "Foundation checkpoint: the host builds, starts, and reports healthy before service slices register endpoints."
       ],
@@ -1731,6 +1748,7 @@
         }
       },
       "id": "WP-order-service-contract",
+      "kind": "code-implementation",
       "integrationCheckpoints": [
         "Contract checkpoint: generated stubs compile and field numbers match the approved specification."
       ],
@@ -1914,6 +1932,7 @@
         }
       },
       "id": "WP-order-service-server",
+      "kind": "code-implementation",
       "integrationCheckpoints": [
         "Service checkpoint: the host registers the service, the solution builds, and the service test suite passes."
       ],
@@ -2091,6 +2110,7 @@
         }
       },
       "id": "WP-coexistence-routing",
+      "kind": "code-implementation",
       "integrationCheckpoints": [
         "Cutover checkpoint: routing, monitoring, and rollback triggers are reviewed together before any traffic shift."
       ],
@@ -2264,6 +2284,7 @@
         }
       },
       "id": "WP-integration-verification",
+      "kind": "final-local-verification",
       "integrationCheckpoints": [
         "Final integration checkpoint: solution builds, all parity tests pass, coexistence configuration reviewed, health probe confirmed. Output feeds the offline retirement-gate review."
       ],

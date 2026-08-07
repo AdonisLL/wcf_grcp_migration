@@ -139,7 +139,38 @@ asserted.
 
 Produce all fifteen schema sections plus the cross-cutting redesigns in the
 design checklist. Every section states its design (or `null` when unresolved),
-its state, and its decision, question, risk, and evidence IDs. Cover at minimum:
+its state, its `scope` (`code` or `offline-handoff`), and its decision,
+question, risk, and evidence IDs.
+
+**Section scope values:**
+
+- `scope: code` — the section describes a design choice that results in
+  repository code, test configuration, or local configuration files. Unresolved
+  code-scope decisions block the consolidated review.
+- `scope: offline-handoff` — the section describes observable criteria and
+  named approval gates for deployment-era operations that occur after the code
+  is complete. These sections are non-executable offline guidance; they do not
+  generate executable work packages and do not block the consolidated review.
+
+| Section | Scope |
+|---|---|
+| `target-runtime` | `code` |
+| `hosting` | `code` |
+| `service-boundaries` | `code` |
+| `protobuf-versioning` | `code` |
+| `data-types` | `code` |
+| `errors` | `code` |
+| `security` | `code` |
+| `authorization` | `code` |
+| `deadlines-retries` | `code` |
+| `observability` | `code` |
+| `health-checks` | `code` |
+| `deployment` | `offline-handoff` |
+| `coexistence` | `offline-handoff` (routing *configuration files* authored by `WP-coexistence-routing` are `code`; the traffic-shifting operation is `offline-handoff`) |
+| `consumer-cutover` | `offline-handoff` |
+| `retirement` | `offline-handoff` |
+
+Cover at minimum:
 
 - target runtime, gRPC stack, and tooling;
 - hosting, Kestrel/HTTP-2/TLS, and named-pipe or local-transport replacement;
@@ -157,11 +188,12 @@ its state, and its decision, question, risk, and evidence IDs. Cover at minimum:
 - deadlines, cancellation flow, retry/hedging, idempotency, and the one-way
   operation replacement;
 - observability (logging, tracing, metrics, redaction) and health checks;
-- deployment, discovery, load balancing, scaling, and rollout mechanics;
-- coexistence topology, routing, exit criteria, and the additive-only schema
-  rule;
-- consumer cutover order, client strategy per consumer, and rollback triggers;
-- WCF retirement gates;
+- deployment mechanism and rollout mechanics (offline-handoff; environment
+  values are deferred-operational offline prerequisites);
+- coexistence routing configuration (the configuration artifact is code; the
+  traffic-shifting execution is offline-handoff);
+- consumer cutover plan (offline-handoff);
+- WCF retirement gates (offline-handoff);
 - session/state redesign, transaction and reliable-session redesign, duplex
   callback and streaming lifecycle redesign, recorded on the sections named in
   the checklist.
@@ -204,12 +236,14 @@ unresolved. Retirement criteria are observable and independently verifiable.
 
 Follow
 [`references/work-package-patterns.md`](references/work-package-patterns.md).
-Each package is independently implementable and carries an ID, objective,
-bounded scope, non-goals, trace sources, typed dependencies, bounded file
-ownership, honest fleet suitability, deliverables, acceptance criteria,
-validation steps with exact commands when knowable, rollback, coexistence, and
-integration checkpoints. Verify the dependency graph is acyclic and that no two
-fleet-eligible packages in a wave claim the same `exclusive-write` path.
+Each package carries a `kind` (`code-implementation` for regular service
+packages, `final-local-verification` for the integration-verification package),
+an ID, objective, bounded scope, non-goals, trace sources, typed dependencies,
+bounded file ownership, honest fleet suitability, deliverables, acceptance
+criteria, validation steps with exact commands when knowable, rollback (code
+revert only), coexistence, and integration checkpoints. Verify the dependency
+graph is acyclic and that no two fleet-eligible packages in a wave claim the
+same `exclusive-write` path.
 
 ### 8. Render Markdown
 
@@ -223,19 +257,31 @@ Write `migration-review.json` conforming to
 and render `migration-review.md`. Include every proposed decision in approval
 scope with evidence, assumptions, alternatives, consequences, confidence, and
 interaction class; summarize architecture, contracts, roadmap, work packages,
-blockers, and deferred operational gates; and explicitly exclude GitHub
-mutation, protected traffic, production access, cutover, rollback execution,
-and WCF retirement.
+blockers, and offline-handoff prerequisites; and emit the `outOfScopeActions`
+list (covering GitHub mutation, protected traffic, production access, production
+cutover, WCF retirement, golden-traffic capture, and retirement approval).
+
+Populate `offlineHandoffItems` for every non-blocking item that is not in
+the approval scope. Each item carries a `gate` value:
+
+- `implementation` — must be resolved before the implementer can write correct
+  code (e.g., deadline thresholds, load-test SLOs, security ownership).
+- `final-local-checkpoint` — must be resolved before `WP-integration-verification`
+  can complete its evidence report (e.g., compliance sign-off needed before
+  the integration report is valid).
+- `offline-handoff` — resolved through a human authority process after the
+  code is complete (e.g., deployment-environment-progression schedules, cutover
+  gates, retirement authorization, golden-traffic capture approval).
 
 The consolidated review approval scope covers **only code- and
 observable-contract choices**: target runtime, gRPC stack, service boundaries,
 Protobuf contracts, security/auth mechanism abstractions, session/state/
 transaction redesigns, observability wiring, and the executable work packages
-that produce code, tests, or local configuration. The approval scope must
-**never include** deployment-environment values, production traffic cutover
-decisions, WCF retirement authorization, golden-traffic capture approval, or
-any `out-of-scope-handoff` or `deferred-operational` topic whose resolution
-requires authority outside the architecture review process.
+(`kind: code-implementation` and `kind: final-local-verification`) that produce
+code, tests, or local configuration. The approval scope must **never include**
+deployment-environment values, production traffic cutover decisions, WCF
+retirement authorization, golden-traffic capture approval, or any
+`out-of-scope-handoff` topic.
 
 Compute semantic digests from canonical content while excluding approval-event
 metadata. Recording approval must not alter semantic content or invalidate the

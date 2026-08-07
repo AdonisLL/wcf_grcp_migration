@@ -18,6 +18,15 @@ section must answer before it may leave the `unresolved` state.
 - `sections` contains **exactly fifteen** entries, one per `topic` value. Never
   omit a topic; an unanswerable topic is `state: unresolved`, `design: null`,
   and at least one `QST-*`.
+- Every section carries a `scope` field:
+  - `scope: code` — the section describes a design choice whose outcome is
+    repository code, tests, or local configuration. Unresolved `code`-scope
+    sections block the consolidated review.
+  - `scope: offline-handoff` — the section describes observable criteria and
+    named approval gates for deployment-era operations that occur after the code
+    is complete. These sections are non-executable offline guidance; they do not
+    generate executable work packages and do **not** block the consolidated
+    review. Their unresolved state is reported in `offlineHandoffItems`.
 - A section becomes `proposed` only when every "must state" item below is
   answered from approved decisions, inventory evidence, or the mapping
   references, and every unsupported construct it touches has a specified
@@ -27,12 +36,36 @@ section must answer before it may leave the `unresolved` state.
 - Each section carries the `decisionIds`, `questionIds`, `riskIds`, and
   `evidenceIds` that justify it. A design sentence with no supporting ID is a
   defect.
-- **Blocking rule:** a topic is blocking when an in-scope service, consumer, or
-  work package cannot be specified without it. `target-runtime`, `hosting`,
-  `service-boundaries`, `protobuf-versioning`, `data-types`, `errors`,
-  `security`, and `authorization` are blocking whenever any service is in scope.
-  The remainder are blocking for the surfaces they touch (for example
-  `coexistence` is blocking when an external consumer cannot be upgraded).
+- **Blocking rule for `code`-scope sections:** a topic is blocking when an
+  in-scope service, consumer, or work package cannot be specified without it.
+  `target-runtime`, `hosting`, `service-boundaries`, `protobuf-versioning`,
+  `data-types`, `errors`, `security`, and `authorization` are blocking whenever
+  any service is in scope. The remainder are blocking for the surfaces they
+  touch (for example `deadlines-retries` is blocking when any streaming or
+  one-way operation is in scope).
+- **`offline-handoff`-scope sections are never blocking for the consolidated
+  review.** Their unresolved values become `offlineHandoffItems` with a gate of
+  `final-local-checkpoint` or `offline-handoff`.
+
+## Scope reference
+
+| Topic | Scope |
+|---|---|
+| `target-runtime` | `code` |
+| `hosting` | `code` |
+| `service-boundaries` | `code` |
+| `protobuf-versioning` | `code` |
+| `data-types` | `code` |
+| `errors` | `code` |
+| `security` | `code` |
+| `authorization` | `code` |
+| `deadlines-retries` | `code` |
+| `observability` | `code` |
+| `health-checks` | `code` |
+| `deployment` | `offline-handoff` |
+| `coexistence` | `offline-handoff` (routing config files are `code`; traffic-shifting execution is `offline-handoff`) |
+| `consumer-cutover` | `offline-handoff` |
+| `retirement` | `offline-handoff` |
 
 ## 1. `target-runtime`
 

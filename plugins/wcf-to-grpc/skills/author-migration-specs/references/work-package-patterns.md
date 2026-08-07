@@ -35,29 +35,38 @@ is the last executable wave before offline guidance takes over.
 
 A package may leave `draft` only when all of the following hold.
 
-1. **Identity.** Stable `WP-*` ID derived from purpose (`WP-order-service-server`),
+1. **Kind.** One of `code-implementation` (regular service or cross-cutting
+   package that produces repository code, tests, or configuration) or
+   `final-local-verification` (the single integration-verification package
+   that runs the full build, all parity tests, and evidence collection).
+2. **Identity.** Stable `WP-*` ID derived from purpose (`WP-order-service-server`),
    never from list position. Renaming the objective does not renumber the ID.
-2. **Objective and bounded scope.** One coherent outcome; `scope` lists what is
+3. **Objective and bounded scope.** One coherent outcome; `scope` lists what is
    built; `nonGoals` names the adjacent work that belongs to another package
    (explicitly including "do not modify shared proto contracts" where true).
-3. **Traceability.** `sourceIds` (inventory), `specIds`, `decisionIds`,
+4. **Traceability.** `sourceIds` (inventory), `specIds`, `decisionIds`,
    `riskIds`, and `evidenceIds` are populated wherever they apply.
-4. **Dependencies.** Every prerequisite is listed with `type` and `reason`; the
+5. **Dependencies.** Every prerequisite is listed with `type` and `reason`; the
    full graph is acyclic; no dependency is on a package that does not exist.
-5. **Ownership.** `fleet.fileOwnership` lists every path the package writes
+6. **Ownership.** `fleet.fileOwnership` lists every path the package writes
    (`exclusive-write`), reads without writing (`shared-read`), or coordinates
    (`integration-owner`), each with a reason.
-6. **Deliverables.** Repository-relative paths with `create`/`modify`/`delete`/
+7. **Deliverables.** Repository-relative paths with `create`/`modify`/`delete`/
    `verify` actions and a one-line description.
-7. **Acceptance.** Observable outcomes with required evidence and at least one
+8. **Acceptance.** Observable outcomes with required evidence and at least one
    `VAL-*` each.
-8. **Validation.** Exact commands where knowable, otherwise a `manual` step that
+9. **Validation.** Exact commands where knowable, otherwise a `manual` step that
    states what is inspected and what constitutes success.
-9. **Rollback and coexistence.** Present even when not applicable, using
-   `not-applicable` resolved values with a reason.
-10. **Integration checkpoints.** The synchronization points after which parallel
+10. **Rollback.** Code-only: revert commits, unregister or stop the new
+    deployment unit if it serves no production traffic. Rollback steps may not
+    perform production traffic shifts, modify live environments outside the
+    repository, or authorize any operational action. Present even when
+    not applicable, using `not-applicable` resolved values with a reason.
+11. **Coexistence.** Present even when not applicable, using `not-applicable`
+    resolved values with a reason.
+12. **Integration checkpoints.** The synchronization points after which parallel
     work is reconciled.
-11. **No blocking unknowns.** Any blocking `QST-*` leaves the package `draft`
+13. **No blocking unknowns.** Any blocking `QST-*` leaves the package `draft`
     (or `blocked` after approval) and is reported to the caller.
 
 ## Dependency graph rules
@@ -101,19 +110,19 @@ routing, and final cutover or retirement.
 Adapt the catalog to the inventory; do not emit packages for constructs the
 repository does not have. Waves are typical, not fixed.
 
-| Package | Typical wave | Fleet | Purpose |
-|---|---|---|---|
-| `WP-foundation-proto-conventions` | 1 | sequential | Proto layout, package naming, versioning policy, shared types (decimal, money, IDs), generated-code configuration, compatibility check tooling |
-| `WP-foundation-host-bootstrap` | 1 | sequential | Kestrel host on modern .NET, HTTP/2/TLS, configuration, DI composition, project structure |
-| `WP-foundation-cross-cutting` | 2 | sequential | Error-mapping interceptor, authentication/authorization policies, logging/tracing/metrics, health checks, deadline and cancellation plumbing |
-| `WP-<service>-contract` | 2–3 | eligible per service | The service `.proto`, message mappings, reservations, generated-code registration |
-| `WP-<service>-server` | 3–4 | eligible per service | Service implementation delegating to existing business logic, request/response conversion, validation, error mapping |
-| `WP-<service>-state-redesign` | 3–4 | sequential when shared store | Session/instance-state replacement, store schema, TTL, concurrency |
-| `WP-<service>-consistency-redesign` | 3–4 | sequential | Saga/outbox/compensation replacing distributed transactions or reliable sessions |
-| `WP-<service>-parity-tests` | 4 | eligible per service | Contract, behavior, fault, serialization, authorization, deadline, and streaming tests defined by the spec |
-| `WP-coexistence-routing` | 3 | sequential | Side-by-side endpoint routing configuration and consumer-switchable traffic control (produces repository-resident routing config and health probes, not live traffic changes) |
-| `WP-consumer-<consumer>-client` | 4–5 | eligible per consumer | Client migration to the generated gRPC client, configuration, retry/deadline policy, rollout |
-| `WP-integration-verification` | highest+1 | sequential | Final sequential checkpoint: builds the complete solution, runs all parity-test suites, verifies coexistence routing configuration, confirms health probes pass, and produces the integration evidence report that feeds the offline retirement-gate review |
+| Package | Kind | Typical wave | Fleet | Purpose |
+|---|---|---|---|---|
+| `WP-foundation-proto-conventions` | `code-implementation` | 1 | sequential | Proto layout, package naming, versioning policy, shared types (decimal, money, IDs), generated-code configuration, compatibility check tooling |
+| `WP-foundation-host-bootstrap` | `code-implementation` | 1 | sequential | Kestrel host on modern .NET, HTTP/2/TLS, configuration, DI composition, project structure |
+| `WP-foundation-cross-cutting` | `code-implementation` | 2 | sequential | Error-mapping interceptor, authentication/authorization policies, logging/tracing/metrics, health checks, deadline and cancellation plumbing |
+| `WP-<service>-contract` | `code-implementation` | 2–3 | eligible per service | The service `.proto`, message mappings, reservations, generated-code registration |
+| `WP-<service>-server` | `code-implementation` | 3–4 | eligible per service | Service implementation delegating to existing business logic, request/response conversion, validation, error mapping |
+| `WP-<service>-state-redesign` | `code-implementation` | 3–4 | sequential when shared store | Session/instance-state replacement, store schema, TTL, concurrency |
+| `WP-<service>-consistency-redesign` | `code-implementation` | 3–4 | sequential | Saga/outbox/compensation replacing distributed transactions or reliable sessions |
+| `WP-<service>-parity-tests` | `code-implementation` | 4 | eligible per service | Contract, behavior, fault, serialization, authorization, deadline, and streaming tests defined by the spec |
+| `WP-coexistence-routing` | `code-implementation` | 3 | sequential | Side-by-side endpoint routing configuration and consumer-switchable traffic control (produces repository-resident routing config and health probes, not live traffic changes) |
+| `WP-consumer-<consumer>-client` | `code-implementation` | 4–5 | eligible per consumer | Client migration to the generated gRPC client, configuration, retry/deadline policy, rollout |
+| `WP-integration-verification` | `final-local-verification` | highest+1 | sequential | Final sequential checkpoint: builds the complete solution, runs all parity-test suites, verifies coexistence routing configuration, confirms health probes pass, and produces the integration evidence report that feeds the offline retirement-gate review |
 
 > **Retired from the executable catalog:** `WP-cutover-<service>` and
 > `WP-wcf-retirement` are no longer executable work packages. Production
@@ -164,11 +173,24 @@ coexistence routing, rollback readiness, and observability signals.
 
 ## Rollback and coexistence
 
-Rollback states the strategy, the triggers that fire it, ordered recovery steps,
-data impact, the owner, and the validation that proves recovery. Coexistence
-states whether it is required, the routing strategy and traffic control, the
-duration or exit condition, whether the legacy endpoint stays routable, and the
-validation that proves both paths behave identically. Any schema or database
+**Rollback is code-only.** Rollback steps must be expressible as repository
+operations: revert commits, unregister or stop the new deployment unit if it
+has not received production traffic, and rebuild to verify the prior state.
+Rollback steps may not perform production traffic shifts, modify live
+environments outside the repository, or require a separate operational
+authority. When the package has never been deployed to a live environment,
+rollback is simply reverting the commit.
+
+Rollback states the code-revert strategy, the triggers that fire it (observable
+build/test signals, not production incidents), ordered repository recovery
+steps, data impact (additive-only schema change revert when applicable), the
+owner, and the local validation that proves the repository is back to a clean
+state.
+
+Coexistence states whether it is required, the routing strategy and traffic
+control (for routing-configuration packages), the duration or exit condition,
+whether the legacy endpoint stays routable, and the validation that proves both
+paths behave identically. Any schema or database
 change made during coexistence is additive and backward compatible.
 
 ## Integration checkpoints

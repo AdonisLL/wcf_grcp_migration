@@ -128,10 +128,17 @@ If a precondition fails, the stage returns `status: blocked` with
 `dependency-cycle`, or `validation-failure`. Every entry names what it blocks and
 the exact next action that unblocks it.
 
-`deferredItems` carries non-blocking operational unknowns postponed to an
-explicit implementation, validation, or cutover gate. Each has a role or owner
-and a concrete next action; a named individual is required when executable
-work is assigned.
+`deferredItems` carries non-blocking items not in the consolidated review
+approval scope. Each has a role or owner and a concrete next action. The `gate`
+field uses one of three values:
+
+- `implementation` — must be resolved before or during implementation so the
+  implementer can write correct code.
+- `final-local-checkpoint` — must be resolved before `WP-integration-verification`
+  can complete its evidence report.
+- `offline-handoff` — resolved through a human authority process after the
+  code is complete (environment-progression approvals, cutover gates,
+  retirement authorization).
 
 ## Invariants the stage guarantees
 

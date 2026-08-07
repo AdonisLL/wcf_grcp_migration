@@ -130,27 +130,35 @@ Work through the ordered stages in the skill. In summary:
 1. **Reconcile.** Load prior artifacts. Preserve every stable ID, Protobuf field
    number, reserved number/name, approval record, and supersession history.
 2. **Gate.** Classify every unresolved decision as immediate or deferrable for
-   each surface it touches. A blocking unknown leaves that architecture section
-   `unresolved` with a `null` design and at least one `QST-*`, leaves the
-   affected contract or work package unapproved, and is reported explicitly.
-   Never write a plausible-looking placeholder design.
+   each surface it touches. A blocking unknown on a `code`-scope section leaves
+   that section `unresolved` with a `null` design and at least one `QST-*`,
+   leaves the affected contract or work package unapproved, and is reported
+   explicitly. Unresolved `offline-handoff`-scope sections are reported as
+   `offlineHandoffItems` with the appropriate gate (`implementation`,
+   `final-local-checkpoint`, or `offline-handoff`) — they never block the
+   consolidated review. Never write a plausible-looking placeholder design.
 3. **Architect.** Produce all 15 architecture sections required by the schema
-   plus the cross-cutting redesigns listed in the design checklist — including
-   `.proto` package, version and file layout, service boundaries, session/state
-   redesign, transaction and reliable-session redesign, telemetry and health,
-   and hosting/deployment.
+   plus the cross-cutting redesigns listed in the design checklist. Assign
+   `scope: code` to sections 1–11 and `scope: offline-handoff` to sections
+   12–15 (deployment, coexistence, consumer-cutover, retirement). Offline-handoff
+   sections describe observable criteria and named approval gates; they do not
+   generate executable work packages.
 4. **Specify contracts.** For each in-scope service, map operations to RPCs with
    an explicit shape (unary, server-, client-, or bidirectional streaming), map
    data contracts to messages with stable field numbers, presence semantics,
    conversion and validation rules, reservations, and polymorphism policy, and
    attach deadline, idempotency, retry, error and authorization policies.
 5. **Sequence.** Build a roadmap of phases with exit criteria and integration
-   checkpoints, then decompose it into work packages whose `dependencies` form
-   an acyclic graph with bounded file ownership and honest fleet suitability.
+   checkpoints, then decompose it into work packages. Each work package carries
+   a `kind` (`code-implementation` or `final-local-verification`). All
+   executable packages produce code, tests, or local configuration. The final
+   wave is always `WP-integration-verification` (`kind: final-local-verification`).
 6. **Prove.** Give each acceptance criterion an observable outcome, required
    evidence, and concrete validation steps with exact commands when knowable.
 7. **Consolidate review.** Emit `migration-review.json` and
-   `migration-review.md` with the exact semantic digest and approval scope.
+   `migration-review.md` with the exact semantic digest, approval scope
+   (code/contract choices and executable work packages only), `offlineHandoffItems`
+   with the correct `gate` values, and `outOfScopeActions`.
 8. **Validate and report.** Validate JSON against the checked-in schemas, check
    every local link, verify the dependency graph is acyclic and ownership is
    disjoint, then return the handoff summary.
@@ -191,22 +199,30 @@ defaults.
 
 - [ ] Inputs validated; scope, runtime, and output directory recorded.
 - [ ] Prior IDs, field numbers, reservations, and approvals preserved.
-- [ ] All 15 architecture sections present, each `unresolved`, `proposed`, or
-      `approved` with the evidence, decision, risk, and question IDs that
-      justify it.
+- [ ] All 15 architecture sections present. Sections 1–11 carry `scope: code`;
+      sections 12–15 carry `scope: offline-handoff`.
+- [ ] Every `code`-scope section is `unresolved`, `proposed`, or `approved`
+      with the evidence, decision, risk, and question IDs that justify it.
+- [ ] Every `offline-handoff`-scope section is documented as non-executable
+      guidance; its unresolved values appear as `offlineHandoffItems` with the
+      correct gate.
 - [ ] Every in-scope service has a `SPEC-*` with RPC shapes, messages, field
       numbers, reservations, presence semantics, and compatibility rules.
 - [ ] Unsupported WCF constructs appear as risks with specified gRPC redesigns.
 - [ ] Roadmap phases are ordered, have exit criteria, and mark integration
       checkpoints.
-- [ ] Work packages are independently implementable, acyclic, ownership-bounded,
-      and carry acceptance criteria, validation steps, non-goals, rollback, and
-      coexistence.
+- [ ] Work packages are independently implementable, carry `kind`
+      (`code-implementation` or `final-local-verification`), are acyclic,
+      ownership-bounded, and carry acceptance criteria, validation steps
+      (code-runnable only), code-only rollback, coexistence, and integration
+      checkpoints. The final wave is `WP-integration-verification`.
 - [ ] `migration-spec.json` validates against
       [`../schemas/migration-spec.schema.json`](../schemas/migration-spec.schema.json).
-- [ ] `migration-review.json` validates against
-      [`../schemas/migration-review.schema.json`](../schemas/migration-review.schema.json)
-      and its Markdown rendering covers the same approval scope.
+- [ ] `migration-review.json` uses `offlineHandoffItems` (with gate values
+      `implementation`, `final-local-checkpoint`, or `offline-handoff`) and
+      `outOfScopeActions`; validates against
+      [`../schemas/migration-review.schema.json`](../schemas/migration-review.schema.json);
+      its Markdown rendering covers the same approval scope.
 - [ ] Markdown is rendered from JSON, deterministic, and free of broken links.
 - [ ] Blocking decisions are reported, not hidden; nothing was self-approved.
 - [ ] No `WP-*` package performs production traffic shifts, WCF endpoint

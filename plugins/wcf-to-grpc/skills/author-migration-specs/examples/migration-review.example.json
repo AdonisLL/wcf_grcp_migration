@@ -74,7 +74,7 @@
     }
   ],
   "architectureSummary": {
-    "summary": "All architecture sections are drafted from evidence-backed proposed decisions.",
+    "summary": "All code-scope architecture sections are drafted from evidence-backed proposed decisions. Offline-handoff sections (deployment, coexistence, consumer-cutover, retirement) are documented as non-executable guidance.",
     "includedIds": [
       "DEC-target-runtime"
     ],
@@ -88,47 +88,70 @@
     "unresolvedIds": []
   },
   "roadmapSummary": {
-    "summary": "Foundation and Orders pilot work are dependency ordered.",
+    "summary": "Foundation and Orders pilot work are dependency ordered. WP-integration-verification is the final executable wave. Production cutover and retirement are offline guidance only.",
     "includedIds": [
       "PHS-foundation",
-      "WP-orders-server"
+      "WP-orders-server",
+      "WP-integration-verification"
     ],
     "unresolvedIds": []
   },
   "workPackageIds": [
-    "WP-orders-server"
+    "WP-orders-server",
+    "WP-integration-verification"
   ],
   "blockingDecisionIds": [],
-  "deferredOperationalItems": [
+  "offlineHandoffItems": [
     {
       "decisionId": "DEC-sla-objectives",
-      "gate": "validation",
-      "nextAction": "The service owner records measurable SLOs before cutover validation.",
+      "gate": "implementation",
+      "nextAction": "The service owner records measurable SLOs before the implementer writes deadline and load-test thresholds.",
+      "owner": {
+        "state": "known",
+        "value": "Service owner"
+      }
+    },
+    {
+      "decisionId": "DEC-deployment-environment-progression",
+      "gate": "offline-handoff",
+      "nextAction": "The platform team defines the environment-progression schedule and approvals before the first deployment to a shared environment.",
+      "owner": {
+        "state": "known",
+        "value": "Platform team"
+      }
+    },
+    {
+      "decisionId": "DEC-cutover-gates",
+      "gate": "offline-handoff",
+      "nextAction": "The service owner and SRE team agree on measured cutover gate thresholds before the retirement-gate review.",
       "owner": {
         "state": "known",
         "value": "Service owner"
       }
     }
   ],
-  "excludedAuthorityGates": [
+  "outOfScopeActions": [
     "github-mutation",
     "protected-traffic",
     "production-access",
-    "cutover",
-    "rollback-execution",
-    "wcf-retirement"
+    "production-cutover",
+    "wcf-retirement",
+    "golden-traffic-capture",
+    "retirement-approval"
   ],
   "approvalScope": {
     "decisionIds": [
       "DEC-target-runtime"
     ],
     "workPackageIds": [
-      "WP-orders-server"
+      "WP-orders-server",
+      "WP-integration-verification"
     ],
     "excludedActions": [
       "GitHub mutation",
       "Protected traffic or production access",
-      "Cutover, rollback execution, and WCF retirement"
+      "Production cutover, WCF retirement, and retirement approval",
+      "Golden-traffic capture"
     ]
   }
 }
