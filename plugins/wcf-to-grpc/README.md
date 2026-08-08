@@ -156,6 +156,11 @@ in the [repository README](../../README.md). Deeper documentation:
 - [`scripts/Validate-Plugin.ps1`](scripts/Validate-Plugin.ps1) is the
   dependency-free validator used locally and by CI, with a
   [POSIX wrapper](scripts/validate-plugin.sh).
+- [`scripts/Semantic-Digest.ps1`](scripts/Semantic-Digest.ps1) and
+  [`scripts/semantic-digest-rules.v1.json`](scripts/semantic-digest-rules.v1.json)
+  provide one versioned semantic-digest implementation for every stage.
+  [`scripts/Validate-Artifact.ps1`](scripts/Validate-Artifact.ps1) provides
+  machine-observed Draft 2020-12 validation for generated artifacts.
 
 ## Non-negotiable guarantees
 
@@ -166,7 +171,14 @@ in the [repository README](../../README.md). Deeper documentation:
   issue, or dependency mutation before the complete preview is confirmed by a
   human against its digest.
 - **No parallel batch with overlapping or shared file ownership.** Shared and
-  schema infrastructure is sequential and single-owner.
+  schema infrastructure is sequential and single-owner. Waves are computed
+  from dependencies and checkpoint barriers, not assigned optimistically.
+- **WCF is immutable.** Inventory-time content hashes protect WCF source,
+  projects, configuration, activation, endpoints, and generated proxies even
+  when files are initially untracked.
+- **Approval is atomic and lifecycle-safe.** The reviewed semantic digest
+  excludes mutable approval/execution state; approval records and promotes all
+  scoped packages in one update.
 - **Orchestration ends at code handoff.** The affected solution must build
   clean and repository-local tests must pass before the orchestrator declares
   the workflow complete. Deployment, production/protected traffic, runtime

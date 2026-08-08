@@ -1,0 +1,141 @@
+{
+  "numericCorpus": [
+    333333333.33333329,
+    1e+30,
+    4.50,
+    2e-3,
+    1e-27,
+    1e-7,
+    1e+21,
+    -0.0
+  ],
+  "expectedNumericCanonicalJson": "[333333333.3333333,1e+30,4.5,0.002,1e-27,1e-7,1e+21,0]",
+  "base": {
+    "artifactType": "migration-spec",
+    "approval": {
+      "state": "review-requested"
+    },
+    "generation": {
+      "generatedAt": "2026-08-08T12:00:00Z"
+    },
+    "targetArchitecture": {
+      "sections": [
+        {
+          "name": "hosting",
+          "state": "proposed",
+          "design": "Kestrel HTTP/2"
+        }
+      ]
+    },
+    "contracts": [
+      {
+        "id": "SPEC-calculator",
+        "approval": {
+          "state": "review-requested"
+        },
+        "protoPackage": "calculator.v1"
+      }
+    ],
+    "workPackages": [
+      {
+        "id": "WP-contract",
+        "status": "ready-for-review",
+        "approval": {
+          "state": "review-requested"
+        },
+        "objective": "Create the reviewed contract.",
+        "deliverables": [
+          "calculator.proto"
+        ]
+      }
+    ]
+  },
+  "lifecycleMutation": {
+    "artifactType": "migration-spec",
+    "approval": {
+      "state": "approved"
+    },
+    "generation": {
+      "generatedAt": "2026-08-08T13:00:00Z"
+    },
+    "approvalTransaction": {
+      "approvalEventId": "APV-calculator"
+    },
+    "targetArchitecture": {
+      "sections": [
+        {
+          "name": "hosting",
+          "state": "approved",
+          "design": "Kestrel HTTP/2"
+        }
+      ]
+    },
+    "contracts": [
+      {
+        "id": "SPEC-calculator",
+        "approval": {
+          "state": "approved"
+        },
+        "protoPackage": "calculator.v1"
+      }
+    ],
+    "workPackages": [
+      {
+        "id": "WP-contract",
+        "semanticSubDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "completed",
+        "approval": {
+          "state": "approved"
+        },
+        "objective": "Create the reviewed contract.",
+        "deliverables": [
+          "calculator.proto"
+        ]
+      }
+    ]
+  },
+  "semanticMutation": {
+    "artifactType": "migration-spec",
+    "approval": {
+      "state": "approved"
+    },
+    "generation": {
+      "generatedAt": "2026-08-08T13:00:00Z"
+    },
+    "approvalTransaction": {
+      "approvalEventId": "APV-calculator"
+    },
+    "targetArchitecture": {
+      "sections": [
+        {
+          "name": "hosting",
+          "state": "approved",
+          "design": "Kestrel HTTP/2"
+        }
+      ]
+    },
+    "contracts": [
+      {
+        "id": "SPEC-calculator",
+        "approval": {
+          "state": "approved"
+        },
+        "protoPackage": "calculator.v1"
+      }
+    ],
+    "workPackages": [
+      {
+        "id": "WP-contract",
+        "semanticSubDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "status": "completed",
+        "approval": {
+          "state": "approved"
+        },
+        "objective": "Create a materially different contract.",
+        "deliverables": [
+          "calculator.proto"
+        ]
+      }
+    ]
+  }
+}

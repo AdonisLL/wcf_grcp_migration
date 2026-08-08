@@ -113,8 +113,10 @@
           "uniqueItems": true
         },
         "semanticDigest": {
-          "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "$ref": "./common.schema.json#/$defs/semanticDigest"
+        },
+        "digestAlgorithmVersion": {
+          "$ref": "./common.schema.json#/$defs/digestAlgorithmVersion"
         },
         "decisionReviews": {
           "type": "array",
@@ -178,6 +180,7 @@
       "required": [
         "sourceArtifacts",
         "semanticDigest",
+        "digestAlgorithmVersion",
         "decisionReviews",
         "architectureSummary",
         "contractSummary",
@@ -199,13 +202,16 @@
           "$ref": "./common.schema.json#/$defs/artifactRef"
         },
         "semanticDigest": {
-          "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "$ref": "./common.schema.json#/$defs/semanticDigest"
+        },
+        "digestAlgorithmVersion": {
+          "$ref": "./common.schema.json#/$defs/digestAlgorithmVersion"
         }
       },
       "required": [
         "artifact",
-        "semanticDigest"
+        "semanticDigest",
+        "digestAlgorithmVersion"
       ],
       "additionalProperties": false
     },

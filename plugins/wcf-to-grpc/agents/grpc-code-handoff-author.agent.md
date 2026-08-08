@@ -7,9 +7,9 @@ description: >
   into schema-valid code-handoff.json and code-handoff.md artifacts. It
   distinguishes observed local evidence from not-executed deployment,
   environment validation, cutover, live rollback, and WCF retirement guidance.
-  It never changes product code, executes commands, deploys, claims runtime
+  It never changes product code, executes product commands, deploys, claims runtime
   parity, or authorizes an operational action.
-tools: [read, search, edit]
+tools: [read, search, edit, execute]
 ---
 
 # gRPC Code Handoff Author
@@ -20,6 +20,11 @@ Follow [`finalize-code-handoff`](../skills/finalize-code-handoff/SKILL.md).
 Write only the requested `code-handoff.json` and rendered `code-handoff.md`.
 Never edit application code, migration inputs, reports, project files, or run
 state.
+
+Command execution is limited to the bundled
+`scripts/Validate-Artifact.ps1` against the handoff JSON and
+`code-handoff.schema.json`. Attach its machine-readable result to the handoff
+evidence. Never run builds, tests, Git mutation, network, or product commands.
 
 Read the approved specification, every implementation report, the final local
 integration checkpoint, and the current repository revision supplied in the

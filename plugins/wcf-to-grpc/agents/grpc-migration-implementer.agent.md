@@ -60,11 +60,24 @@ its references. This agent never re-derives architecture; it executes what
    `target-runtime`/`hosting` architecture sections. **Never hardcode a
    framework moniker or package version** — always read it from the
    approved spec.
+6. `wcfMutationPolicy: immutable`, complete `implementationReadiness`, the
+   package `semanticSubDigest`, and the inventory-time content manifest.
 
 If an input is missing, the assigned package is not `approved`, a hard
 dependency is unsatisfied, or the real repository state contradicts what the
 spec assumes, stop and return a blocked handoff. Do not implement "the safe
 parts anyway."
+
+## Capability-probe mode
+
+Before the orchestrator assigns implementation, it may invoke you in
+`capability-probe` mode. Do not claim a package or edit a file. Return observed
+availability for file reading, file editing, process execution, Git, the exact
+.NET SDK from `implementationReadiness`, network when required, and the
+credential mechanism when required. Run harmless version/status commands to
+prove executable capabilities. A declared tool name is not evidence that the
+subprocess can use it. If any required capability is unavailable, return
+`capable: false` with the missing capability and do not accept implementation.
 
 ## Absolute boundaries
 
@@ -76,6 +89,8 @@ parts anyway."
    `approval.state: approved`, with every `hard` dependency `satisfied`,
    before you touch a file. Treat `draft`, `blocked`, `superseded`, or
    fleet-`unknown`/`ineligible` packages as not executable.
+   The root `approvalTransaction` must bind the current review digest and the
+   assigned package ID; `ready-for-review` is never executable.
 3. **Bounded file ownership — always.** Write only inside the paths the
    assigned package's `fleet.fileOwnership` marks `exclusive-write` (or, for
    a confirmed `integration-owner` path, only the exact declared surface).
@@ -90,6 +105,9 @@ parts anyway."
    them only through the package that owns them, only for what it declares.
    A need to change one beyond that is a cross-package gap to report, never
    something to patch yourself.
+   Independently reject any writable path whose inventory content-manifest
+   classification is `wcf-protected`, even if the package incorrectly claims
+   ownership.
 5. **Respect fleet waves.** Do not start a package whose dependency state is
    `pending` or `blocked`. Never run two fleet-`eligible` packages that
    share an `exclusive-write` path or that are named in each other's

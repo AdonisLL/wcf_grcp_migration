@@ -2,6 +2,7 @@
 work_package_id: {{work_package_id}}
 migration_spec_id: {{migration_spec_id}}
 report_status: {{status}}
+attempt_id: {{attempt_id}}
 generated_at: {{generated_at_utc}}
 ---
 
@@ -10,6 +11,7 @@ generated_at: {{generated_at_utc}}
 **Status:** {{status}} (`completed` | `partial` | `blocked`)
 **Objective (from spec):** {{objective}}
 **Run mode:** {{mode}} (`implement` | `resume`)
+**Spec package sub-digest:** `{{semantic_sub_digest}}`
 
 This report does not claim runtime parity with WCF, does not assert
 deployment readiness, does not authorize WCF retirement, and does not
@@ -22,6 +24,8 @@ approve its own work package.
 - Fleet wave/ownership/conflict check: {{fleet_check_result}}
 - Claim marker written: `{{claim_marker_path}}`
 - Current repository state re-read (not assumed): {{reread_confirmation}}
+- Execution capability handshake: {{capability_check_result}}
+- Immutable WCF/content-manifest check: {{protected_manifest_check}}
 
 ## Changed projects and files
 
@@ -83,6 +87,24 @@ Next action: {{smallest_unblocking_step}}
 | Package / SDK / Tool | Version required | Source / feed |
 |---|---|---|
 | {{name}} | {{version}} | {{feed}} |
+
+## Reviewed versus resolved dependencies
+
+| Package | Reviewed direct version | Effective resolved version | Drift disposition |
+|---|---|---|---|
+| {{package}} | {{reviewed_version}} | {{resolved_version}} | {{matched_approved_exception_blocked}} |
+
+## Content-manifest evidence
+
+| Path | Classification / ownership | Before SHA-256 | After SHA-256 | Result |
+|---|---|---|---|---|
+| `{{manifest_path}}` | {{classification_or_owner}} | `{{before_hash}}` | `{{after_hash}}` | {{unchanged_or_expected_change}} |
+
+## Attempt lineage
+
+- Previous attempt: {{previous_attempt_id_or_none}}
+- Supersedes: {{superseded_attempt_id_or_none}}
+- Resolved blockers: {{resolved_blocker_ids_or_none}}
 
 ## Final sequential integration checkpoint
 

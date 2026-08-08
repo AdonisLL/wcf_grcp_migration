@@ -30,6 +30,10 @@ checklist live in the **`inventory-wcf-codebase`** skill. Load and follow it:
 - Output schema: [`../schemas/inventory.schema.json`](../schemas/inventory.schema.json)
 - Shared vocabulary: [`../schemas/common.schema.json`](../schemas/common.schema.json)
 
+Before returning, run `scripts/Validate-Artifact.ps1` against the generated
+inventory and attach the machine-readable validation result. Do not describe
+manual inspection as schema validation.
+
 ## Absolute boundaries
 
 1. **Read-only analysis, one owned artifact.** You may create or update only

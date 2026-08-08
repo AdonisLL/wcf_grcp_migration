@@ -30,6 +30,14 @@
         "repository": {
           "$ref": "#/$defs/repository"
         },
+        "contentManifest": {
+          "type": "array",
+          "description": "Inventory-time file hashes used to attribute bounded changes even when Git history or tracking is unavailable.",
+          "items": {
+            "$ref": "#/$defs/contentManifestEntry"
+          },
+          "minItems": 1
+        },
         "services": {
           "type": "array",
           "items": {
@@ -77,6 +85,7 @@
         "analysisState",
         "scope",
         "repository",
+        "contentManifest",
         "services",
         "dataContracts",
         "endpoints",
@@ -89,6 +98,46 @@
   ],
   "unevaluatedProperties": false,
   "$defs": {
+    "contentManifestEntry": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "classification": {
+          "enum": [
+            "wcf-protected",
+            "migration-artifact",
+            "repository-source",
+            "generated",
+            "other"
+          ]
+        },
+        "gitState": {
+          "enum": [
+            "tracked",
+            "untracked",
+            "ignored",
+            "unknown"
+          ]
+        },
+        "affectedIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "classification",
+        "gitState",
+        "affectedIds"
+      ],
+      "additionalProperties": false
+    },
     "scope": {
       "type": "object",
       "properties": {
@@ -1021,8 +1070,38 @@
             "obsolete"
           ]
         },
-        "blocking": {
-          "type": "boolean"
+        "blocksGates": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "review",
+              "implementation",
+              "final-local-checkpoint",
+              "deployment",
+              "protected-traffic",
+              "parity",
+              "cutover",
+              "retirement"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "impactArea": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specificImpact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
         },
         "affectedIds": {
           "$ref": "./common.schema.json#/$defs/idArray"
@@ -1052,7 +1131,11 @@
         "prompt",
         "whyNeeded",
         "status",
-        "blocking",
+        "blocksGates",
+        "impactArea",
+        "specificImpact",
+        "owner",
+        "nextAction",
         "affectedIds",
         "decisionId",
         "evidenceIds"

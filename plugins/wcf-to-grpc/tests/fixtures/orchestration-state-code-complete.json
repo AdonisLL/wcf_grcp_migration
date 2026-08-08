@@ -1,10 +1,10 @@
 {
-  "schemaVersion": "2.0.0",
+  "schemaVersion": "2.1.0",
   "artifactType": "orchestration-state",
   "runId": "ORUN-code-only-example",
   "generation": {
     "generator": "wcf-migration-orchestrator",
-    "generatorVersion": "2.0.0",
+    "generatorVersion": "2.1.0",
     "generatedAt": "2026-08-08T18:05:00Z",
     "sourceRevision": {
       "state": "known",
@@ -157,6 +157,18 @@
     }
   ],
   "blockingItems": [],
+  "attemptHistory": [
+    {
+      "attemptId": "ATT-final-local-checkpoint",
+      "workPackageId": "WP-final-local-checkpoint",
+      "reportPath": "docs/wcf-grpc-migration/implementation-reports/WP-final-local-checkpoint/attempt-ATT-final-local-checkpoint.md",
+      "startedAt": "2026-08-08T17:30:00Z",
+      "outcome": "completed",
+      "resolvedBlockerIds": [],
+      "supersedesAttemptId": null
+    }
+  ],
+  "currentAttemptId": "ATT-final-local-checkpoint",
   "waves": [
     {
       "wave": 1,
@@ -171,7 +183,28 @@
           "dispatchState": "reported",
           "reportPath": "docs/wcf-grpc-migration/reports/final-local-checkpoint.json",
           "reportStatus": "completed",
-          "exclusiveWritePaths": []
+          "exclusiveWritePaths": [],
+          "capabilityCheck": {
+            "checkedAt": "2026-08-08T17:29:00Z",
+            "capable": true,
+            "fileRead": true,
+            "fileEdit": true,
+            "processExecution": true,
+            "git": true,
+            "dotnetSdk": {
+              "state": "known",
+              "value": "10.0.100"
+            },
+            "network": {
+              "state": "known",
+              "value": false
+            },
+            "credentialMechanism": {
+              "state": "not-applicable",
+              "reason": "The approved restore uses no authenticated feed."
+            },
+            "missingCapabilities": []
+          }
         }
       ],
       "ownershipConflicts": []

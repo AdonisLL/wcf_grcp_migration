@@ -184,8 +184,16 @@ contracts, work packages, final local verification, and offline guidance. On
 exact-digest approval with reviewer identity:
 
 1. dispatch the interviewer in `record-bundle-approval` mode;
-2. dispatch the architect in `record-human-approval` mode; and
-3. verify both artifacts record the same digest and full approval scope.
+2. dispatch the architect in `record-human-approval` mode;
+3. require one atomic specification update that records `approvalTransaction`,
+   binds every scoped ID, and promotes every scoped executable package from
+   `ready-for-review` to `approved`; and
+4. recompute with `scripts/Semantic-Digest.ps1` and verify both artifacts retain
+   the same digest and full approval scope.
+
+If any scoped package remains `ready-for-review`, or approval insertion changes
+the semantic digest, treat the entire approval recording as failed rather than
+performing a second lifecycle-only approval.
 
 Approval authorizes only the listed code design and work packages. It does not
 authorize any offline operational action.
@@ -204,15 +212,26 @@ This is the only external mutation in the workflow.
 
 ### 7. Implementation waves
 
-Dispatch one `grpc-migration-implementer` instance per ready work package.
+Before dispatching a package, invoke `grpc-migration-implementer` in
+`capability-probe` mode. Require observed file editing and process execution,
+Git when repository attribution uses it, the exact .NET SDK, and required
+network/feed access. Do not dispatch implementation to an incapable subprocess
+and do not retry the same unchanged capability failure. Select a
+command-capable implementation backend while retaining the specialist's
+instructions, or record a blocking item.
+
+Dispatch one capable `grpc-migration-implementer` instance per ready work package.
 Shared schema, codegen, solution, or package-management surfaces are
 single-owner and sequential. Parallel packages require disjoint exclusive
-write paths and no incomplete dependency.
+write paths, no incomplete dependency, and no unreconciled phase-checkpoint
+barrier. Recompute wave eligibility from dependencies and checkpoints before
+dispatch; never advertise nominal parallelism that cannot start concurrently.
 
 Each report must identify exact changed files/projects, acceptance criteria,
 commands and results, code-revert instructions, deviations, unresolved code
-gaps, and offline dependencies. `partial` or `blocked` never satisfies a
-dependency.
+gaps, offline dependencies, reviewed/resolved package versions, and
+owned/protected file hashes. Reports are append-only attempt records with a
+small current-status index. `partial` or `blocked` never satisfies a dependency.
 
 ### 8. Final local integration checkpoint
 

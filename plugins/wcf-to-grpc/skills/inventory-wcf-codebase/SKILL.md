@@ -201,12 +201,20 @@ signals and search recipes behind every stage.
    it raises. Consult
    [`../map-wcf-to-grpc/references/feature-mapping.md`](../map-wcf-to-grpc/references/feature-mapping.md)
    and its sibling references for which features are HIGH risk.
-2. Record every genuine `unknown` as a `QST-*` with `prompt`, `whyNeeded`,
-   `blocking`, and `affectedIds`; do not answer it.
+2. Record every genuine `unknown` as a `QST-*` with `prompt`, plain-language
+   `whyNeeded`, `blocksGates`, `impactArea`, `specificImpact`, `owner`,
+   `nextAction`, and `affectedIds`; do not answer it. `blocksGates` identifies
+   the exact milestones affected, so an offline deployment or retirement
+   unknown is never mistaken for a current code blocker.
 3. Add trace links (`TRC-*`) from inventory items to the risks/questions they
    raise so downstream decisions, specs, and validation can attach without
    renumbering.
-4. Set `analysisState` per service and for the inventory root based on how much
+4. Capture a SHA-256 content manifest for every in-scope file. Classify WCF
+   source, projects, configuration, activation files, endpoints, and generated
+   proxies as `wcf-protected`. Record Git state when available, but include
+   untracked and imported files so later implementers can prove bounded changes
+   without depending on Git attribution.
+5. Set `analysisState` per service and for the inventory root based on how much
    survived full tracing.
 
 ## Completion checklist

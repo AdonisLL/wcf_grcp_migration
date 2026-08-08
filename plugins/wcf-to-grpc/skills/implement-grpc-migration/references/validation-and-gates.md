@@ -56,6 +56,15 @@ example the affected solution/project build plus the test projects the
 merged packages own) — not the entire repository unless that is genuinely
 the narrowest available command.
 
+Before accepting the checkpoint:
+
+1. inspect the resolved package graph and report reviewed direct versions
+   beside effective resolved versions;
+2. fail on unexplained compatibility-sensitive version drift;
+3. compare current hashes for every `wcf-protected` manifest entry with the
+   inventory baseline; and
+4. compare changed owned-file hashes with the package's declared ownership.
+
 ## 4. Static analysis and code review are never parity proof
 
 Neither this agent's own review of its diff, nor a successful narrow build

@@ -1,7 +1,7 @@
 {
   "name": "wcf-to-grpc",
   "description": "Code-only WCF to gRPC migration workflow: evidence-backed planning, optional Issue publication, implementation, repository-local build/tests, and an offline operational handoff.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "keywords": [
     "wcf",
     "grpc",

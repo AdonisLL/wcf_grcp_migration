@@ -148,9 +148,16 @@ Flag every unsupported/high-risk WCF feature as a risk and link the questions
 it raises. Use `decision-required` when a user choice is needed; leave
 `decisionIds` empty until the decision stage creates the `DEC-*`.
 
-`unknown` (`QST-*`): `prompt`, `whyNeeded`, `status` (`open`/`answered`/
-`obsolete`), `blocking`, `affectedIds`, `decisionId` (or `null`), and
-`evidenceIds`. Never answer a question here; the interview/decision stage does.
+`unknown` (`QST-*`): `prompt`, plain-language `whyNeeded`, `status`
+(`open`/`answered`/`obsolete`), exact `blocksGates`, `impactArea`,
+`specificImpact`, `owner`, `nextAction`, `affectedIds`, `decisionId` (or
+`null`), and `evidenceIds`. Never answer a question here; the
+interview/decision stage does.
+
+`contentManifest`: one SHA-256 entry per in-scope file, including its Git state
+and classification. Mark WCF source, projects, configuration, activation,
+endpoint, and generated-proxy files `wcf-protected`; downstream ownership and
+coexistence validation uses these hashes even when Git cannot attribute them.
 
 ## Trace links (`TRC-*`)
 

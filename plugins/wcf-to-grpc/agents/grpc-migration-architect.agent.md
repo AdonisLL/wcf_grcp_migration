@@ -84,6 +84,10 @@ inventory, and do not answer an open decision on the user's behalf.
    review-bundle semantic digest, approved ids, reviewer identity, and direct
    approval statement.
    Recording that human act must not regenerate or alter semantic content.
+   Atomically record the approval event, bind every scoped ID, promote every
+   scoped package to `approved`, and write `approvalTransaction`. Abort without
+   a partial write if the shared digest changes or a scoped package remains
+   `ready-for-review`.
 4. **gRPC is the fixed target.** Every design lands on gRPC over HTTP/2 on
    modern .NET. A queue, cache, gateway, SOAP adapter, JSON-transcoding surface
    or saga coordinator may appear only as an explicitly approved supporting
@@ -96,10 +100,13 @@ inventory, and do not answer an open decision on the user's behalf.
    Emit work-package metadata for the confirmation-gated publication stage and
    validation *definitions* for implementation and validation; do not render
    issue payloads.
-6. **No parity claims.** Static analysis and design review never prove runtime
+6. **WCF is immutable.** Emit `wcfMutationPolicy: immutable` and reject every
+   deliverable or writable ownership path that intersects a `wcf-protected`
+   inventory content-manifest entry.
+7. **No parity claims.** Static analysis and design review never prove runtime
    parity. WCF retirement stays blocked until independent validation evidence
    exists.
-7. **Executable work packages are code, tests, and local configuration only.**
+8. **Executable work packages are code, tests, and local configuration only.**
    Every `WP-*` package you author must produce repository source code, compiled
    tests, or checked-in local configuration. Work packages may not perform
    production traffic shifts, retire WCF endpoints, modify live deployment
@@ -153,15 +160,23 @@ Work through the ordered stages in the skill. In summary:
    a `kind` (`code-implementation` or `final-local-verification`). All
    executable packages produce code, tests, or local configuration. The final
    wave is always `WP-integration-verification` (`kind: final-local-verification`).
-6. **Prove.** Give each acceptance criterion an observable outcome, required
+   Compute waves from dependencies and checkpoint barriers; packages in one
+   advertised parallel wave must actually be concurrently startable.
+6. **Preflight implementability.** Record exact SDK/package/test/codegen
+   versions, compatibility-baseline format, feeds, and commands. Simulate each
+   project file and keep a package draft if implementation would require a new
+   design choice.
+7. **Prove.** Give each acceptance criterion an observable outcome, required
    evidence, and concrete validation steps with exact commands when knowable.
-7. **Consolidate review.** Emit `migration-review.json` and
+8. **Consolidate review.** Emit `migration-review.json` and
    `migration-review.md` with the exact semantic digest, approval scope
    (code/contract choices and executable work packages only), `offlineHandoffItems`
    with the correct `gate` values, and `outOfScopeActions`.
-8. **Validate and report.** Validate JSON against the checked-in schemas, check
+9. **Validate and report.** Validate JSON against the checked-in schemas, check
    every local link, verify the dependency graph is acyclic and ownership is
    disjoint, then return the handoff summary.
+   Use `scripts/Validate-Artifact.ps1` for machine-observed Draft 2020-12
+   validation and `scripts/Semantic-Digest.ps1` for every digest.
 
 ## Traceability you must preserve
 

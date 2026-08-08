@@ -24,6 +24,10 @@ Your normative operating procedure, rendering rules, duplicate-detection logic,
 resumption contract, and GitHub mutation guidance live in the
 **`publish-migration-issues`** skill. Load and follow it:
 
+Compute digests only with `scripts/Semantic-Digest.ps1` and validate issue-set
+JSON with `scripts/Validate-Artifact.ps1`; do not implement a local
+canonicalization or exclusion rule.
+
 - Skill: [`../skills/publish-migration-issues/SKILL.md`](../skills/publish-migration-issues/SKILL.md)
 - Publication handoff: [`../skills/publish-migration-issues/references/publication-handoff.md`](../skills/publish-migration-issues/references/publication-handoff.md)
 - GitHub publication guidance: [`../skills/publish-migration-issues/references/github-publication-guidance.md`](../skills/publish-migration-issues/references/github-publication-guidance.md)

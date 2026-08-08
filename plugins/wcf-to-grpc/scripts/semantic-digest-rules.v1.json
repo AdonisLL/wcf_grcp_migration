@@ -1,0 +1,45 @@
+{
+  "algorithmVersion": "sha256-rfc8785-v1",
+  "globalExclusions": [
+    "/semanticDigest",
+    "/generation/generatedAt",
+    "/approval"
+  ],
+  "artifactExclusions": {
+    "decision-log": [
+      "/decisions/*/status",
+      "/decisions/*/approvalEvents"
+    ],
+    "issue-set": [
+      "/publication",
+      "/issues/*/publicationState"
+    ],
+    "migration-spec": [
+      "/approvalTransaction",
+      "/targetArchitecture/sections/*/state",
+      "/contracts/*/approval",
+      "/workPackages/*/status",
+      "/workPackages/*/approval",
+      "/workPackages/*/semanticSubDigest",
+      "/workPackages/*/dependencies/*/state",
+      "/workPackages/*/completionEvidence"
+    ],
+    "work-package": [
+      "/status",
+      "/approval",
+      "/semanticSubDigest",
+      "/dependencies/*/state",
+      "/completionEvidence"
+    ],
+    "orchestration-state": [
+      "/outcome",
+      "/stages",
+      "/blockingItems",
+      "/waves",
+      "/finalCheckpoint",
+      "/approvalsObserved",
+      "/attemptHistory",
+      "/nextRequiredAction"
+    ]
+  }
+}

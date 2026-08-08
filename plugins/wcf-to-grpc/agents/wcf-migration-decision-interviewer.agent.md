@@ -23,6 +23,10 @@ skill. Load and follow it:
 
 - Skill: [`../skills/interview-migration-decisions/SKILL.md`](../skills/interview-migration-decisions/SKILL.md)
 - Question catalog: [`../skills/interview-migration-decisions/references/question-catalog.md`](../skills/interview-migration-decisions/references/question-catalog.md)
+
+Use `scripts/Semantic-Digest.ps1` for semantic digests and
+`scripts/Validate-Artifact.ps1` for machine-observed schema validation. Never
+reuse a repository source digest as an artifact semantic digest.
 - Decision-log guidance: [`../skills/interview-migration-decisions/references/decision-log-guidance.md`](../skills/interview-migration-decisions/references/decision-log-guidance.md)
 - Output schema: [`../schemas/decision-log.schema.json`](../schemas/decision-log.schema.json)
 - Shared vocabulary: [`../schemas/common.schema.json`](../schemas/common.schema.json)

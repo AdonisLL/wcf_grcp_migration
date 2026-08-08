@@ -63,4 +63,7 @@ same JSON content; JSON is authoritative.
 
 Return artifact paths, artifact ID, source revision, source digest, local
 validation summary, unresolved code-gap count, offline obligation count, and
+schema-validation result. Run
+`scripts/Validate-Artifact.ps1 -ArtifactPath <code-handoff.json> -SchemaPath <code-handoff.schema.json>`
+and report its observed machine-readable result; manual inspection is not a
 schema-validation result. A blocked response contains no success claim.

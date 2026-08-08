@@ -17,9 +17,9 @@ from implementers" section of
    and the assigned work package(s) are `status: approved` with
    `approval.state: approved`.
 2. Every `hard` dependency of the assigned package(s) is `satisfied`.
-3. The repository working tree is in a known, clean-enough state to attribute
-   changes to this run (uncommitted, unrelated changes should be called out
-   if present).
+3. The inventory content manifest is available and current enough to attribute
+   changes to this run, including initially untracked files. Git status is
+   supplemental evidence, not the sole baseline.
 4. Exactly one work package is assigned, or a small explicit set the caller
    asserts is wave-and-ownership safe per `fleetPlan`.
 
@@ -52,9 +52,12 @@ report and writes no application file.
 ## Outbound handoff report
 
 Written to
-`docs/wcf-grpc-migration/implementation-reports/<work-package-id>.md` using
+`docs/wcf-grpc-migration/implementation-reports/<work-package-id>/attempt-<attempt-id>.md`
+using
 [`../templates/handoff-report.md`](../templates/handoff-report.md), and
-summarized to the caller as short readable text. The report always contains:
+indexed by `<work-package-id>/current.json`. Attempt reports are immutable;
+retries create a new attempt and link the blocker resolution or superseded
+attempt. The report always contains:
 
 | Field | Content |
 |---|---|
@@ -67,6 +70,8 @@ summarized to the caller as short readable text. The report always contains:
 | Code gaps / deviations from the package | Any place the implementation could not follow the spec exactly, and why |
 | Code rollback | Exact `git revert` or file-removal steps that undo this package's changes; confirmation (via local build result) that reverting leaves WCF and shared projects compilable and runnable |
 | Offline dependencies | Every NuGet package reference, SDK version, and tooling version the new projects require, listed for pre-fetch in restricted environments |
+| Resolved dependencies | Reviewed direct and effective resolved versions, with any drift explained or treated as blocking |
+| Content hashes | Before/after hashes for owned paths and unchanged hashes for every WCF-protected path |
 | Coexistence state | Confirmation the legacy WCF endpoint is untouched and locally runnable, matching the package's `coexistence` plan |
 | Final integration checkpoint result | Build command, test command, working directory, and outcome; explicit statement that this is not runtime parity or deployment-readiness evidence |
 | Next required action | The single most important next step for the caller |
@@ -111,8 +116,8 @@ deliverables that are unaffected.
   handoff topic outside this skill.
 - `inventory.json`, `decision-log.json`, `migration-spec.json`, and
   `issue-set.json` are never edited.
-- The handoff report path is deterministic from the work package's own ID,
-  so parallel fleet runs never collide on it.
+- Attempt report paths are unique and append-only; only the per-package
+  `current.json` index is updated.
 - No validation step is marked `passed` without having actually run.
 - The final sequential integration checkpoint (build + repo-local tests) ran
   and its result is recorded; the report explicitly disclaims runtime parity

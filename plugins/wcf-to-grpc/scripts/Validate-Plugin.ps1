@@ -14,7 +14,7 @@ $pluginManifestPath = Join-Path $pluginRoot "plugin.json"
 $fixtureRoot = Join-Path $pluginRoot "tests/fixtures"
 $docsRoot = Join-Path $repoRoot "docs"
 $fixtureSchemaPath = Join-Path $fixtureRoot "fixture-expectations.schema.json"
-$stableIdPattern = "^(?:INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|CHOFF|OBL|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+$stableIdPattern = "^(?:INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|CHOFF|OBL|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|ATT|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
 
 function Add-Check {
     param(
@@ -288,6 +288,111 @@ function Test-DependencyDag {
     Add-Check ($visited -eq $nodeMap.Count) "$Context contains a dependency cycle."
 }
 
+function Test-PathsOverlap {
+    param(
+        [string] $Left,
+        [string] $Right
+    )
+
+    $leftPath = $Left.Replace("\", "/").TrimEnd("/")
+    $rightPath = $Right.Replace("\", "/").TrimEnd("/")
+    return $leftPath -eq $rightPath -or
+        $leftPath.StartsWith("$rightPath/", [StringComparison]::OrdinalIgnoreCase) -or
+        $rightPath.StartsWith("$leftPath/", [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Test-WavePlan {
+    param(
+        [object[]] $WorkPackages,
+        [object[]] $Phases,
+        [string] $Context
+    )
+
+    $packagesById = @{}
+    foreach ($package in $WorkPackages) {
+        $packagesById[(Get-PropertyValue $package "id")] = $package
+    }
+
+    foreach ($package in $WorkPackages) {
+        $packageId = Get-PropertyValue $package "id"
+        $fleet = Get-PropertyValue $package "fleet"
+        $wave = Get-PropertyValue (Get-PropertyValue $fleet "wave") "value"
+        foreach ($dependency in @(Get-PropertyValue $package "dependencies")) {
+            if ((Get-PropertyValue $dependency "type") -ne "hard") {
+                continue
+            }
+            $dependencyId = Get-PropertyValue $dependency "workPackageId"
+            if (-not $packagesById.ContainsKey($dependencyId)) {
+                continue
+            }
+            $dependencyWave = Get-PropertyValue (Get-PropertyValue (Get-PropertyValue $packagesById[$dependencyId] "fleet") "wave") "value"
+            Add-Check ($wave -gt $dependencyWave) "$Context package '$packageId' is advertised in wave $wave before dependency '$dependencyId' in wave $dependencyWave is complete."
+        }
+    }
+
+    $phasesById = @{}
+    foreach ($phase in $Phases) {
+        $phasesById[(Get-PropertyValue $phase "id")] = $phase
+    }
+    foreach ($phase in $Phases) {
+        $phasePackageIds = @(Get-PropertyValue $phase "workPackageIds")
+        foreach ($dependencyPhaseId in @(Get-PropertyValue $phase "dependsOnPhaseIds")) {
+            if (-not $phasesById.ContainsKey($dependencyPhaseId)) {
+                continue
+            }
+            $dependencyPhase = $phasesById[$dependencyPhaseId]
+            if (-not (Get-PropertyValue $dependencyPhase "integrationCheckpoint")) {
+                continue
+            }
+            $dependencyWaves = @(
+                @(Get-PropertyValue $dependencyPhase "workPackageIds") |
+                    ForEach-Object {
+                        Get-PropertyValue (Get-PropertyValue (Get-PropertyValue $packagesById[$_] "fleet") "wave") "value"
+                    }
+            )
+            $barrierWave = ($dependencyWaves | Measure-Object -Maximum).Maximum
+            foreach ($packageId in $phasePackageIds) {
+                $packageWave = Get-PropertyValue (Get-PropertyValue (Get-PropertyValue $packagesById[$packageId] "fleet") "wave") "value"
+                Add-Check ($packageWave -gt $barrierWave) "$Context package '$packageId' in wave $packageWave crosses unreconciled checkpoint '$dependencyPhaseId' ending in wave $barrierWave."
+            }
+        }
+    }
+
+    $parallelPackages = @($WorkPackages | Where-Object {
+        (Get-PropertyValue (Get-PropertyValue $_ "fleet") "suitability") -eq "eligible"
+    })
+    for ($leftIndex = 0; $leftIndex -lt $parallelPackages.Count; $leftIndex++) {
+        for ($rightIndex = $leftIndex + 1; $rightIndex -lt $parallelPackages.Count; $rightIndex++) {
+            $left = $parallelPackages[$leftIndex]
+            $right = $parallelPackages[$rightIndex]
+            $leftFleet = Get-PropertyValue $left "fleet"
+            $rightFleet = Get-PropertyValue $right "fleet"
+            $leftWave = Get-PropertyValue (Get-PropertyValue $leftFleet "wave") "value"
+            $rightWave = Get-PropertyValue (Get-PropertyValue $rightFleet "wave") "value"
+            $leftGroup = Get-PropertyValue (Get-PropertyValue $leftFleet "parallelGroup") "value"
+            $rightGroup = Get-PropertyValue (Get-PropertyValue $rightFleet "parallelGroup") "value"
+            if ($leftWave -ne $rightWave -or $leftGroup -ne $rightGroup) {
+                continue
+            }
+            $leftWrites = @(
+                @(Get-PropertyValue $leftFleet "fileOwnership") |
+                    Where-Object { (Get-PropertyValue $_ "mode") -eq "exclusive-write" } |
+                    ForEach-Object { Get-PropertyValue $_ "path" }
+            )
+            $rightWrites = @(
+                @(Get-PropertyValue $rightFleet "fileOwnership") |
+                    Where-Object { (Get-PropertyValue $_ "mode") -eq "exclusive-write" } |
+                    ForEach-Object { Get-PropertyValue $_ "path" }
+            )
+            foreach ($leftPath in $leftWrites) {
+                foreach ($rightPath in $rightWrites) {
+                    Add-Check (-not (Test-PathsOverlap $leftPath $rightPath)) "$Context parallel packages '$((Get-PropertyValue $left "id"))' and '$((Get-PropertyValue $right "id"))' overlap at '$leftPath' and '$rightPath'."
+                }
+            }
+        }
+    }
+}
+
 Write-Host "Validating plugin at $pluginRoot"
 
 Write-Host " - JSON and manifests"
@@ -457,10 +562,40 @@ if ((Test-Path -LiteralPath $pluginReadmePath -PathType Leaf) -and (Test-Path -L
     Add-Check ((Get-Content -LiteralPath $handoffAuthorPath -Raw) -like "*never changes product code*") "Code handoff author lacks its read-only product boundary."
     $issuePublisherText = Get-Content -LiteralPath $issuePublisherPath -Raw
     Add-Check ($issuePublisherText -like "*previewDigest*" -and $issuePublisherText -like "*publish-approved*") "Optional Issue publication no longer requires digest-bound confirmation."
+    $digestScriptPath = Join-Path $pluginRoot "scripts/Semantic-Digest.ps1"
+    $digestRulesPath = Join-Path $pluginRoot "scripts/semantic-digest-rules.v1.json"
+    $artifactValidatorPath = Join-Path $pluginRoot "scripts/Validate-Artifact.ps1"
+    $reviewValidatorPath = Join-Path $pluginRoot "scripts/Validate-Review-Markdown.ps1"
+    Add-Check (Test-Path -LiteralPath $digestScriptPath -PathType Leaf) "Shared semantic digest utility is missing."
+    Add-Check (Test-Path -LiteralPath $digestRulesPath -PathType Leaf) "Versioned semantic digest rules are missing."
+    Add-Check (Test-Path -LiteralPath $artifactValidatorPath -PathType Leaf) "Runtime artifact validator is missing."
+    Add-Check (Test-Path -LiteralPath $reviewValidatorPath -PathType Leaf) "Review Markdown consistency validator is missing."
+    if ((Test-Path -LiteralPath $digestScriptPath -PathType Leaf) -and
+        (Test-Path -LiteralPath $digestRulesPath -PathType Leaf)) {
+        try {
+            $digestFixture = Join-Path $fixtureRoot "semantic-digest-lifecycle.json"
+            $digestResult = & $digestScriptPath self-test $digestFixture -RulesPath $digestRulesPath
+            Add-Check ($digestResult -like "Self-test passed*") "Semantic digest lifecycle self-test did not pass."
+        }
+        catch {
+            Add-Check $false "Semantic digest lifecycle self-test failed: $($_.Exception.Message)"
+        }
+    }
+    $reviewTemplateText = Get-Content -LiteralPath (Join-Path $pluginRoot "skills/author-migration-specs/templates/migration-review.md") -Raw
+    Add-Check ($reviewTemplateText -like "*{{approval.state}}*") "Migration review template does not render lifecycle state from structured approval data."
+    Add-Check ($reviewTemplateText -notlike "*This review approves only*") "Migration review template contains stale static approval prose."
 
     $orchestrationSchemaText = Get-Content -LiteralPath (Join-Path $pluginRoot "schemas/orchestration-state.schema.json") -Raw
     Add-Check ($orchestrationSchemaText -notmatch '"validationRuns"|"retirementOutcome"|"allowHarness"|"allowGoldenTraffic"|"allowLoadTest"|"allowProductionAccess"') "Orchestration state still stores removed operational gates or outcomes."
     Add-Check ($orchestrationSchemaText -like '*"code-complete"*' -and $orchestrationSchemaText -like '*"offline-handoff"*') "Orchestration state lacks code-only completion stages."
+    Add-Check ($orchestrationSchemaText -like '*"capabilityCheck"*' -and $orchestrationSchemaText -like '*"attemptHistory"*') "Orchestration state lacks capability preflight or append-only attempt history."
+    Add-Check ($orchestratorText -like "*capability-probe*" -and $orchestratorText -like "*do not retry*") "Orchestrator does not reject unchanged incapable implementation backends."
+    $architectText = Get-Content -LiteralPath $architectPath -Raw
+    Add-Check ($architectText -like "*approvalTransaction*" -and $architectText -like "*implementation*require*a new*design choice*") "Architect lacks atomic approval or implementation-readiness safeguards."
+    $implementerText = Get-Content -LiteralPath (Join-Path $agentsPath "grpc-migration-implementer.agent.md") -Raw
+    Add-Check ($implementerText -like "*capability-probe*" -and $implementerText -like "*wcf-protected*") "Implementer lacks execution capability or immutable-WCF preflight."
+    $inventorySchemaText = Get-Content -LiteralPath (Join-Path $pluginRoot "schemas/inventory.schema.json") -Raw
+    Add-Check ($inventorySchemaText -like '*"blocksGates"*' -and $inventorySchemaText -notlike '*"blocking"*') "Inventory unknowns are not modeled by exact migration gates."
 
     $streamliningFixturePath = Join-Path $fixtureRoot "decision-streamlining.json"
     $streamliningFixture = $jsonDocuments[$streamliningFixturePath]
@@ -629,9 +764,20 @@ foreach ($artifactFile in $artifactJsonFiles) {
             }
         } "$($artifactFile.FullName) work packages"
         $workPackages = @(Get-PropertyValue $artifact "workPackages")
+        Test-WavePlan $workPackages @((Get-PropertyValue (Get-PropertyValue $artifact "roadmap") "phases")) "$($artifactFile.FullName) fleet plan"
         Add-Check ($workPackages.Count -gt 0) "Migration specification has no code work packages."
+        Add-Check ((Get-PropertyValue $artifact "digestAlgorithmVersion") -eq "sha256-rfc8785-v1") "Migration specification does not declare the shared digest algorithm."
+        Add-Check ((Get-PropertyValue $artifact "wcfMutationPolicy") -eq "immutable") "Migration specification does not enforce immutable WCF."
+        $readiness = Get-PropertyValue $artifact "implementationReadiness"
+        Add-Check (-not [string]::IsNullOrWhiteSpace((Get-PropertyValue $readiness "sdkVersion"))) "Migration specification omits the exact SDK version."
+        Add-Check (@(Get-PropertyValue $readiness "packageReferences").Count -gt 0) "Migration specification omits exact package references."
+        foreach ($packageReference in @(Get-PropertyValue $readiness "packageReferences")) {
+            $version = Get-PropertyValue $packageReference "version"
+            Add-Check (-not [string]::IsNullOrWhiteSpace($version) -and $version -notmatch "[*xX]") "Migration specification contains an inexact package version for '$((Get-PropertyValue $packageReference "id"))'."
+        }
         Add-Check (@($workPackages | Where-Object { (Get-PropertyValue $_ "kind") -eq "final-local-verification" }).Count -eq 1) "Migration specification must contain exactly one final local verification package."
         foreach ($workPackage in $workPackages) {
+            Add-Check ((Get-PropertyValue $workPackage "semanticSubDigest") -match "^sha256:[a-f0-9]{64}$") "Work package '$((Get-PropertyValue $workPackage "id"))' lacks a semantic sub-digest."
             Add-Check ((Get-PropertyValue $workPackage "kind") -in @("code-implementation", "final-local-verification")) "Work package '$((Get-PropertyValue $workPackage "id"))' is not code-only."
             $executableSurface = [ordered]@{
                 objective = Get-PropertyValue $workPackage "objective"

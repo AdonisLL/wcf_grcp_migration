@@ -33,6 +33,10 @@ Only implement the surfaces your assigned package's `scope` and
    reservations, and policies you must implement.
 3. Open every file your package's `fleet.fileOwnership` lists before editing
    any of them, to confirm the current state matches what the spec assumes.
+4. Verify every exact SDK, package, test adapter, and code-generation version
+   in `implementationReadiness`. Confirm the baseline format and validation
+   commands are sufficient to create the declared project files without a new
+   design choice.
 
 ## 1. Proto contracts and codegen setup
 
@@ -74,10 +78,11 @@ Only implement the surfaces your assigned package's `scope` and
 
 ## 3. Adapters to existing business logic
 
-- The gRPC service implementation is a thin adapter: convert the request
-  message to the existing business-logic call's inputs, invoke the existing
-  method/service exactly as before, convert the result back to the response
-  message, and map exceptions/faults per the `errors` architecture section.
+- The gRPC service implementation follows `wcfMutationPolicy: immutable`.
+  Reuse an existing business library only when it is already consumable without
+  changing a `wcf-protected` file. Otherwise create the independently specified
+  gRPC-side domain/adapter and verify behavior through public interfaces or a
+  retained WCF test harness. Never add a shared core by editing the WCF project.
 - Do not rewrite, "improve", or re-architect the existing business logic
   itself unless the package's scope explicitly says so (for example a
   state-redesign or consistency-redesign package). Preserve its existing
@@ -198,6 +203,10 @@ Only implement the surfaces your assigned package's `scope` and
   new projects require. List them in the handoff report under **offline
   dependencies** so that an air-gapped or restricted build environment can
   pre-fetch them before building.
+- After restore, compare direct reviewed versions with effective versions in
+  the resolved dependency graph. Record both. A transitive override of a
+  compatibility-sensitive package requires an explicit reviewed exception;
+  otherwise validation is blocked.
 - Configuration values (ports, endpoints, feature flags) must be wired to
   existing project-local configuration abstractions (appsettings, user secrets,
   environment variables read at startup) — never hardcoded in source.

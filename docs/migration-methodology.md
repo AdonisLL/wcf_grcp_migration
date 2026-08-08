@@ -148,6 +148,12 @@ contract specifications, a dependency-ordered roadmap with integration
 checkpoints, and independently implementable work packages with acceptance
 criteria, validation steps, non-goals, rollback, and coexistence plans.
 
+Before review it also proves implementation readiness: exact SDK, package,
+test-adapter, and code-generation versions; compatibility-baseline format;
+restore/feed boundaries; and exact validation commands. It computes waves from
+dependencies and checkpoint barriers and rejects any writable path that
+intersects the inventory's immutable WCF content manifest.
+
 It applies proposed decisions as labeled assumptions and **blocks rather than
 guesses**. An unresolved immediate decision leaves that
 architecture section `unresolved` with a `null` design and an open `QST-*`,
@@ -160,9 +166,10 @@ semantic digest.
 
 ## 6. Stage 5 — Consolidated review
 
-Approval is one human act over the exact review-bundle digest. The interviewer
-records its listed decisions and the architect records the specification and
-listed work packages. Partial recording resumes safely. **Nothing is
+Approval is one atomic human act over the exact review-bundle digest. The
+interviewer records its listed decisions and the architect records the
+specification, binds all scoped IDs, and promotes all listed work packages.
+The shared semantic digest excludes these lifecycle transitions. **Nothing is
 implemented and no issue is published before both records are complete.**
 
 Review at minimum: recommendations, assumptions, confidence and alternatives;
@@ -199,16 +206,24 @@ Publication is optional. When you use it, the safeguards are absolute:
 ## 8. Stage 7 — Implementation in waves
 
 **Agent:** gRPC Migration Implementer · **Skill:** `implement-grpc-migration` ·
-**Output:** code plus `implementation-reports/<work-package-id>.md`
+**Output:** code plus append-only
+`implementation-reports/<work-package-id>/attempt-<attempt-id>.md`
 
 One work package at a time. Before touching a file, the implementer confirms
 the package is approved, its `hard` dependencies are satisfied, its wave is
 open, the previous integration checkpoint reconciled, and its file ownership is
-uncontested — then records a claim marker.
+uncontested — then records a claim marker. A capability handshake first proves
+that the delegated subprocess can edit files, execute commands, use the exact
+.NET SDK, and access required package feeds. An unchanged incapable backend is
+not retried.
 
 The normal layout is a **new modern .NET gRPC project added alongside the
 existing WCF project**. WCF is never modified; every schema, database, and
 proto change is additive and backward compatible.
+
+The implementer compares inventory-time and post-run hashes for WCF-protected
+and package-owned paths, and reports reviewed direct package versions beside
+effective resolved versions. Unexplained transitive drift is blocking.
 
 Waves are dispatched with Copilot CLI `/fleet` and observed with `/tasks`, by a
 human. Parallel batches contain only packages with pairwise-disjoint

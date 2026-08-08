@@ -6,7 +6,7 @@
   "$defs": {
     "stableId": {
       "type": "string",
-      "pattern": "^(INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|CHOFF|OBL|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      "pattern": "^(INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|CHOFF|OBL|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|ATT|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF)-[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "relativePath": {
       "type": "string",
@@ -35,6 +35,14 @@
         "pattern": "^EVD-[a-z0-9]+(?:-[a-z0-9]+)*$"
       },
       "uniqueItems": true
+    },
+    "digestAlgorithmVersion": {
+      "const": "sha256-rfc8785-v1",
+      "description": "Versioned semantic digest algorithm implemented by scripts/Semantic-Digest.mjs."
+    },
+    "semanticDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
     },
     "resolvedString": {
       "oneOf": [

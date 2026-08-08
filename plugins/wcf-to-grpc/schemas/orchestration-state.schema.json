@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "const": "2.0.0"
+      "const": "2.1.0"
     },
     "artifactType": {
       "const": "orchestration-state"
@@ -179,6 +179,24 @@
         "$ref": "#/$defs/blockingItem"
       }
     },
+    "attemptHistory": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/attempt"
+      },
+      "minItems": 1
+    },
+    "currentAttemptId": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^ATT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "waves": {
       "type": "array",
       "items": {
@@ -234,6 +252,8 @@
     "stages",
     "artifacts",
     "blockingItems",
+    "attemptHistory",
+    "currentAttemptId",
     "waves",
     "finalCheckpoint",
     "approvalsObserved",
@@ -539,6 +559,8 @@
             "local-validation-failure",
             "evidence-gap",
             "missing-permission"
+            ,
+            "execution-capability"
           ]
         },
         "blocks": {
@@ -665,6 +687,9 @@
             "minLength": 1
           },
           "uniqueItems": true
+        },
+        "capabilityCheck": {
+          "$ref": "#/$defs/capabilityCheck"
         }
       },
       "required": [
@@ -672,7 +697,154 @@
         "dispatchMode",
         "dispatchState",
         "reportStatus",
-        "exclusiveWritePaths"
+        "exclusiveWritePaths",
+        "capabilityCheck"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "dispatchState": {
+                "enum": [
+                  "handed-off",
+                  "reported"
+                ]
+              }
+            },
+            "required": [
+              "dispatchState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "capabilityCheck": {
+                "properties": {
+                  "capable": {
+                    "const": true
+                  },
+                  "fileEdit": {
+                    "const": true
+                  },
+                  "processExecution": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "capabilityCheck": {
+      "type": "object",
+      "properties": {
+        "checkedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "capable": {
+          "type": "boolean"
+        },
+        "fileRead": {
+          "type": "boolean"
+        },
+        "fileEdit": {
+          "type": "boolean"
+        },
+        "processExecution": {
+          "type": "boolean"
+        },
+        "git": {
+          "type": "boolean"
+        },
+        "dotnetSdk": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "network": {
+          "$ref": "./common.schema.json#/$defs/resolvedBoolean"
+        },
+        "credentialMechanism": {
+          "$ref": "./common.schema.json#/$defs/resolvedString",
+          "description": "Non-secret description of the available credential mechanism, or why credentials are not applicable."
+        },
+        "missingCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "checkedAt",
+        "capable",
+        "fileRead",
+        "fileEdit",
+        "processExecution",
+        "git",
+        "dotnetSdk",
+        "network",
+        "credentialMechanism",
+        "missingCapabilities"
+      ],
+      "additionalProperties": false
+    },
+    "attempt": {
+      "type": "object",
+      "properties": {
+        "attemptId": {
+          "type": "string",
+          "pattern": "^ATT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "workPackageId": {
+          "type": "string",
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "reportPath": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "outcome": {
+          "enum": [
+            "in-progress",
+            "blocked",
+            "partial",
+            "completed"
+          ]
+        },
+        "resolvedBlockerIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^BLK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "supersedesAttemptId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^ATT-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "attemptId",
+        "workPackageId",
+        "reportPath",
+        "startedAt",
+        "outcome",
+        "resolvedBlockerIds",
+        "supersedesAttemptId"
       ],
       "additionalProperties": false
     },
@@ -778,6 +950,9 @@
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$"
         },
+        "digestAlgorithmVersion": {
+          "$ref": "./common.schema.json#/$defs/digestAlgorithmVersion"
+        },
         "freshness": {
           "enum": [
             "current",
@@ -821,6 +996,7 @@
         "path",
         "artifactId",
         "semanticDigest",
+        "digestAlgorithmVersion",
         "freshness",
         "decisionApprovalState",
         "specificationApprovalState",

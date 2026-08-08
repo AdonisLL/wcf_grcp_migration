@@ -32,7 +32,9 @@ docs/wcf-grpc-migration/
 ├── work-packages/
 │   └── <work-package-id>.md          Rendered implementable work package
 ├── implementation-reports/
-│   ├── <work-package-id>.md          Implementer handoff report
+│   ├── <work-package-id>/
+│   │   ├── current.json              Current-attempt index
+│   │   └── attempt-<attempt-id>.md   Immutable implementation attempt
 │   ├── <work-package-id>.claim.json  Ownership claim marker
 │   └── checkpoint-<phase-id>.md      Integration checkpoint reconciliation
 ├── code-handoff.json                 Terminal code-only handoff (schema-validated)
@@ -45,9 +47,9 @@ docs/wcf-grpc-migration/
     └── harness/<scope-key>/          Optional permission-gated probe harness
 ```
 
-Every path is deterministic from the identity of the thing it describes — a
-work-package id, a phase id, a scope key — so parallel runs never collide and a
-re-run overwrites its own file rather than creating a variant.
+Every path is deterministic from the identity of the thing it describes.
+Parallel runs never collide. Implementation attempts are append-only so a retry
+cannot erase blocker history; only each package's `current.json` index changes.
 
 ## 2. Artifact ownership
 
@@ -87,6 +89,14 @@ Strict JSON Schema Draft 2020-12, `additionalProperties: false` throughout, in
 | [`orchestration-state.schema.json`](../plugins/wcf-to-grpc/schemas/orchestration-state.schema.json) | `orchestration-state.json` |
 | [`code-handoff.schema.json`](../plugins/wcf-to-grpc/schemas/code-handoff.schema.json) | `code-handoff.json` |
 | [`fixture-expectations.schema.json`](../plugins/wcf-to-grpc/tests/fixtures/fixture-expectations.schema.json) | Test fixture `expected.json` files |
+
+Semantic digests use
+[`Semantic-Digest.ps1`](../plugins/wcf-to-grpc/scripts/Semantic-Digest.ps1)
+with versioned exclusions in
+[`semantic-digest-rules.v1.json`](../plugins/wcf-to-grpc/scripts/semantic-digest-rules.v1.json).
+Approval events, package lifecycle state, dependency satisfaction, and
+completion evidence are non-semantic; design, ownership, versions,
+deliverables, acceptance, and validation definitions remain digest-bound.
 
 Implementation and validation reports are Markdown rendered from checked-in
 templates rather than schema-validated JSON; their contracts are documented in

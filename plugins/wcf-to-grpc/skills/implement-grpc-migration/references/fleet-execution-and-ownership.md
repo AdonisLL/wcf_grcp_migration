@@ -87,6 +87,9 @@ what you may write. Before editing:
    `exclusive-write` (or a package-confirmed `integration-owner`) entry. A
    deliverable path with no matching ownership entry is a spec defect —
    report it; do not edit the file anyway.
+5. Cross-check all writable paths against the inventory content manifest.
+   Any overlap with `classification: wcf-protected` is a spec defect under
+   `wcfMutationPolicy: immutable`, even when Git reports the file as untracked.
 
 ### Claim marker (recommended, cheap coordination)
 

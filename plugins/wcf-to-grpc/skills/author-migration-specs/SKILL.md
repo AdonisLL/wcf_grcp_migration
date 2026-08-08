@@ -145,8 +145,7 @@ For every row in the rendered `assessment.md` **Unresolved facts** table:
   acceptance, consumer cutover, or WCF retirement;
 - distinguish an immediate code or consolidated-review blocker from an
   eventual offline operational gate. When code implementation may proceed,
-  say so explicitly rather than leaving `Blocking: true` open to
-  interpretation; and
+  say so explicitly and render the exact `blocksGates` values; and
 - retain the affected impact area and next decision so the reader can see who
   or what must resolve the unknown.
 
@@ -260,10 +259,37 @@ revert only), coexistence, and integration checkpoints. Verify the dependency
 graph is acyclic and that no two fleet-eligible packages in a wave claim the
 same `exclusive-write` path.
 
+Before requesting review, run an implementation-readiness preflight:
+
+1. populate `implementationReadiness` with the exact SDK, every direct package
+   and tool version, test framework and adapter, generated-code mode,
+   compatibility-baseline format and rules, restore/feed boundaries, and exact
+   validation commands;
+2. simulate each declared project file from those values. If an implementer
+   would still need to choose a version, test framework, code-generation mode,
+   feed, or artifact format, the package remains `draft`;
+3. when network is denied, verify required SDKs/packages are locally available;
+   when network is allowed, record approved feed URLs without credentials; and
+4. enforce `wcfMutationPolicy: immutable`: no deliverable or
+   `exclusive-write`/`integration-owner` path may intersect an inventory
+   `contentManifest` entry classified `wcf-protected`.
+
+Compute each package's `semanticSubDigest` with the shared
+[`../../scripts/Semantic-Digest.ps1`](../../scripts/Semantic-Digest.ps1)
+utility (or the byte-equivalent `.mjs` implementation).
+Preserve prior completion evidence across an amended review only when both the
+sub-digest and all owned file hashes are unchanged; record the prior review
+digest in `completionEvidence.lineage`. Otherwise invalidate completion and
+re-run the affected package.
+
 ### 8. Render Markdown
 
 Render from the structured artifacts with the templates below. Markdown
-introduces no claim absent from JSON.
+introduces no claim absent from JSON. Render lifecycle statements only from the
+current structured approval and package status fields; do not embed prose such
+as "review-requested" or "not executable" in summaries. Regenerate every
+rendered lifecycle statement after approval or completion and reject JSON/
+Markdown contradictions with `scripts/Validate-Review-Markdown.ps1`.
 
 ### 9. Build the consolidated review
 
@@ -298,12 +324,23 @@ deployment-environment values, production traffic cutover decisions, WCF
 retirement authorization, golden-traffic capture approval, or any
 `out-of-scope-handoff` topic.
 
-Compute semantic digests from canonical content while excluding approval-event
-metadata. Recording approval must not alter semantic content or invalidate the
-reviewed digest. Any semantic change creates a new review digest and invalidates
-prior bundle approval. Verify every `approvalScope.workPackageIds` entry exists
-in the bound source migration specification; the source specification ID is
+Compute every semantic digest and package sub-digest with the shared
+`scripts/Semantic-Digest.ps1` utility and
+`scripts/semantic-digest-rules.v1.json`; never substitute the repository source
+digest or an agent-local exclusion list. Store `digestAlgorithmVersion`.
+Recording approval must not alter semantic content or invalidate the reviewed
+digest. Any semantic change creates a new review digest and invalidates prior
+bundle approval. Verify every `approvalScope.workPackageIds` entry exists in
+the bound source migration specification; the source specification ID is
 defined only by the required `migration-spec` entry in `sourceArtifacts`.
+
+In `record-human-approval` mode, perform one atomic artifact update: verify the
+current review digest, append the human approval event, bind every scoped
+decision and work-package ID, set the specification and all scoped package
+approvals to `approved`, promote each scoped package from `ready-for-review` to
+`approved`, and write `approvalTransaction`. Recompute the digest before and
+after and abort the entire write if it changes. An approved specification may
+not retain a scoped package at `ready-for-review`.
 
 ### 10. Validate and report
 
@@ -384,10 +421,16 @@ Before reporting completion:
    fabricated downstream ID exists.
 3. Topologically sort the work-package graph; report any cycle verbatim.
 4. Intersect `exclusive-write` paths per fleet wave; report every conflict.
-5. Confirm field numbers and reservations match the prior generation.
-6. Resolve every local Markdown link in the generated artifacts and in this
+5. Recompute waves from package dependencies and phase checkpoint barriers.
+   Reject a parallel wave if any package depends on another package in that
+   wave or an unreconciled checkpoint serializes it.
+6. Confirm no writable ownership path intersects a `wcf-protected` manifest
+   entry.
+7. Run the implementation-readiness preflight and shared digest self-test.
+8. Confirm field numbers and reservations match the prior generation.
+9. Resolve every local Markdown link in the generated artifacts and in this
    skill's own files.
-7. Confirm no application file outside the output directory changed.
+10. Confirm no application file outside the output directory changed.
 
 ## Completion criteria
 

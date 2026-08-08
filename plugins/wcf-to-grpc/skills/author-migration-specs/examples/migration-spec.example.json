@@ -2,6 +2,7 @@
   "approval": {
     "state": "draft"
   },
+  "approvalTransaction": null,
   "artifactId": "MSPEC-contoso-orders",
   "artifactType": "migration-spec",
   "assessment": {
@@ -808,6 +809,7 @@
     }
   ],
   "decisionLogId": "DLOG-contoso-orders",
+  "digestAlgorithmVersion": "sha256-rfc8785-v1",
   "generation": {
     "generatedAt": "2026-07-30T00:00:00Z",
     "generator": "author-migration-specs",
@@ -820,6 +822,60 @@
     }
   },
   "inventoryId": "INV-contoso-orders",
+  "implementationReadiness": {
+    "sdkVersion": "10.0.100",
+    "packageReferences": [
+      {
+        "id": "Google.Protobuf",
+        "version": "3.25.3",
+        "source": "https://api.nuget.org/v3/index.json"
+      },
+      {
+        "id": "Grpc.AspNetCore",
+        "version": "2.64.0",
+        "source": "https://api.nuget.org/v3/index.json"
+      },
+      {
+        "id": "Grpc.Net.Client",
+        "version": "2.64.0",
+        "source": "https://api.nuget.org/v3/index.json"
+      },
+      {
+        "id": "Grpc.Tools",
+        "version": "2.64.0",
+        "source": "https://api.nuget.org/v3/index.json"
+      }
+    ],
+    "testTooling": {
+      "framework": "xUnit",
+      "frameworkVersion": "2.9.3",
+      "adapter": "xunit.runner.visualstudio",
+      "adapterVersion": "3.1.4",
+      "testSdkVersion": "17.14.1"
+    },
+    "generatedCodeMode": "Grpc.Tools MSBuild generation with explicit GrpcServices metadata",
+    "compatibilityBaseline": {
+      "format": "Canonical UTF-8 JSON derived from a FileDescriptorSet",
+      "canonicalization": "Sort packages, services, methods, messages, fields, and reservations; omit generator and source metadata.",
+      "compatibilityRules": [
+        "Existing field numbers and names cannot be reused incompatibly.",
+        "Removed fields retain reserved numbers and names.",
+        "RPC request, response, and streaming shapes cannot change incompatibly."
+      ]
+    },
+    "validationCommands": [
+      "dotnet restore Contoso.Orders.sln",
+      "dotnet build Contoso.Orders.sln --no-restore",
+      "dotnet test Contoso.Orders.sln --no-build"
+    ],
+    "restorePolicy": {
+      "networkRequired": true,
+      "approvedFeeds": [
+        "https://api.nuget.org/v3/index.json"
+      ],
+      "localCacheVerified": false
+    }
+  },
   "roadmap": {
     "phases": [
       {
@@ -1314,6 +1370,7 @@
       }
     }
   ],
+  "wcfMutationPolicy": "immutable",
   "workPackages": [
     {
       "acceptanceCriteria": [
@@ -1402,6 +1459,7 @@
       },
       "id": "WP-foundation-proto-conventions",
       "kind": "code-implementation",
+      "semanticSubDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
       "integrationCheckpoints": [
         "Foundation checkpoint: shared protos build and the numbering policy is published before any service contract starts."
       ],
@@ -1568,6 +1626,7 @@
       },
       "id": "WP-foundation-host-bootstrap",
       "kind": "code-implementation",
+      "semanticSubDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
       "integrationCheckpoints": [
         "Foundation checkpoint: the host builds, starts, and reports healthy before service slices register endpoints."
       ],
@@ -1721,11 +1780,12 @@
         "suitability": "eligible",
         "wave": {
           "state": "known",
-          "value": 2
+          "value": 3
         }
       },
       "id": "WP-order-service-contract",
       "kind": "code-implementation",
+      "semanticSubDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
       "integrationCheckpoints": [
         "Contract checkpoint: generated stubs compile and field numbers match the approved specification."
       ],
@@ -1905,11 +1965,12 @@
         "suitability": "eligible",
         "wave": {
           "state": "known",
-          "value": 3
+          "value": 4
         }
       },
       "id": "WP-order-service-server",
       "kind": "code-implementation",
+      "semanticSubDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
       "integrationCheckpoints": [
         "Service checkpoint: the host registers the service, the solution builds, and the service test suite passes."
       ],
@@ -2084,6 +2145,7 @@
       },
       "id": "WP-integration-verification",
       "kind": "final-local-verification",
+      "semanticSubDigest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
       "integrationCheckpoints": [
         "Final integration checkpoint: affected projects build, required repository-local tests pass, WCF remains unchanged, and the local gRPC health probe succeeds."
       ],

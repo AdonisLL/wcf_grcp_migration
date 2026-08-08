@@ -68,6 +68,14 @@ A package may leave `draft` only when all of the following hold.
     work is reconciled.
 13. **No blocking unknowns.** Any blocking `QST-*` leaves the package `draft`
     (or `blocked` after approval) and is reported to the caller.
+14. **Executable dependency details.** The specification names the exact SDK,
+    package/tool versions, test framework and adapter, generated-code mode,
+    compatibility-baseline format, feeds, and validation commands.
+15. **Immutable WCF boundary.** No writable ownership or deliverable path
+    intersects an inventory manifest entry classified `wcf-protected`.
+16. **Stable package identity.** `semanticSubDigest` binds objective, scope,
+    ownership, dependencies, deliverables, acceptance, validation, rollback,
+    coexistence, versions, and code choices while excluding lifecycle state.
 
 ## Dependency graph rules
 
@@ -85,6 +93,13 @@ A package may leave `draft` only when all of the following hold.
 - `dependencies[].state` is `pending` until the prerequisite is completed,
   `satisfied` when it is, `blocked` when the prerequisite is blocked, and
   `waived` only with an approved decision that explains the risk.
+- A phase integration checkpoint is a hard scheduling barrier. Every package in
+  a dependent phase has a higher wave than every package guarded by that
+  checkpoint, regardless of nominal package parallelism.
+- Recompute the fleet plan from dependencies and checkpoints before review.
+  Packages advertised in the same parallel wave must all be able to start at
+  the same time; a package waiting for another package or checkpoint is moved
+  to a later wave.
 
 ## Fleet suitability
 
@@ -104,6 +119,10 @@ disjointness: solution and build files, central package management, shared
 composition, cross-cutting interceptors, authentication/authorization
 configuration, database or shared-state migrations, reverse-proxy or gateway
 routing, and final cutover or retirement.
+
+Also intersect every writable path with inventory `contentManifest` entries
+classified `wcf-protected`. Under the required `wcfMutationPolicy: immutable`,
+any intersection is a specification error, not an ownership assignment.
 
 ## Canonical package catalog
 

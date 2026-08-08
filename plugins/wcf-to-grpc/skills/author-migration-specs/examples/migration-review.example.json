@@ -2,6 +2,7 @@
   "schemaVersion": "1.0.0",
   "artifactType": "migration-review",
   "artifactId": "MREV-example-orders",
+  "digestAlgorithmVersion": "sha256-rfc8785-v1",
   "generation": {
     "generator": "author-migration-specs",
     "generatorVersion": "1.1.0",
@@ -28,28 +29,32 @@
         "artifactType": "inventory",
         "id": "INV-example-orders"
       },
-      "semanticDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      "semanticDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "digestAlgorithmVersion": "sha256-rfc8785-v1"
     },
     {
       "artifact": {
         "artifactType": "decision-log",
         "id": "DLOG-example-orders"
       },
-      "semanticDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      "semanticDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "digestAlgorithmVersion": "sha256-rfc8785-v1"
     },
     {
       "artifact": {
         "artifactType": "mapping-result",
         "id": "MRES-example-orders"
       },
-      "semanticDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      "semanticDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "digestAlgorithmVersion": "sha256-rfc8785-v1"
     },
     {
       "artifact": {
         "artifactType": "migration-spec",
         "id": "MSPEC-example-orders"
       },
-      "semanticDigest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      "semanticDigest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "digestAlgorithmVersion": "sha256-rfc8785-v1"
     }
   ],
   "semanticDigest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",

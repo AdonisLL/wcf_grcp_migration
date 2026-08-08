@@ -88,6 +88,8 @@ before implementing anything.
   before you touch a file. `soft` dependencies may be in flight; `integration`
   dependencies must reconcile at the shared checkpoint. Treat `draft`,
   `blocked`, `superseded`, or fleet-`unknown` packages as not executable.
+  The specification's atomic `approvalTransaction` must bind the current
+  review digest and assigned package ID.
 - **Re-read, never assume.** Reload the spec and the actual current
   repository content at the start of every run. A prior agent's summary,
   your own earlier turn, or the specification's prose description of legacy
@@ -100,6 +102,8 @@ before implementing anything.
   `exclusive-write` path, even if it would be convenient or "more correct."
   If your package is `integration-owner` for a shared path, change only the
   exact surface named — do not restructure the shared file.
+  Compare every writable path with the inventory content manifest and reject
+  any `wcf-protected` intersection. Git status alone is insufficient.
 - **Shared and schema infrastructure is single-owner.** Proto package/version
   conventions and shared type protos, generated-code build configuration,
   solution and project files, central package management, host bootstrap and
@@ -186,6 +190,17 @@ prior implementation report for them. Confirm `status: approved` and
 and no `soft`/`integration` dependency is `blocked`. If verification fails,
 stop and return a blocked handoff naming exactly what is missing.
 
+Before accepting the assignment, complete the capability handshake described
+by the agent. Prove process execution, editing, Git, the exact required .NET
+SDK, and any required network/feed access. Do not retry an unchanged,
+incapable execution environment; return a capability blocker so the
+orchestrator can select a command-capable backend.
+
+Verify `implementationReadiness` is complete and executable: exact versions
+exist for every SDK/package/test/codegen dependency, the compatibility
+baseline is fully defined, and validation commands are concrete. If network is
+denied, confirm required packages are in the local cache before editing.
+
 ### 2. Gate on fleet position
 
 Apply
@@ -211,6 +226,8 @@ Read the package's linked `SPEC-*` contract(s), the relevant
 the **actual current repository files** the package will touch — not the
 spec's paraphrase of them. Reconcile any difference between what the spec
 assumes and what the code actually contains before writing anything.
+Hash owned and `wcf-protected` manifest paths before editing. Use those hashes,
+not only Git tracking state, as the before-state evidence.
 
 ### 5. Implement exactly the declared deliverables
 
@@ -238,6 +255,11 @@ affected solution), then run any existing repository-local tests that cover
 the changed code. Use only commands that exist in the repository; do not
 introduce new tooling. Record all commands and results in the handoff report.
 
+After restore, inspect the resolved dependency graph (for .NET, the generated
+assets file or equivalent) and compare effective versions with every reviewed
+direct version. An unexplained override of a compatibility-sensitive version
+is blocking. Record both reviewed and resolved versions.
+
 This checkpoint confirms the code compiles and existing tests pass. It does
 **not** constitute runtime parity evidence, WCF behavior equivalence, or
 deployment readiness — state that explicitly in the report.
@@ -260,6 +282,14 @@ checkpoint was reconciled, the checkpoint report using
 Never mark the package `completed` in prose if any acceptance criterion
 lacks its required evidence, or if any assigned validation step did not
 actually run.
+
+Write immutable attempt reports under
+`implementation-reports/<work-package-id>/attempt-<attempt-id>.md`; never
+replace a prior blocked or partial attempt. Update only the package's small
+`current.json` index to point at the latest attempt and record blocker
+resolution/supersession links. On completion, record the current package
+sub-digest and owned-file hashes so unchanged evidence can be preserved across
+later unrelated bundle amendments.
 
 ## Technical surfaces covered
 

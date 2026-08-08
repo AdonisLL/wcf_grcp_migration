@@ -1,11 +1,13 @@
 # Migration review: {{artifactId}}
 
 **Semantic digest:** `{{semanticDigest}}`
+**Digest algorithm:** `{{digestAlgorithmVersion}}`
+**Approval state:** `{{approval.state}}`
 
-This review approves only the decision, specification, and work-package IDs
-listed in **Approval scope**. It does not grant GitHub mutation, protected
-traffic, production access, production cutover, WCF retirement, or any other
-out-of-scope action listed under **Out-of-scope actions**.
+The current approval state applies only to the decision, specification, and
+work-package IDs listed in **Approval scope**. It never grants GitHub mutation,
+protected traffic, production access, production cutover, WCF retirement, or
+any other action under **Out-of-scope actions**.
 
 ## Recommended decisions
 
@@ -37,11 +39,11 @@ out-of-scope action listed under **Out-of-scope actions**.
 {{/each}}
 {{/each}}
 
-## Draft architecture
+## Architecture
 
 {{architectureSummary.summary}}
 
-## Draft contracts
+## Contracts
 
 {{contractSummary.summary}}
 

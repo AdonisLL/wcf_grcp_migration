@@ -25,6 +25,26 @@
           "type": "string",
           "pattern": "^DLOG-[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
+        "digestAlgorithmVersion": {
+          "$ref": "./common.schema.json#/$defs/digestAlgorithmVersion"
+        },
+        "wcfMutationPolicy": {
+          "const": "immutable",
+          "description": "The code-only plugin keeps all inventoried WCF source, projects, configuration, activation, endpoints, and generated proxies unchanged."
+        },
+        "implementationReadiness": {
+          "$ref": "#/$defs/implementationReadiness"
+        },
+        "approvalTransaction": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/approvalTransaction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "assessment": {
           "$ref": "#/$defs/assessment"
         },
@@ -62,6 +82,10 @@
       "required": [
         "inventoryId",
         "decisionLogId",
+        "digestAlgorithmVersion",
+        "wcfMutationPolicy",
+        "implementationReadiness",
+        "approvalTransaction",
         "assessment",
         "targetArchitecture",
         "contracts",
@@ -94,6 +118,9 @@
             "required": [
               "reviewBundleDigest"
             ]
+          },
+          "approvalTransaction": {
+            "$ref": "#/$defs/approvalTransaction"
           },
           "targetArchitecture": {
             "properties": {
@@ -147,6 +174,13 @@
                 }
               }
             }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "approvalTransaction": {
+            "type": "null"
           }
         }
       }
@@ -1344,6 +1378,13 @@
         "approval": {
           "$ref": "./common.schema.json#/$defs/approval"
         },
+        "semanticSubDigest": {
+          "$ref": "./common.schema.json#/$defs/semanticDigest",
+          "description": "Digest of this package after applying the migration-spec lifecycle exclusions. It allows unchanged completed packages to survive unrelated bundle amendments."
+        },
+        "completionEvidence": {
+          "$ref": "#/$defs/packageCompletionEvidence"
+        },
         "objective": {
           "type": "string",
           "minLength": 1
@@ -1448,6 +1489,7 @@
         "kind",
         "status",
         "approval",
+        "semanticSubDigest",
         "objective",
         "scope",
         "nonGoals",
@@ -1520,6 +1562,252 @@
             }
           }
         }
+      ],
+      "additionalProperties": false
+    },
+    "implementationReadiness": {
+      "type": "object",
+      "properties": {
+        "sdkVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageReferences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "version",
+              "source"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "testTooling": {
+          "type": "object",
+          "properties": {
+            "framework": {
+              "type": "string",
+              "minLength": 1
+            },
+            "frameworkVersion": {
+              "type": "string",
+              "minLength": 1
+            },
+            "adapter": {
+              "type": "string",
+              "minLength": 1
+            },
+            "adapterVersion": {
+              "type": "string",
+              "minLength": 1
+            },
+            "testSdkVersion": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "framework",
+            "frameworkVersion",
+            "adapter",
+            "adapterVersion",
+            "testSdkVersion"
+          ],
+          "additionalProperties": false
+        },
+        "generatedCodeMode": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compatibilityBaseline": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "minLength": 1
+            },
+            "canonicalization": {
+              "type": "string",
+              "minLength": 1
+            },
+            "compatibilityRules": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "format",
+            "canonicalization",
+            "compatibilityRules"
+          ],
+          "additionalProperties": false
+        },
+        "validationCommands": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "restorePolicy": {
+          "type": "object",
+          "properties": {
+            "networkRequired": {
+              "type": "boolean"
+            },
+            "approvedFeeds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "localCacheVerified": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "networkRequired",
+            "approvedFeeds",
+            "localCacheVerified"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "sdkVersion",
+        "packageReferences",
+        "testTooling",
+        "generatedCodeMode",
+        "compatibilityBaseline",
+        "validationCommands",
+        "restorePolicy"
+      ],
+      "additionalProperties": false
+    },
+    "approvalTransaction": {
+      "type": "object",
+      "properties": {
+        "approvalEventId": {
+          "type": "string",
+          "pattern": "^APV-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "reviewBundleDigest": {
+          "$ref": "./common.schema.json#/$defs/semanticDigest"
+        },
+        "digestAlgorithmVersion": {
+          "$ref": "./common.schema.json#/$defs/digestAlgorithmVersion"
+        },
+        "scopedDecisionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^DEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "scopedWorkPackageIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "promotedStatus": {
+          "const": "approved"
+        },
+        "recordedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "approvalEventId",
+        "reviewBundleDigest",
+        "digestAlgorithmVersion",
+        "scopedDecisionIds",
+        "scopedWorkPackageIds",
+        "promotedStatus",
+        "recordedAt"
+      ],
+      "additionalProperties": false
+    },
+    "packageCompletionEvidence": {
+      "type": "object",
+      "properties": {
+        "semanticSubDigest": {
+          "$ref": "./common.schema.json#/$defs/semanticDigest"
+        },
+        "reviewBundleDigest": {
+          "$ref": "./common.schema.json#/$defs/semanticDigest"
+        },
+        "ownedFileHashes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        },
+        "reportPath": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "priorReviewBundleDigest": {
+                "$ref": "./common.schema.json#/$defs/semanticDigest"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "priorReviewBundleDigest",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "semanticSubDigest",
+        "reviewBundleDigest",
+        "ownedFileHashes",
+        "reportPath",
+        "completedAt",
+        "lineage"
       ],
       "additionalProperties": false
     },
