@@ -17,6 +17,19 @@
     "allowGitHubMutation"
   ],
   "terminalOutcome": "code-complete",
+  "solutionLayouts": [
+    "augment-existing-solution",
+    "isolated-new-solution-reference-wcf",
+    "isolated-new-solution-copy-wcf-fixture",
+    "isolated-new-solution-grpc-only"
+  ],
+  "isolatedLayoutRules": [
+    "grpc-root-is-not-repository-root",
+    "original-solution-read-only",
+    "original-wcf-read-only",
+    "copied-wcf-fixture-is-hash-verified-test-only",
+    "grpc-only-does-not-reference-or-copy-wcf"
+  ],
   "finalWorkPackage": {
     "kind": "final-local-verification",
     "dispatchMode": "sequential",

@@ -65,7 +65,7 @@ Shared vocabulary is defined by
 7. **gRPC remains mandatory.** The target is gRPC for .NET on modern .NET.
    Supporting infrastructure may not replace gRPC.
 8. **WCF remains runnable.** No work package may disable, delete, reroute, or
-   retire WCF. A modern gRPC project is normally added alongside it.
+   retire WCF. Place gRPC according to the operator-selected solution layout.
 9. **No secrets.** Store only mechanisms, owner roles, and secret-store
    references. Never request or persist credential values, keys,
    certificates, tokens, or connection strings.
@@ -86,9 +86,34 @@ Record:
 3. repository kind as `unknown` until inventory resolves it;
 4. target runtime as unresolved until Stage 2 proposes the current supported
    .NET LTS, unless repository evidence requires an immediate blocker;
-5. `allowNetwork`, default `false`; and
-6. `allowGitHubMutation`, default `false`, relevant only when optional Issue
+5. one explicit `solutionLayout.mode`:
+   - `augment-existing-solution` — add gRPC projects to the existing solution;
+   - `isolated-new-solution-reference-wcf` — create a new solution/folder and
+     reference original WCF projects read-only for local coexistence tests;
+   - `isolated-new-solution-copy-wcf-fixture` — create a new solution/folder
+     with a byte-for-byte, immutable, test-only WCF snapshot; or
+   - `isolated-new-solution-grpc-only` — create a new solution/folder with only
+     modern gRPC projects; and
+6. `allowNetwork`, default `false`; and
+7. `allowGitHubMutation`, default `false`, relevant only when optional Issue
    publication is requested.
+
+Never infer the solution layout from repository structure. It is a future-state
+operator preference that changes writable paths, build commands, and business-
+logic reuse. Recommend `isolated-new-solution-reference-wcf` when the operator
+wants the original solution untouched but local WCF comparison remains useful.
+Record `grpcRoot: "."` only for `augment-existing-solution`; require a
+non-root relative `grpcRoot` for isolated modes. Derive
+`originalSolutionMutationAllowed` and `wcfSourceHandling` from the selected
+mode. Record `copiedWcfFixtureRoot` only for copy-fixture mode and keep it
+beneath `grpcRoot`; the stored path is relative to `grpcRoot`. Always record
+`copiedWcfFixtureDeployable: false`.
+Warn that a copied WCF tree is a test fixture, not a second deployable service:
+it must preserve source hashes, include the complete build dependency closure,
+and may not be independently modified.
+At every artifact handoff, require `solutionLayout` to equal the Stage 0 value
+exactly. A downstream artifact with a different layout is stale or invalid and
+blocks progression.
 
 Do not ask for test-harness, golden-traffic, load-test, production, deployment,
 cutover, rollback, or retirement permission. They are outside orchestration.
@@ -103,7 +128,7 @@ task merely because intake is incomplete.
 
 | Stage | Required upstream proof | Hard refusal |
 |---|---|---|
-| 1 Inventory | Scope recorded; repository readable | Analyst writes only its inventory artifact |
+| 1 Inventory | Scope and solution layout recorded; repository readable | Analyst writes only its inventory artifact |
 | 2 Decisions | Valid complete inventory | Never answer or approve a blocker |
 | 3 Mapping | Every surface has a proposal/answer or an explicitly scoped immediate blocker | Independent surfaces may proceed; no construct may disappear |
 | 4 Specification | Valid inventory, decision log, and mapping | Only code/local-test work packages; operational topics are handoff guidance |

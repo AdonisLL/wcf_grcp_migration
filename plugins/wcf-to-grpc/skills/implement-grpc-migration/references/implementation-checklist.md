@@ -37,6 +37,14 @@ Only implement the surfaces your assigned package's `scope` and
    in `implementationReadiness`. Confirm the baseline format and validation
    commands are sufficient to create the declared project files without a new
    design choice.
+5. Apply `solutionLayout`:
+   - existing-solution mode permits only the specifically owned `.sln`/shared
+     file changes;
+   - reference-WCF mode may add original WCF projects to the new solution by
+     path but treats every original file as read-only;
+   - copy-WCF-fixture mode copies the complete declared dependency closure,
+     verifies byte equality, and never edits the copy afterward; and
+   - gRPC-only mode neither references nor copies WCF projects.
 
 ## 1. Proto contracts and codegen setup
 

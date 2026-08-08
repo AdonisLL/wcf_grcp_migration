@@ -649,6 +649,14 @@ if ((Test-Path -LiteralPath $pluginReadmePath -PathType Leaf) -and (Test-Path -L
     Add-Check (@(Get-PropertyValue $codeOnlyFixture "permissions").Count -eq 2) "Code-only fixture must expose only network and optional GitHub mutation permissions."
     Add-Check ((Get-PropertyValue $codeOnlyFixture "terminalOutcome") -eq "code-complete") "Code-only fixture has the wrong terminal outcome."
     Add-Check ((Get-PropertyValue (Get-PropertyValue $codeOnlyFixture "finalWorkPackage") "kind") -eq "final-local-verification") "Code-only fixture lacks a final local verification package."
+    $expectedSolutionLayouts = @(
+        "augment-existing-solution",
+        "isolated-new-solution-reference-wcf",
+        "isolated-new-solution-copy-wcf-fixture",
+        "isolated-new-solution-grpc-only"
+    )
+    Add-Check (@(Compare-Object (@(Get-PropertyValue $codeOnlyFixture "solutionLayouts") | Sort-Object) ($expectedSolutionLayouts | Sort-Object)).Count -eq 0) "Code-only fixture does not enumerate every solution layout."
+    Add-Check (@(Get-PropertyValue $codeOnlyFixture "isolatedLayoutRules").Count -eq 5) "Code-only fixture does not enumerate the isolated-layout safety rules."
     Add-Check (@(Get-PropertyValue $codeOnlyFixture "offlineCategories").Count -ge 10) "Code-only fixture does not cover the offline handoff."
     Add-Check (@(Get-PropertyValue $codeOnlyFixture "forbiddenOrchestratedActions").Count -eq 8) "Code-only fixture does not enumerate every forbidden operational action."
     foreach ($skillFile in $skillFiles) {
@@ -739,10 +747,68 @@ foreach ($pair in $schemaValidationPairs) {
     try {
         Add-Check (Test-Json -LiteralPath $pair.Json -SchemaFile $pair.Schema -ErrorAction Stop) "JSON artifact $($pair.Json) does not conform to $($pair.Schema)."
     }
+
     catch {
         Add-Check $false "Could not schema-validate $($pair.Json): $($_.Exception.Message)"
     }
 }
+
+$orchestrationSchemaPath = Join-Path $pluginRoot "schemas/orchestration-state.schema.json"
+$orchestrationFixturePath = Join-Path $fixtureRoot "orchestration-state-code-complete.json"
+$layoutCases = @(
+    @{
+        Mode = "isolated-new-solution-reference-wcf"
+        Handling = "reference-original-readonly"
+        CopyRoot = @{ state = "not-applicable"; reason = "Original WCF projects are referenced read-only." }
+    },
+    @{
+        Mode = "isolated-new-solution-copy-wcf-fixture"
+        Handling = "copy-immutable-test-fixture"
+        CopyRoot = @{ state = "known"; value = "test-fixtures/wcf" }
+    },
+    @{
+        Mode = "isolated-new-solution-grpc-only"
+        Handling = "external-only"
+        CopyRoot = @{ state = "not-applicable"; reason = "The isolated solution contains no WCF source." }
+    }
+)
+foreach ($layoutCase in $layoutCases) {
+    $layoutFixture = Get-Content -LiteralPath $orchestrationFixturePath -Raw | ConvertFrom-Json
+    $layoutFixture.solutionLayout.mode = $layoutCase.Mode
+    $layoutFixture.solutionLayout.grpcRoot = "grpc-migration"
+    $layoutFixture.solutionLayout.originalSolutionMutationAllowed = $false
+    $layoutFixture.solutionLayout.wcfSourceHandling = $layoutCase.Handling
+    $layoutFixture.solutionLayout.copiedWcfFixtureRoot = $layoutCase.CopyRoot
+    Add-Check (
+        Test-Json -Json ($layoutFixture | ConvertTo-Json -Depth 100) -SchemaFile $orchestrationSchemaPath -ErrorAction SilentlyContinue
+    ) "Solution layout '$($layoutCase.Mode)' does not validate."
+}
+
+$invalidLayoutFixture = Get-Content -LiteralPath $orchestrationFixturePath -Raw | ConvertFrom-Json
+$invalidLayoutFixture.solutionLayout.mode = "isolated-new-solution-reference-wcf"
+$invalidLayoutFixture.solutionLayout.grpcRoot = "."
+$invalidLayoutFixture.solutionLayout.originalSolutionMutationAllowed = $true
+$invalidLayoutFixture.solutionLayout.wcfSourceHandling = "reference-original-readonly"
+Add-Check (
+    -not (Test-Json -Json ($invalidLayoutFixture | ConvertTo-Json -Depth 100) -SchemaFile $orchestrationSchemaPath -ErrorAction SilentlyContinue)
+) "An isolated layout incorrectly permits repository-root writes or original-solution mutation."
+
+$invalidCopyFixture = Get-Content -LiteralPath $orchestrationFixturePath -Raw | ConvertFrom-Json
+$invalidCopyFixture.solutionLayout.mode = "isolated-new-solution-copy-wcf-fixture"
+$invalidCopyFixture.solutionLayout.grpcRoot = "grpc-migration"
+$invalidCopyFixture.solutionLayout.originalSolutionMutationAllowed = $false
+$invalidCopyFixture.solutionLayout.wcfSourceHandling = "copy-immutable-test-fixture"
+$invalidCopyFixture.solutionLayout.copiedWcfFixtureRoot = @{ state = "known"; value = "../wcf" }
+Add-Check (
+    -not (Test-Json -Json ($invalidCopyFixture | ConvertTo-Json -Depth 100) -SchemaFile $orchestrationSchemaPath -ErrorAction SilentlyContinue)
+) "A copied WCF fixture incorrectly permits a path outside grpcRoot."
+
+$stateLayout = Get-PropertyValue $jsonDocuments[$orchestrationFixturePath] "solutionLayout"
+$specLayout = Get-PropertyValue $jsonDocuments[(Join-Path $pluginRoot "skills/author-migration-specs/examples/migration-spec.example.json")] "solutionLayout"
+$handoffLayout = Get-PropertyValue $jsonDocuments[(Join-Path $pluginRoot "skills/finalize-code-handoff/examples/code-handoff.example.json")] "solutionLayout"
+$stateLayoutJson = $stateLayout | ConvertTo-Json -Depth 20 -Compress
+Add-Check (($specLayout | ConvertTo-Json -Depth 20 -Compress) -eq $stateLayoutJson) "Migration specification does not preserve the Stage 0 solution layout."
+Add-Check (($handoffLayout | ConvertTo-Json -Depth 20 -Compress) -eq $stateLayoutJson) "Code handoff does not preserve the Stage 0 solution layout."
 
 Write-Host " - stable IDs and dependency DAGs"
 $artifactJsonFiles = @(

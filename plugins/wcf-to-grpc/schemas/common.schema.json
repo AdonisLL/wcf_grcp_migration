@@ -44,6 +44,236 @@
       "type": "string",
       "pattern": "^sha256:[a-f0-9]{64}$"
     },
+    "solutionLayout": {
+      "type": "object",
+      "description": "Operator-selected repository layout for additive gRPC code and optional local WCF test-harness access.",
+      "properties": {
+        "mode": {
+          "enum": [
+            "augment-existing-solution",
+            "isolated-new-solution-reference-wcf",
+            "isolated-new-solution-copy-wcf-fixture",
+            "isolated-new-solution-grpc-only"
+          ]
+        },
+        "grpcRoot": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "originalSolutionMutationAllowed": {
+          "type": "boolean"
+        },
+        "wcfSourceHandling": {
+          "enum": [
+            "retain-in-place",
+            "reference-original-readonly",
+            "copy-immutable-test-fixture",
+            "external-only"
+          ]
+        },
+        "copiedWcfFixtureRoot": {
+          "$ref": "#/$defs/resolvedRelativePath",
+          "description": "Path relative to grpcRoot; known only for copy-fixture mode."
+        },
+        "copiedWcfFixtureDeployable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mode",
+        "grpcRoot",
+        "originalSolutionMutationAllowed",
+        "wcfSourceHandling",
+        "copiedWcfFixtureRoot",
+        "copiedWcfFixtureDeployable"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "augment-existing-solution"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "grpcRoot": {
+                "const": "."
+              },
+              "originalSolutionMutationAllowed": {
+                "const": true
+              },
+              "wcfSourceHandling": {
+                "const": "retain-in-place"
+              },
+              "copiedWcfFixtureRoot": {
+                "properties": {
+                  "state": {
+                    "const": "not-applicable"
+                  }
+                }
+              },
+              "copiedWcfFixtureDeployable": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "isolated-new-solution-reference-wcf"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "grpcRoot": {
+                "pattern": "^(?!\\./).+",
+                "not": {
+                  "const": "."
+                }
+              },
+              "originalSolutionMutationAllowed": {
+                "const": false
+              },
+              "wcfSourceHandling": {
+                "const": "reference-original-readonly"
+              },
+              "copiedWcfFixtureRoot": {
+                "properties": {
+                  "state": {
+                    "const": "not-applicable"
+                  }
+                }
+              },
+              "copiedWcfFixtureDeployable": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "isolated-new-solution-copy-wcf-fixture"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "grpcRoot": {
+                "pattern": "^(?!\\./).+",
+                "not": {
+                  "const": "."
+                }
+              },
+              "originalSolutionMutationAllowed": {
+                "const": false
+              },
+              "wcfSourceHandling": {
+                "const": "copy-immutable-test-fixture"
+              },
+              "copiedWcfFixtureRoot": {
+                "properties": {
+                  "state": {
+                    "const": "known"
+                  }
+                }
+              },
+              "copiedWcfFixtureDeployable": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "isolated-new-solution-grpc-only"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "grpcRoot": {
+                "pattern": "^(?!\\./).+",
+                "not": {
+                  "const": "."
+                }
+              },
+              "originalSolutionMutationAllowed": {
+                "const": false
+              },
+              "wcfSourceHandling": {
+                "const": "external-only"
+              },
+              "copiedWcfFixtureRoot": {
+                "properties": {
+                  "state": {
+                    "const": "not-applicable"
+                  }
+                }
+              },
+              "copiedWcfFixtureDeployable": {
+                "const": false
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "resolvedRelativePath": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "known"
+            },
+            "value": {
+              "$ref": "#/$defs/relativePath"
+            }
+          },
+          "required": [
+            "state",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "not-applicable"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "state",
+            "reason"
+          ]
+        }
+      ]
+    },
     "resolvedString": {
       "oneOf": [
         {

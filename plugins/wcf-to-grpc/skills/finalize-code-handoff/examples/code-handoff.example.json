@@ -21,6 +21,17 @@
   "traceLinks": [],
   "migrationSpecId": "MSPEC-contoso-orders",
   "reviewBundleDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "solutionLayout": {
+    "mode": "augment-existing-solution",
+    "grpcRoot": ".",
+    "originalSolutionMutationAllowed": true,
+    "wcfSourceHandling": "retain-in-place",
+    "copiedWcfFixtureRoot": {
+      "state": "not-applicable",
+      "reason": "The existing solution is augmented without copying WCF."
+    },
+    "copiedWcfFixtureDeployable": false
+  },
   "codeCompletion": {
     "status": "code-complete",
     "sourceRevision": {

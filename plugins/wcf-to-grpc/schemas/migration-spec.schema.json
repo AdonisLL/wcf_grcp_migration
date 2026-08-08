@@ -32,6 +32,9 @@
           "const": "immutable",
           "description": "The code-only plugin keeps all inventoried WCF source, projects, configuration, activation, endpoints, and generated proxies unchanged."
         },
+        "solutionLayout": {
+          "$ref": "./common.schema.json#/$defs/solutionLayout"
+        },
         "implementationReadiness": {
           "$ref": "#/$defs/implementationReadiness"
         },
@@ -84,6 +87,7 @@
         "decisionLogId",
         "digestAlgorithmVersion",
         "wcfMutationPolicy",
+        "solutionLayout",
         "implementationReadiness",
         "approvalTransaction",
         "assessment",

@@ -12,9 +12,10 @@ and WCF retirement are out-of-scope offline activities. Guidance for those
 activities is in §9–11 of this document for reference; the orchestrator does
 not invoke them.
 
-**Normal repository layout:** the implementation stage adds a new modern .NET
-gRPC project alongside the existing WCF project. WCF is never modified and
-continues to serve throughout; every change made during coexistence is additive.
+**Repository layout:** Stage 0 records an operator choice: augment the existing
+solution, or create an isolated solution that references WCF read-only, copies
+an immutable WCF test fixture, or contains only gRPC projects. WCF is never
+modified in any mode.
 
 For how the plugin is built see [architecture.md](architecture.md); for the
 files it produces see [output-contracts.md](output-contracts.md).
@@ -26,6 +27,7 @@ files it produces see [output-contracts.md](output-contracts.md).
 | What is in scope? | One service, one solution, or a bounded slice. Everything downstream is scoped by this answer. |
 | Does this repository host WCF services, only consume them, or both? | A client-only repository is fully supported but produces no server work packages. |
 | Which .NET version will host the gRPC services? | The plugin proposes the current supported .NET LTS and highlights constraints; override it in consolidated review. |
+| Should gRPC augment the existing solution or use an isolated solution? | This controls every writable path, build command, project reference, and local coexistence-test strategy. It is a future-state choice and cannot be inferred safely from the repository. |
 | Who approves architecture and publication? | Architecture decisions/spec/work packages share one scoped review; publication is a distinct act. |
 | What may the agents do? Network, GitHub mutation? | All default to off. Nothing is granted implicitly. |
 
@@ -217,9 +219,11 @@ that the delegated subprocess can edit files, execute commands, use the exact
 .NET SDK, and access required package feeds. An unchanged incapable backend is
 not retried.
 
-The normal layout is a **new modern .NET gRPC project added alongside the
-existing WCF project**. WCF is never modified; every schema, database, and
-proto change is additive and backward compatible.
+The implementation follows the selected layout exactly. For isolation with
+local legacy reuse, referencing original WCF projects read-only is preferred.
+A copied WCF tree is permitted only as a complete, hash-verified, immutable,
+test-only fixture; it is not deployable. A gRPC-only solution neither
+references nor copies WCF.
 
 The implementer compares inventory-time and post-run hashes for WCF-protected
 and package-owned paths, and reports reviewed direct package versions beside

@@ -7,9 +7,10 @@ evidence-backed analysis, an explicit decision record, a reviewable
 specification, and gated implementation ending with an affected solution build,
 repository-local tests, and a structured code handoff.
 
-The normal repository layout is a **new modern .NET gRPC project added
-alongside the existing WCF project**. WCF remains unchanged and continues to
-serve throughout; every implementation change during coexistence is additive.
+Stage 0 asks whether to add gRPC to the existing solution or create an isolated
+solution in a new folder. An isolated solution may reference the original WCF
+projects read-only, contain an immutable WCF test fixture, or contain only gRPC
+projects. WCF remains unchanged in every mode.
 
 The plugin drafts before it interrupts. It selects only high-confidence,
 reversible, evidence-backed recommendations as proposed assumptions, then asks
@@ -129,6 +130,7 @@ Orchestrator**. You can start interactively with:
 > Orchestrate a WCF to gRPC migration for this repository. Ask me for any
 > irreducible choices, prepare the complete recommended migration plan, then
 > ask me to review it once. Stop separately for GitHub Issue publication.
+> Ask whether to augment the existing solution or create an isolated solution.
 > Deployment, production traffic, cutover, and retirement are out of scope.
 
 The orchestrator will ask for any missing Stage 0 values and continue in the
@@ -143,7 +145,9 @@ handoff envelopes.
 > artifacts to `docs/wcf-grpc-migration/`. Discover whether the repository is a
 > service host, client-only, or mixed during inventory. Propose the current
 > supported .NET LTS as the target runtime unless repository evidence makes it
-> unsafe. Network access and GitHub mutation are denied. Ask only for
+> unsafe. Create an isolated solution under `src/grpc-migration/` that
+> references the original WCF projects read-only. Network access and GitHub
+> mutation are denied. Ask only for
 > irreducible choices, prepare the complete recommended migration plan, then ask
 > me for one consolidated review. Keep Issue publication as a separate gate.
 > Deployment, protected traffic, cutover, rollback execution, and WCF
@@ -160,8 +164,19 @@ evidence makes it unsafe.
 | Scope | Defaults to the whole repository; name a bounded slice and exclusions when needed |
 | Target runtime | Current supported .NET LTS is proposed; override it in review or when constraints require |
 | Output directory | Defaults to `docs/wcf-grpc-migration/` |
+| Solution layout | Augment the existing solution; isolated solution referencing WCF read-only; isolated solution with an immutable WCF test fixture; or isolated gRPC-only solution |
+| gRPC root | Required for an isolated solution and must not be the repository root |
 | Network | Grant only when a stage may access external resources |
 | GitHub mutation | Grant only for confirmation-gated Issue publication |
+
+**Solution-layout tradeoffs**
+
+| Layout | Best fit | Consequence |
+|---|---|---|
+| Augment existing solution | Lowest duplication and simplest integrated build | The existing `.sln` and approved shared build files change; WCF source remains protected |
+| Isolated, reference WCF read-only | Original solution must stay untouched, but local adapters/parity tests need WCF code | Recommended isolated mode; legacy and modern projects may need separate build commands |
+| Isolated, copy WCF test fixture | The new solution must be self-contained for offline tests | Copies the full dependency closure, verifies hashes, and marks it test-only/non-deployable; duplicated code can drift |
+| Isolated, gRPC only | Strongest separation and no legacy build dependency | Reuse must be extracted or reimplemented outside WCF; comparisons need an external WCF endpoint or synthetic expectations |
 
 A `blocked` stage is normally a safety gate, not a failed migration. Respond to
 the orchestrator's **next required action in the same conversation**; it reads

@@ -41,6 +41,7 @@ Record:
 
 - source revision, approved spec/review digest, and code-completion status;
 - projects and files created/modified;
+- the selected solution layout, gRPC root, and WCF source-handling mode;
 - contract/package locations and local run instructions;
 - exact local validation commands and observed outcomes;
 - deviations and unresolved code gaps;

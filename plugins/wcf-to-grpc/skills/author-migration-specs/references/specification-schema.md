@@ -147,6 +147,11 @@ approved destination and the adapter has explicit exit criteria.
 
 `migration-spec.schema.json` contains four connected surfaces:
 
+The root `solutionLayout` records whether implementation augments the existing
+solution or creates an isolated solution that references WCF read-only, copies
+an immutable WCF test fixture, or contains only gRPC projects. This field is
+semantic and controls ownership and validation commands.
+
 1. `assessment`: scope, complexity, services, dependencies, risks,
    constraints, unresolved questions, and evidence. Its rendered unresolved
    facts explain in plain language why each fact is needed and identify the

@@ -1371,6 +1371,17 @@
     }
   ],
   "wcfMutationPolicy": "immutable",
+  "solutionLayout": {
+    "mode": "augment-existing-solution",
+    "grpcRoot": ".",
+    "originalSolutionMutationAllowed": true,
+    "wcfSourceHandling": "retain-in-place",
+    "copiedWcfFixtureRoot": {
+      "state": "not-applicable",
+      "reason": "The existing solution is augmented without copying WCF."
+    },
+    "copiedWcfFixtureDeployable": false
+  },
   "workPackages": [
     {
       "acceptanceCriteria": [

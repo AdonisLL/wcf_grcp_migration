@@ -36,6 +36,9 @@
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$"
         },
+        "solutionLayout": {
+          "$ref": "./common.schema.json#/$defs/solutionLayout"
+        },
         "codeCompletion": {
           "$ref": "#/$defs/codeCompletion"
         },
@@ -246,6 +249,7 @@
       "required": [
         "migrationSpecId",
         "reviewBundleDigest",
+        "solutionLayout",
         "codeCompletion",
         "deliverables",
         "localRunInstructions",

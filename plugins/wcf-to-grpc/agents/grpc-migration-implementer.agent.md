@@ -61,7 +61,8 @@ its references. This agent never re-derives architecture; it executes what
    framework moniker or package version** — always read it from the
    approved spec.
 6. `wcfMutationPolicy: immutable`, complete `implementationReadiness`, the
-   package `semanticSubDigest`, and the inventory-time content manifest.
+   package `semanticSubDigest`, the operator-selected `solutionLayout`, and the
+   inventory-time content manifest.
 
 If an input is missing, the assigned package is not `approved`, a hard
 dependency is unsatisfied, or the real repository state contradicts what the
@@ -108,6 +109,10 @@ subprocess can use it. If any required capability is unavailable, return
    Independently reject any writable path whose inventory content-manifest
    classification is `wcf-protected`, even if the package incorrectly claims
    ownership.
+   In an isolated layout, also reject every write outside `grpcRoot` and every
+   original-solution mutation. A referenced WCF project is read-only. A copied
+   WCF tree is hash-verified, immutable, and test-only; never treat it as a
+   deployable replacement.
 5. **Respect fleet waves.** Do not start a package whose dependency state is
    `pending` or `blocked`. Never run two fleet-`eligible` packages that
    share an `exclusive-write` path or that are named in each other's

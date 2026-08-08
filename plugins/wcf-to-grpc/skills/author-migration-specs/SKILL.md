@@ -38,9 +38,11 @@ Issues, implement the migration, execute validation, or claim runtime parity.
    [`../../schemas/mapping-result.schema.json`](../../schemas/mapping-result.schema.json),
    produced using [`../map-wcf-to-grpc/SKILL.md`](../map-wcf-to-grpc/SKILL.md)
    and including every unsupported-feature risk and its required redesign.
-4. The analyzed repository root, the migration scope, and an optional output
-   directory. Use `docs/wcf-grpc-migration/` when none is supplied.
-5. Any prior artifacts already present in the output directory.
+4. The analyzed repository root, migration scope, and operator-selected
+   `solutionLayout`.
+5. An optional output directory. Use `docs/wcf-grpc-migration/` when none is
+   supplied.
+6. Any prior artifacts already present in the output directory.
 
 Read
 [`references/specification-schema.md`](references/specification-schema.md),
@@ -273,6 +275,28 @@ Before requesting review, run an implementation-readiness preflight:
 4. enforce `wcfMutationPolicy: immutable`: no deliverable or
    `exclusive-write`/`integration-owner` path may intersect an inventory
    `contentManifest` entry classified `wcf-protected`.
+
+Apply `solutionLayout` exactly:
+
+- `augment-existing-solution`: a single integration owner may modify the
+  declared existing `.sln` and explicitly approved shared build/package files;
+  WCF projects and source remain protected.
+- `isolated-new-solution-reference-wcf`: create all gRPC files beneath
+  `grpcRoot`; the new solution may reference original WCF projects only as
+  `shared-read`, and final verification uses separate legacy and modern build
+  commands when one toolchain cannot build both.
+- `isolated-new-solution-copy-wcf-fixture`: enumerate the complete WCF build
+  dependency closure and a destination beneath the new root. The copy package
+  verifies every copied file hash against the inventory manifest and labels the
+  snapshot test-only/non-deployable. No later package may modify copied WCF
+  source; adapters and new behavior live outside the fixture tree.
+- `isolated-new-solution-grpc-only`: no work package references or copies WCF
+  projects. Behavioral comparisons use an externally started retained WCF
+  endpoint or synthetic expectations without claiming runtime parity.
+
+For every isolated mode, reject writes to the original solution and its shared
+build/package files. The final verification package must run the exact build
+and test commands for the selected layout.
 
 Compute each package's `semanticSubDigest` with the shared
 [`../../scripts/Semantic-Digest.ps1`](../../scripts/Semantic-Digest.ps1)

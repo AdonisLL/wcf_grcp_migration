@@ -5,8 +5,10 @@ Copilot CLI plugin that takes a legacy .NET WCF codebase to **gRPC for
 reviewable specification, and gated implementation ending with an affected
 solution build, repository-local tests, and a structured code handoff.
 
-The normal layout is a **new modern .NET gRPC project added alongside the
-existing WCF project**. WCF remains unchanged throughout. Deployment,
+Stage 0 records whether gRPC augments the existing solution or is created in
+an isolated solution that references WCF read-only, contains an immutable WCF
+test fixture, or contains only gRPC projects. WCF remains unchanged throughout.
+Deployment,
 environment provisioning, production/protected traffic, runtime parity
 validation, cutover, live rollback, and WCF retirement are out-of-scope
 offline activities — guidance for those activities is in

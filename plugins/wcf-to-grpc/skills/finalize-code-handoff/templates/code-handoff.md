@@ -7,6 +7,9 @@
 - **Status:** {{codeCompletionStatus}}
 - **Source revision:** {{sourceRevision}}
 - **WCF state:** Active and unchanged
+- **Solution layout:** {{solutionLayoutMode}}
+- **gRPC root:** `{{grpcRoot}}`
+- **WCF source handling:** {{wcfSourceHandling}}
 
 ## Delivered code
 

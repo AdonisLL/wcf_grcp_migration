@@ -103,6 +103,11 @@ inventory, and do not answer an open decision on the user's behalf.
 6. **WCF is immutable.** Emit `wcfMutationPolicy: immutable` and reject every
    deliverable or writable ownership path that intersects a `wcf-protected`
    inventory content-manifest entry.
+   Apply the operator-selected `solutionLayout` without substituting a more
+   convenient repository structure. In isolated modes, every new gRPC writable
+   path stays beneath `grpcRoot` and the original solution is read-only.
+   A copied WCF tree is an immutable, hash-verified, test-only fixture and
+   never a second deployable WCF service.
 7. **No parity claims.** Static analysis and design review never prove runtime
    parity. WCF retirement stays blocked until independent validation evidence
    exists.

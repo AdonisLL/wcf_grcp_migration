@@ -264,6 +264,7 @@ It records:
 
 - source revision, approved spec/review digest, and `code-complete` status with
   `affectedBuildsPassed: true` and `requiredLocalTestsPassed: true`;
+- the selected solution layout, gRPC root, and WCF source-handling mode;
 - all deliverables (projects, proto contracts, servers, clients, adapters,
   configuration, tests) with kind, change type, and source trace ids;
 - local run instructions and exact local validation commands with observed

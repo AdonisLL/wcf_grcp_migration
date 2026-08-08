@@ -104,6 +104,12 @@ before implementing anything.
   exact surface named — do not restructure the shared file.
   Compare every writable path with the inventory content manifest and reject
   any `wcf-protected` intersection. Git status alone is insufficient.
+- **Honor the selected solution layout.** For isolated modes, create or modify
+  files only beneath `solutionLayout.grpcRoot` and never edit the original
+  solution or shared build/package files. A read-only WCF reference permits
+  project inclusion and builds, not edits. A copied WCF fixture must be
+  byte-for-byte equal to its inventory hashes, include the specified dependency
+  closure, remain test-only, and never receive behavioral changes.
 - **Shared and schema infrastructure is single-owner.** Proto package/version
   conventions and shared type protos, generated-code build configuration,
   solution and project files, central package management, host bootstrap and
@@ -200,6 +206,9 @@ Verify `implementationReadiness` is complete and executable: exact versions
 exist for every SDK/package/test/codegen dependency, the compatibility
 baseline is fully defined, and validation commands are concrete. If network is
 denied, confirm required packages are in the local cache before editing.
+Verify every declared deliverable and command matches `solutionLayout`. Treat a
+write outside an isolated `grpcRoot`, an original-solution edit in an isolated
+mode, or a modified copied-WCF fixture as a blocking specification defect.
 
 ### 2. Gate on fleet position
 
