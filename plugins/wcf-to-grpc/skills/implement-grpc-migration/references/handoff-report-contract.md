@@ -59,21 +59,23 @@ summarized to the caller as short readable text. The report always contains:
 | Field | Content |
 |---|---|
 | `status` | `completed`, `blocked`, or `partial` (see semantics below) |
-| Changed files | Every file created/modified/deleted, each tagged with its `deliverables` action |
-| Commands executed | Exact command, working directory, and result for every `VAL-*` step actually run |
+| Changed projects/files | Every project and file created/modified/deleted, each tagged with its `deliverables` action and ownership mode |
+| Commands executed | Exact command, working directory, and result for every `VAL-*` step actually run, plus the final integration checkpoint build/test commands |
 | Acceptance evidence | Per `AC-*`: met/not-met, and the concrete evidence observed |
 | Assumptions | Anything inferred because the spec did not state it explicitly, flagged for review |
 | New risks/decisions discovered | Anything found during re-reading current code that the spec did not anticipate |
-| Deviations from the package | Any place the implementation could not follow the spec exactly, and why |
-| Coexistence state | Whether the legacy endpoint remains routable and unaffected, matching the package's `coexistence` plan |
-| Rollback readiness | Confirmation the package's `rollback` steps are implemented/exercisable, or what is missing |
+| Code gaps / deviations from the package | Any place the implementation could not follow the spec exactly, and why |
+| Code rollback | Exact `git revert` or file-removal steps that undo this package's changes; confirmation (via local build result) that reverting leaves WCF and shared projects compilable and runnable |
+| Offline dependencies | Every NuGet package reference, SDK version, and tooling version the new projects require, listed for pre-fetch in restricted environments |
+| Coexistence state | Confirmation the legacy WCF endpoint is untouched and locally runnable, matching the package's `coexistence` plan |
+| Final integration checkpoint result | Build command, test command, working directory, and outcome; explicit statement that this is not runtime parity or deployment-readiness evidence |
 | Next required action | The single most important next step for the caller |
 
 ### Status semantics
 
 | `status` | Meaning |
 |---|---|
-| `completed` | Every deliverable's action was performed, every linked `VAL-*` ran and passed, and every `AC-*` has its required evidence. Retirement/approval authority is still separate — this status never authorizes WCF retirement. |
+| `completed` | Every deliverable's action was performed, every linked `VAL-*` ran and passed, the final integration checkpoint build/tests passed, and every `AC-*` has its required evidence. This status does **not** constitute runtime parity or deployment-readiness evidence. WCF decommissioning is an offline handoff topic; this status has no bearing on it. |
 | `partial` | Some deliverables/criteria are done; others are blocked by a named, non-fatal gap (for example a soft dependency still in flight) with an owner or next action. |
 | `blocked` | A precondition, ownership conflict, spec deviation, or missing decision prevents the package (or a specific deliverable within it) from proceeding. No unauthorized file was changed. |
 
@@ -103,13 +105,23 @@ deliverables that are unaffected.
 
 - Only paths inside the assigned package's `exclusive-write`/confirmed
   `integration-owner` ownership are created, modified, or deleted.
+- No deployment manifests, IaC, CI/CD pipelines, routing rules, cutover
+  steps, live rollback, or WCF changes are made. WCF remains
+  untouched and locally runnable; its decommissioning is an offline
+  handoff topic outside this skill.
 - `inventory.json`, `decision-log.json`, `migration-spec.json`, and
   `issue-set.json` are never edited.
 - The handoff report path is deterministic from the work package's own ID,
   so parallel fleet runs never collide on it.
 - No validation step is marked `passed` without having actually run.
-- `WP-wcf-retirement` is never executed without the evidence
-  [`validation-and-gates.md`](validation-and-gates.md) requires.
+- The final sequential integration checkpoint (build + repo-local tests) ran
+  and its result is recorded; the report explicitly disclaims runtime parity
+  and deployment readiness.
+- Rollback is documented as code-revert steps with a local build result;
+  no live operational steps are included.
+- Offline dependencies (packages, SDK versions) are listed.
+- WCF decommissioning is an offline handoff topic outside this skill's
+  boundary; this implementer has no role in it.
 - No secret value appears in the report or in any changed file.
 
 ## Downstream consumers of this report

@@ -25,7 +25,7 @@ packages may not:
 
 Deployment-era operations (production cutover, WCF endpoint removal, WCF
 retirement) are **non-executable offline guidance** recorded in
-`roadmap.retirementCriteria` and the `deployment`, `coexistence`,
+`roadmap.offlineHandoffCriteria` and the `deployment`, `coexistence`,
 `consumer-cutover`, and `retirement` architecture sections. They describe
 observable gates and named approval prerequisites; they never become `WP-*`
 packages. A final integration-verification work package (see canonical catalog)
@@ -120,17 +120,15 @@ repository does not have. Waves are typical, not fixed.
 | `WP-<service>-state-redesign` | `code-implementation` | 3–4 | sequential when shared store | Session/instance-state replacement, store schema, TTL, concurrency |
 | `WP-<service>-consistency-redesign` | `code-implementation` | 3–4 | sequential | Saga/outbox/compensation replacing distributed transactions or reliable sessions |
 | `WP-<service>-parity-tests` | `code-implementation` | 4 | eligible per service | Contract, behavior, fault, serialization, authorization, deadline, and streaming tests defined by the spec |
-| `WP-coexistence-routing` | `code-implementation` | 3 | sequential | Side-by-side endpoint routing configuration and consumer-switchable traffic control (produces repository-resident routing config and health probes, not live traffic changes) |
 | `WP-consumer-<consumer>-client` | `code-implementation` | 4–5 | eligible per consumer | Client migration to the generated gRPC client, configuration, retry/deadline policy, rollout |
-| `WP-integration-verification` | `final-local-verification` | highest+1 | sequential | Final sequential checkpoint: builds the complete solution, runs all parity-test suites, verifies coexistence routing configuration, confirms health probes pass, and produces the integration evidence report that feeds the offline retirement-gate review |
+| `WP-integration-verification` | `final-local-verification` | highest+1 | sequential | Final sequential checkpoint: builds every affected project/solution, runs the required repository-local unit, contract, compatibility, and integration tests, and produces the local evidence report for the code handoff |
 
-> **Retired from the executable catalog:** `WP-cutover-<service>` and
-> `WP-wcf-retirement` are no longer executable work packages. Production
-> traffic cutover and WCF endpoint removal require human operational authority,
-> monitoring windows, and rollback readiness verification that cannot be
-> executed by an implementer agent from a work package alone. These are
-> documented as non-executable offline guidance in `roadmap.retirementCriteria`
-> and the `retirement` and `consumer-cutover` architecture sections.
+> **Outside the executable catalog:** production traffic cutover and WCF
+> endpoint removal require human operational authority, monitoring windows,
+> and rollback readiness verification that cannot be executed by an implementer
+> agent. These are documented as non-executable offline guidance in
+> `roadmap.offlineHandoffCriteria` and the `retirement` and `consumer-cutover`
+> architecture sections.
 > `WP-integration-verification` is the final executable wave; what comes after
 > is outside the code-only boundary.
 
@@ -148,7 +146,7 @@ Cover at least: contract shape parity, message/field mapping including edge
 cases (nulls/defaults, `decimal` precision, time zones, empty versus missing
 collections, unknown enum values), fault-to-status mapping, authentication and
 authorization, deadline and cancellation behavior, streaming lifecycle,
-coexistence routing, rollback readiness, and observability signals.
+local WCF/gRPC compatibility, code-revert safety, and observability signals.
 
 ## Validation steps
 

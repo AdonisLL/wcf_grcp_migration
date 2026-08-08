@@ -106,7 +106,7 @@ inventory, and do not answer an open decision on the user's behalf.
    environments, capture production traffic, or authorize any action that
    requires a separate human operational authority. Deployment-era operations
    (production cutover, WCF endpoint removal, retirement) are offline guidance
-   in `roadmap.retirementCriteria` and in the `deployment`, `coexistence`,
+   in `roadmap.offlineHandoffCriteria` and in the `deployment`, `coexistence`,
    `consumer-cutover`, and `retirement` architecture sections — they describe
    observable gates, not executable tasks, and never generate `WP-*` packages.
 

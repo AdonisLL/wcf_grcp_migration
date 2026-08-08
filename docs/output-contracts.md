@@ -26,7 +26,7 @@ docs/wcf-grpc-migration/
 ├── assessment.md                     Rendered current-state assessment
 ├── decisions.md                      Rendered decision view
 ├── target-architecture.md            Rendered architecture and topology
-├── roadmap.md                        Rendered phases, waves, retirement gates
+├── roadmap.md                        Rendered code phases, waves, and offline handoff criteria
 ├── contracts/
 │   └── <spec-id>.md                  Rendered per-service contract specification
 ├── work-packages/
@@ -35,6 +35,8 @@ docs/wcf-grpc-migration/
 │   ├── <work-package-id>.md          Implementer handoff report
 │   ├── <work-package-id>.claim.json  Ownership claim marker
 │   └── checkpoint-<phase-id>.md      Integration checkpoint reconciliation
+├── code-handoff.json                 Terminal code-only handoff (schema-validated)
+├── code-handoff.md                   Human-readable handoff view
 └── validation-reports/
     ├── <scope-key>.md                Validation report (gate matrix, findings)
     ├── <scope-key>.checklist.md      Filled parity checklist
@@ -60,7 +62,8 @@ Exactly one stage may write each artifact. Every other stage reads it.
 | `migration-spec.json` | Architect | Publication, implementer, validator |
 | `migration-review.json`, `migration-review.md` | Architect | Interview, orchestrator, humans |
 | `issue-set.json` | Publication stage | Humans, GitHub |
-| `implementation-reports/*` | Implementer | Orchestrator, validator, humans |
+| `implementation-reports/*` | Implementer | Orchestrator, handoff author, humans |
+| `code-handoff.json`, `code-handoff.md` | gRPC Code Handoff Author | Orchestrator, humans |
 | `validation-reports/*` | Validator | Orchestrator, architect, implementer, humans |
 
 Upstream artifacts are never edited by a downstream stage. An implementer that
@@ -82,6 +85,7 @@ Strict JSON Schema Draft 2020-12, `additionalProperties: false` throughout, in
 | [`migration-review.schema.json`](../plugins/wcf-to-grpc/schemas/migration-review.schema.json) | `migration-review.json` |
 | [`issue-set.schema.json`](../plugins/wcf-to-grpc/schemas/issue-set.schema.json) | `issue-set.json` |
 | [`orchestration-state.schema.json`](../plugins/wcf-to-grpc/schemas/orchestration-state.schema.json) | `orchestration-state.json` |
+| [`code-handoff.schema.json`](../plugins/wcf-to-grpc/schemas/code-handoff.schema.json) | `code-handoff.json` |
 | [`fixture-expectations.schema.json`](../plugins/wcf-to-grpc/tests/fixtures/fixture-expectations.schema.json) | Test fixture `expected.json` files |
 
 Implementation and validation reports are Markdown rendered from checked-in
@@ -115,6 +119,7 @@ survives moves, renames, and regeneration.
 | Prefix | Meaning |
 |---|---|
 | `INV-`, `DLOG-`, `MRES-`, `MREV-`, `MSPEC-`, `ISET-` | Core migration artifacts |
+| `CHOFF-`, `OBL-`, `MBLK-` | Code handoff artifact, offline obligations, and code gaps |
 | `ORUN-` | Orchestration run |
 | `REPO-`, `SOL-`, `PRJ-`, `HOST-` | Repository topology |
 | `SVC-`, `OP-`, `DC-`, `FLD-` | WCF service, operation, data contract, field |
@@ -140,7 +145,8 @@ collision.
 
 ```text
 EVD-* ─▶ RSK-*/QST-* ─▶ DEC-* ─▶ SPEC-*/architecture section ─▶ WP-*/AC-*/VAL-*
-      ─▶ ISSUE-* ─▶ implementation report ─▶ VRPT-*/VF-* ─▶ retirementCriteria
+      ─▶ ISSUE-* ─▶ implementation report ──▶ code handoff
+                                              [optional] VRPT-*/VF-* ─▶ offlineHandoffCriteria
 ```
 
 - Every legacy-system claim cites at least one `EVD-*` with a
@@ -181,8 +187,6 @@ Rules that hold everywhere:
 - **Action authority is excluded.** Bundle approval never grants GitHub
   mutation, protected traffic, production access, cutover, rollback execution,
   or WCF retirement.
-- **Retirement approval is separate again** — a distinct decision in the
-  decision log referencing the `VRPT-*` report it relies on.
 - `draft`, `review-requested`, `rejected`, `superseded`, and absent all mean
   "not approved".
 
@@ -203,7 +207,8 @@ Every artifact carries a `generation` block: `generator`, `generatorVersion`,
   that depended on it is invalidated. The owning stage must re-run before
   anything downstream advances.
 - **Validation evidence must match the deployed revision.** Evidence produced
-  against an older revision is `blocked`, never `pass`.
+  against an older revision is `blocked`, never `pass`. (Applies when the
+  optional parity validator is used post-deployment.)
 
 ## 9. Orchestration state
 
@@ -214,10 +219,10 @@ repository kind, resolved target runtime, and permissions; per-stage status
 owner and result summary; artifact states with path, digest, approval state and
 freshness; blocking items (`BLK-*`) with kind, what they block, the ids that
 clear them, owner, and next action; the wave plan with each package's dispatch
-mode, dispatch state, and report status; validation runs with status and
-retirement outcome; approvals **observed** (never granted); observations
-(`OBS-*`) including recorded prompt-injection attempts; and the single next
-required action with its owner.
+mode, dispatch state, and report status; approvals **observed** (never granted);
+observations (`OBS-*`) including recorded prompt-injection attempts; and the
+single next required action with its owner. Validation runs and retirement
+outcomes are not tracked here; they belong to post-deployment offline artifacts.
 
 On every invocation the orchestrator re-derives gates from the artifacts on
 disk rather than trusting the stored status, so a stale or hand-edited state
@@ -238,29 +243,64 @@ the publication record. Its safeguards are contractual:
 - Partial successes persist, so publication resumes instead of double-posting.
 - No credential is collected, transformed, or stored.
 
-## 11. Validation reports and evidence
+## 11. Code handoff artifact
 
-A validation report records all thirteen gate states, blocking findings first,
-coverage counts, the mechanically computed run status, assumptions, and the
-single next required action. Every gate result and finding cites `EVD-*`
-evidence with the exact command, working directory, and a **redacted** capture
-stored under `validation-reports/evidence/`, so anyone can re-run it.
+`code-handoff.json` is the terminal artifact of the orchestrated workflow,
+written by the **gRPC Code Handoff Author** after all implementation waves,
+integration checkpoints, the affected solution build, and repository-local
+tests are complete.
+
+It records:
+
+- source revision, approved spec/review digest, and `code-complete` status with
+  `affectedBuildsPassed: true` and `requiredLocalTestsPassed: true`;
+- all deliverables (projects, proto contracts, servers, clients, adapters,
+  configuration, tests) with kind, change type, and source trace ids;
+- local run instructions and exact local validation commands with observed
+  outcomes;
+- code gaps (`MBLK-*`, severity `non-blocking`) and code-rollback steps;
+- offline obligations (`OBL-*`) for every out-of-scope category —
+  `environment-configuration`, `secrets`, `deployment`, `service-discovery`,
+  `identity-and-tls`, `data-and-state`, `external-dependencies`,
+  `observability-health-capacity`, `environment-parity-validation`,
+  `consumer-cutover`, `live-rollback`, and `wcf-retirement` — each with
+  `executionState: not-executed`, an owner role, a next action, and source ids;
+- `wcfState: "active-and-unchanged"`; and
+- six explicit limitations: `not-deployed`, `runtime-parity-not-established`,
+  `production-readiness-not-established`, `cutover-not-authorized`,
+  `live-rollback-not-executed`, `wcf-retirement-not-authorized`.
+
+`code-handoff.md` is a human-readable view rendered from the same content;
+`code-handoff.json` is authoritative. Neither is an approval of any operational
+action.
+
+## 12. Validation reports and evidence (optional, post-deployment)
+
+The **gRPC Parity Validator** is an optional standalone tool you invoke
+manually after deploying to a test environment. It is not an orchestrated
+stage. When you run it, a validation report records all thirteen gate states,
+blocking findings first, coverage counts, the mechanically computed run status,
+assumptions, and the single next required action. Every gate result and finding
+cites `EVD-*` evidence with the exact command, working directory, and a
+**redacted** capture stored under `validation-reports/evidence/`, so anyone can
+re-run it.
 
 Findings use `VF-<gate>-<semantic-key>` and carry kind (`defect` or
 `evidence-gap`), severity (`blocking`/`non-blocking`), confidence, affected
 ids, observed-versus-expected, evidence, trace links, remediation, owner, and
 next action.
 
-## 12. Secrets and personal data
+## 13. Secrets and personal data
 
 No artifact ever contains a credential value, token, private key, certificate
 content, connection string, or `Authorization` header value. Agents cite the
 location of a secret and redact the value; redaction happens at write time, not
 as a cleanup pass. A secret found exposed in the product is itself a blocking
-finding. Golden traffic is masked by default and used only under recorded
-permission with stated retention and deletion.
+finding. If the optional parity validator captures traffic, that traffic is
+masked by default and used only under recorded permission with stated retention
+and deletion.
 
-## 13. Checking artifacts yourself
+## 14. Checking artifacts yourself
 
 The plugin's own validator checks the plugin, not your generated artifacts. To
 check a generated artifact against its schema locally with PowerShell:
@@ -268,6 +308,9 @@ check a generated artifact against its schema locally with PowerShell:
 ```powershell
 Test-Json -LiteralPath .\docs\wcf-grpc-migration\migration-spec.json `
           -SchemaFile .\plugins\wcf-to-grpc\schemas\migration-spec.schema.json
+
+Test-Json -LiteralPath .\docs\wcf-grpc-migration\code-handoff.json `
+          -SchemaFile .\plugins\wcf-to-grpc\schemas\code-handoff.schema.json
 ```
 
 A schema-valid artifact is not an approved artifact, and an approved artifact

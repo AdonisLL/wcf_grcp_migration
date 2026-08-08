@@ -180,22 +180,23 @@ Every `WP-*` defines:
 - deliverable paths and actions;
 - acceptance criteria linked to concrete validation steps;
 - rollback triggers and ordered recovery steps;
-- coexistence routing, duration/exit condition, and legacy endpoint status;
+- local side-by-side compatibility plus offline coexistence/routing guidance,
+  duration/exit condition, and legacy endpoint status;
 - integration checkpoints and evidence expectations.
 
 Fleet suitability is one of:
 
 - `eligible`: safe for a declared parallel wave and group, with bounded
   `exclusive-write`, `shared-read`, or `integration-owner` paths;
-- `sequential`: ordered work, normally shared contracts/infrastructure,
-  schema evolution, cutover, or retirement;
+- `sequential`: ordered code work, normally shared contracts/infrastructure,
+  schema evolution, solution integration, or final local verification;
 - `ineligible`: too coupled or risky for parallel execution;
 - `unknown`: analysis is incomplete and the package is not executable.
 
 Two fleet-eligible packages must not claim overlapping `exclusive-write`
 paths. Shared generated files, solution files, package-management files,
 common `.proto` contracts, hosting bootstrap, database migrations, and final
-cutover require one integration owner unless the specification proves a
+local verification require one integration owner unless the specification proves a
 disjoint boundary. Approval does not waive unresolved ownership conflicts.
 
 ## Acceptance criteria and validation
@@ -208,8 +209,8 @@ repository-relative working directory, expected result, status, and evidence.
 Use the narrowest existing build/test/lint/compatibility commands that prove
 the criterion. Manual checks must state what is inspected and what constitutes
 success. Include contract compatibility, authorization, error mapping,
-deadline/cancellation, serialization edge cases, coexistence routing, and
-rollback where relevant. A static inspection cannot set runtime validation
+deadline/cancellation, serialization edge cases, local WCF/gRPC compatibility,
+and code-revert checks where relevant. A static inspection cannot set runtime validation
 to `passed`.
 
 ## Rollback and coexistence

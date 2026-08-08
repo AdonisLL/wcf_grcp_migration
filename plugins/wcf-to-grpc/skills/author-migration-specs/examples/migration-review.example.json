@@ -104,8 +104,8 @@
   "offlineHandoffItems": [
     {
       "decisionId": "DEC-sla-objectives",
-      "gate": "implementation",
-      "nextAction": "The service owner records measurable SLOs before the implementer writes deadline and load-test thresholds.",
+      "gate": "offline-handoff",
+      "nextAction": "The service owner records measurable production SLOs before environment capacity and load validation.",
       "owner": {
         "state": "known",
         "value": "Service owner"
@@ -131,13 +131,14 @@
     }
   ],
   "outOfScopeActions": [
-    "github-mutation",
+    "deployment",
+    "environment-provisioning",
     "protected-traffic",
     "production-access",
-    "production-cutover",
-    "wcf-retirement",
-    "golden-traffic-capture",
-    "retirement-approval"
+    "environment-parity-validation",
+    "consumer-cutover",
+    "live-rollback",
+    "wcf-retirement"
   ],
   "approvalScope": {
     "decisionIds": [

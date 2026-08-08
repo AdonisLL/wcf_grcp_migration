@@ -26,7 +26,7 @@ invoked directly, as an optional `/fleet` subagent, or by the orchestrator.
 - The orchestrator decides that a wave or `integrationCheckpoint` is complete
   from handoff reports written to disk, never from a child-agent summary.
 - Work packages marked `fleet.suitability: sequential` (shared/schema
-  infrastructure, coexistence routing, cutover, retirement) are dispatched
+  infrastructure, solution integration, or final local verification) are dispatched
   **one at a time**, regardless of which wave they are in.
 - `/fleet` and `/tasks` remain optional interactive operator controls; the
   orchestrated workflow does not require them.

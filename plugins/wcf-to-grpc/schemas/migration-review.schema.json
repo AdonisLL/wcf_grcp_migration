@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "./migration-review.schema.json",
   "title": "WCF to gRPC consolidated migration review",
-  "description": "Digest-bound review bundle for proposed decisions, draft architecture, contracts, roadmap, and work packages. Approval excludes publication, protected traffic, cutover, rollback execution, and WCF retirement.",
+  "description": "Digest-bound review bundle for proposed code decisions, architecture, contracts, roadmap, and repository-local work packages. Operational topics are non-executable offline handoff guidance; publication remains separately confirmed.",
   "allOf": [
     {
       "$ref": "./common.schema.json#/$defs/artifactBase"
@@ -147,25 +147,28 @@
           },
           "uniqueItems": true
         },
-        "deferredOperationalItems": {
+        "offlineHandoffItems": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/deferredItem"
+            "$ref": "#/$defs/offlineHandoffItem"
           }
         },
-        "excludedAuthorityGates": {
+        "outOfScopeActions": {
           "type": "array",
           "items": {
             "enum": [
-              "github-mutation",
+              "deployment",
+              "environment-provisioning",
               "protected-traffic",
               "production-access",
-              "cutover",
-              "rollback-execution",
+              "environment-parity-validation",
+              "consumer-cutover",
+              "live-rollback",
               "wcf-retirement"
             ]
           },
-          "minItems": 6,
+          "minItems": 8,
+          "maxItems": 8,
           "uniqueItems": true
         },
         "approvalScope": {
@@ -181,8 +184,8 @@
         "roadmapSummary",
         "workPackageIds",
         "blockingDecisionIds",
-        "deferredOperationalItems",
-        "excludedAuthorityGates",
+        "offlineHandoffItems",
+        "outOfScopeActions",
         "approvalScope"
       ]
     }
@@ -300,7 +303,7 @@
       ],
       "additionalProperties": false
     },
-    "deferredItem": {
+    "offlineHandoffItem": {
       "type": "object",
       "properties": {
         "decisionId": {
@@ -310,8 +313,8 @@
         "gate": {
           "enum": [
             "implementation",
-            "validation",
-            "cutover"
+            "final-local-checkpoint",
+            "offline-handoff"
           ]
         },
         "nextAction": {

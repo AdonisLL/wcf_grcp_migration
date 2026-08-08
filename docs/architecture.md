@@ -30,7 +30,7 @@ generates see [output-contracts.md](output-contracts.md).
 ```text
 plugins/wcf-to-grpc/
 ├── plugin.json          Manifest: name, version, keywords, component paths
-├── agents/*.agent.md    Personas, boundaries, and handoffs (8 agents)
+├── agents/*.agent.md    Personas, boundaries, and handoffs (9 agents)
 ├── skills/*/SKILL.md    Normative procedures, with references/ and templates/
 ├── schemas/*.json       JSON Schema Draft 2020-12 artifact contracts
 ├── tests/               Static WCF fixtures, expectations, smoke-test guidance
@@ -74,7 +74,8 @@ Frontmatter is deliberately minimal and validated by
 | [WCF-to-gRPC Mapper](../plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | `read`, `search`, `edit`, `execute` | `mapping-result.json` | Drop a construct, resolve a decision, author architecture |
 | [gRPC Migration Architect](../plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | `read`, `search`, `edit`, `execute` | `migration-spec.json`, `migration-review.json/.md`, rendered design docs | Application code, issues, implementations, inferred approvals |
 | [gRPC Migration Issue Publisher](../plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | `read`, `search`, `edit`, `execute` | Issue preview and publication artifacts | Mutate GitHub without approved inputs, exact confirmation, and permission |
-| [gRPC Migration Implementer](../plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | `read`, `search`, `edit`, `execute` | Only its assigned work package's `exclusive-write` paths | Migration artifacts, other packages' paths, WCF retirement without evidence |
+| [gRPC Migration Implementer](../plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | `read`, `search`, `edit`, `execute` | Only its assigned work package's `exclusive-write` paths | Migration artifacts, other packages' paths, deployment/routing/cutover/live rollback, any WCF removal |
+| [gRPC Code Handoff Author](../plugins/wcf-to-grpc/agents/grpc-code-handoff-author.agent.md) | `read`, `search`, `edit` | Only `code-handoff.json` and `code-handoff.md` | Application code, migration artifacts, commands, deployment, parity claims |
 | [gRPC Parity Validator](../plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | `read`, `search`, `edit`, `execute` | Only `validation-reports/` | Application code, upstream artifacts, fixing findings, granting retirement |
 | [WCF Migration Orchestrator](../plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | `read`, `search`, `edit`, `agent` | Only `orchestration-state.json` and the optional status view | Any stage work, any approval, any command execution, any slash command |
 
@@ -99,14 +100,15 @@ aliases may be declared at all.
 | [`author-migration-specs`](../plugins/wcf-to-grpc/skills/author-migration-specs/SKILL.md) | Specification | `migration-spec.json`, `migration-review.json/.md`, rendered design docs |
 | [`publish-migration-issues`](../plugins/wcf-to-grpc/skills/publish-migration-issues/SKILL.md) | Publication | `issue-set.json` + previews |
 | [`implement-grpc-migration`](../plugins/wcf-to-grpc/skills/implement-grpc-migration/SKILL.md) | Implementation | Code + `implementation-reports/` |
-| [`validate-grpc-parity`](../plugins/wcf-to-grpc/skills/validate-grpc-parity/SKILL.md) | Validation | `validation-reports/` |
+| [`finalize-code-handoff`](../plugins/wcf-to-grpc/skills/finalize-code-handoff/SKILL.md) | Code handoff (terminal) | `code-handoff.json`, `code-handoff.md` |
+| [`validate-grpc-parity`](../plugins/wcf-to-grpc/skills/validate-grpc-parity/SKILL.md) | Optional manual post-deploy | `validation-reports/` |
 
 Only `implement-grpc-migration` may modify application source, and only inside
 the bounded ownership its assigned work package declares.
 
 ## 5. Orchestration state machine
 
-The orchestrator drives eleven stages. Each transition is gated on artifact
+The orchestrator drives stages 0–9. Each transition is gated on artifact
 state that can be read back from disk, which is what makes a run resumable.
 
 ```text
@@ -120,14 +122,17 @@ intake ──▶ inventory ──▶ proposals/blockers ──▶ mapping ──
               publication (optional, confirmation-gated)
                        │
                        ▼
-     implementation waves ⇄ integration checkpoints ──▶ validation ──▶ retirement
+     implementation waves ⇄ integration checkpoints ──▶ build + tests ──▶ code handoff (gRPC Code Handoff Author)
 ```
 
-Loops are normal and expected: a validation finding routes back to
-implementation, a spec deviation routes back to the architect, an unresolved
-decision routes back to the interview. Stages never run out of order, and an
-upstream change marks its downstream artifacts `stale` and invalidates the
-approvals that depended on them.
+Parity validation, cutover, and retirement are out-of-scope offline activities.
+The parity validator is available as a standalone tool after deployment; it is
+not connected to the orchestration state machine.
+
+Loops are normal and expected: a spec deviation routes back to the architect,
+an unresolved decision routes back to the interview. Stages never run out of
+order, and an upstream change marks its downstream artifacts `stale` and
+invalidates the approvals that depended on them.
 
 Run state lives in `orchestration-state.json`
 ([schema](../plugins/wcf-to-grpc/schemas/orchestration-state.schema.json)). On
@@ -143,9 +148,8 @@ resumed migration reaches the same next action.
 | No implementation before bundle-scoped decision, specification, and work-package approval | Interviewer/architect approval recording; orchestrator stage 7 gate |
 | No GitHub mutation before a full-set preview and digest-matched confirmation | Publication skill; orchestrator stage 6 gate |
 | No parallel batch with overlapping or shared ownership | `fleetPlan` ownership data; implementer boundaries 3–5; orchestrator wave partitioning |
-| No next wave before its integration checkpoint reconciles | Fleet reference §5; orchestrator stage 8 gate |
-| No parity claim from static analysis or a green build | Validator boundary 5 |
-| No WCF retirement without a current `retirement-ready` report **and** a recorded human approval | Retirement gate; implementer boundary 10; orchestrator stage 10 gate |
+| No next wave before its integration checkpoint reconciles | Fleet reference §5; orchestrator stage 7 wave gate |
+| No code handoff before affected solution builds clean and repository-local tests pass | Orchestrator stage 8 completion gate |
 
 ## 6. Fleet execution model
 
@@ -164,8 +168,9 @@ substrate for implementation waves — but never as the source of safety.
   pairwise-disjoint `exclusive-write` paths and a sequential set containing all
   shared or schema infrastructure — proto conventions, generated-code build
   configuration, solution and package-management files, host bootstrap and DI,
-  the interceptor chain, auth configuration, shared-state migrations,
-  gateway/proxy routing, coexistence routing, cutover, and retirement.
+  the interceptor chain, auth configuration, shared-state code, and the final
+  local verification package. Routing, cutover, live rollback, and retirement
+  are not work packages.
 - **The orchestrator delegates work packages directly.** It invokes one
   implementer per package through the `agent` tool and may issue concurrent
   calls only for the verified parallel-eligible set. `/fleet` and `/tasks`
@@ -206,7 +211,7 @@ never collects credentials.
 
 ```text
 EVD-* ─▶ RSK-*/QST-* ─▶ DEC-* ─▶ SPEC-*/architecture section ─▶ WP-*/AC-*/VAL-*
-      ─▶ ISSUE-* ─▶ implementation report ─▶ VRPT-*/VF-* ─▶ retirementCriteria
+      ─▶ ISSUE-* ─▶ implementation report ──▶ [optional] VRPT-*/VF-* ─▶ retirementCriteria
 ```
 
 Identifiers are stable and semantic (`WP-order-service-server`, not `WP-7`), so
@@ -246,6 +251,8 @@ documented in [tests/README.md](../plugins/wcf-to-grpc/tests/README.md).
 - No runtime component, MCP server, LSP server, or hook ships with this plugin;
   it is agents, skills, schemas, fixtures, and a validator.
 - The plugin does not execute a migration by itself. Every irreversible step —
-  approval, publication, retirement — is a human act.
-- The plugin does not host, deploy, or monitor anything; it specifies what must
-  be hosted, deployed, and monitored, and validates the result.
+  approval and publication — is a human act.
+- The plugin does not host, deploy, or monitor anything; the orchestrated
+  workflow ends at a verified code handoff. Deployment, environment
+  provisioning, production/protected traffic, runtime parity validation, cutover,
+  live rollback, and WCF retirement are out-of-scope offline activities.

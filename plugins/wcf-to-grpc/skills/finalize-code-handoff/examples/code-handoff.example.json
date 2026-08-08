@@ -1,0 +1,277 @@
+{
+  "schemaVersion": "1.0.0",
+  "artifactType": "code-handoff",
+  "artifactId": "CHOFF-example-orders",
+  "generation": {
+    "generator": "finalize-code-handoff",
+    "generatorVersion": "1.0.0",
+    "generatedAt": "2026-08-08T18:00:00Z",
+    "sourceRevision": {
+      "state": "known",
+      "value": "git:0123456789abcdef"
+    },
+    "sourceDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "mode": "full"
+  },
+  "approval": {
+    "state": "not-applicable",
+    "reason": "This evidence handoff is verified from reports and is not an approval surface."
+  },
+  "citations": [],
+  "traceLinks": [],
+  "migrationSpecId": "MSPEC-contoso-orders",
+  "reviewBundleDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "codeCompletion": {
+    "status": "code-complete",
+    "sourceRevision": {
+      "state": "known",
+      "value": "git:0123456789abcdef"
+    },
+    "implementationReportIds": [
+      "IMP-orders-server",
+      "IMP-final-local-checkpoint"
+    ],
+    "finalCheckpointWorkPackageId": "WP-final-local-checkpoint",
+    "finalCheckpointReportPath": "docs/wcf-grpc-migration/reports/final-local-checkpoint.json",
+    "affectedBuildsPassed": true,
+    "requiredLocalTestsPassed": true,
+    "completedAt": "2026-08-08T17:55:00Z"
+  },
+  "deliverables": [
+    {
+      "path": "src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj",
+      "kind": "project",
+      "change": "created",
+      "summary": "Modern .NET gRPC host added alongside the WCF host.",
+      "sourceIds": [
+        "SVC-order-service",
+        "WP-orders-server"
+      ]
+    }
+  ],
+  "localRunInstructions": [
+    "Run dotnet run --project src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj using local development configuration."
+  ],
+  "localValidation": [
+    {
+      "validationId": "VAL-final-build",
+      "command": "dotnet build Contoso.Orders.sln --no-restore",
+      "scope": "Affected solution and new gRPC project",
+      "outcome": "passed",
+      "reportPath": "docs/wcf-grpc-migration/reports/final-local-checkpoint.json",
+      "evidenceIds": []
+    }
+  ],
+  "codeGaps": [],
+  "codeRollback": {
+    "scope": "repository-code-only",
+    "steps": [
+      "Revert the migration commit without changing deployed routing or WCF endpoints."
+    ],
+    "localCompatibilityCheck": "Build the original WCF solution and run its existing repository-local tests."
+  },
+  "offlineObligations": [
+    {
+      "id": "OBL-environment-configuration",
+      "category": "environment-configuration",
+      "executionState": "not-executed",
+      "guidance": "Populate environment-specific non-secret settings through the deployment platform.",
+      "owner": {
+        "state": "known",
+        "value": "Platform owner"
+      },
+      "nextAction": "Map documented configuration keys for each target environment.",
+      "sourceIds": [
+        "MSPEC-contoso-orders"
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "OBL-secrets",
+      "category": "secrets",
+      "executionState": "not-executed",
+      "guidance": "Provide secret values through the approved secret store; do not commit them.",
+      "owner": {
+        "state": "known",
+        "value": "Security owner"
+      },
+      "nextAction": "Create secret-store bindings for the documented configuration references.",
+      "sourceIds": [
+        "MSPEC-contoso-orders"
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "OBL-deployment",
+      "category": "deployment",
+      "executionState": "not-executed",
+      "guidance": "Package and deploy the gRPC project through the organization's release process.",
+      "owner": {
+        "state": "known",
+        "value": "Release owner"
+      },
+      "nextAction": "Author and review deployment changes outside this plugin.",
+      "sourceIds": [
+        "WP-orders-server"
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "OBL-service-discovery",
+      "category": "service-discovery",
+      "executionState": "not-executed",
+      "guidance": "Register deployed gRPC endpoints in the environment's discovery mechanism.",
+      "owner": {
+        "state": "known",
+        "value": "Platform owner"
+      },
+      "nextAction": "Choose and configure the environment-specific endpoint registration.",
+      "sourceIds": [
+        "MSPEC-contoso-orders"
+      ],
+      "prerequisites": [
+        "Deployment endpoint is known."
+      ]
+    },
+    {
+      "id": "OBL-identity-tls",
+      "category": "identity-and-tls",
+      "executionState": "not-executed",
+      "guidance": "Provision trusted identity and TLS material through environment controls.",
+      "owner": {
+        "state": "known",
+        "value": "Security owner"
+      },
+      "nextAction": "Bind the approved identity and certificate references.",
+      "sourceIds": [
+        "DEC-service-authentication"
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "OBL-data-state",
+      "category": "data-and-state",
+      "executionState": "not-executed",
+      "guidance": "Verify environment data/state dependencies before traffic is enabled.",
+      "owner": {
+        "state": "known",
+        "value": "Service owner"
+      },
+      "nextAction": "Exercise state consistency and recovery in the target environment.",
+      "sourceIds": [
+        "MSPEC-contoso-orders"
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "OBL-external-dependencies",
+      "category": "external-dependencies",
+      "executionState": "not-executed",
+      "guidance": "Confirm downstream systems and consumers can reach and authenticate to gRPC.",
+      "owner": {
+        "state": "known",
+        "value": "Integration owner"
+      },
+      "nextAction": "Run environment connectivity checks with each external owner.",
+      "sourceIds": [
+        "DEP-orders-sql"
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "OBL-observability",
+      "category": "observability-health-capacity",
+      "executionState": "not-executed",
+      "guidance": "Connect telemetry backends and establish measured capacity and SLO thresholds.",
+      "owner": {
+        "state": "known",
+        "value": "Operations owner"
+      },
+      "nextAction": "Verify health, traces, metrics, logs, load limits, and alerts after deployment.",
+      "sourceIds": [
+        "MSPEC-contoso-orders"
+      ],
+      "prerequisites": [
+        "A representative environment is available."
+      ]
+    },
+    {
+      "id": "OBL-environment-parity",
+      "category": "environment-parity-validation",
+      "executionState": "not-executed",
+      "guidance": "Establish behavioral, security, resilience, and performance parity using deployed services.",
+      "owner": {
+        "state": "known",
+        "value": "Validation owner"
+      },
+      "nextAction": "Run independent environment validation before any cutover decision.",
+      "sourceIds": [
+        "MSPEC-contoso-orders"
+      ],
+      "prerequisites": [
+        "WCF and gRPC are deployed in a controlled environment."
+      ]
+    },
+    {
+      "id": "OBL-consumer-cutover",
+      "category": "consumer-cutover",
+      "executionState": "not-executed",
+      "guidance": "Migrate consumers only after independent validation and owner approval.",
+      "owner": {
+        "state": "known",
+        "value": "Consumer migration owner"
+      },
+      "nextAction": "Create an offline consumer rollout and traffic-change plan.",
+      "sourceIds": [
+        "CON-external-partner"
+      ],
+      "prerequisites": [
+        "Environment parity evidence is accepted."
+      ]
+    },
+    {
+      "id": "OBL-live-rollback",
+      "category": "live-rollback",
+      "executionState": "not-executed",
+      "guidance": "Define and rehearse reversal of environment routing and consumer changes.",
+      "owner": {
+        "state": "known",
+        "value": "Release owner"
+      },
+      "nextAction": "Approve and rehearse the live rollback runbook outside this plugin.",
+      "sourceIds": [
+        "MSPEC-contoso-orders"
+      ],
+      "prerequisites": [
+        "Deployment and cutover plans exist."
+      ]
+    },
+    {
+      "id": "OBL-wcf-retirement",
+      "category": "wcf-retirement",
+      "executionState": "not-executed",
+      "guidance": "Keep WCF active until all consumers are migrated and operational evidence is accepted.",
+      "owner": {
+        "state": "known",
+        "value": "Service owner"
+      },
+      "nextAction": "Evaluate retirement separately after cutover stability and rollback retention requirements are met.",
+      "sourceIds": [
+        "SVC-order-service"
+      ],
+      "prerequisites": [
+        "No remaining WCF consumers.",
+        "Independent environment evidence is accepted."
+      ]
+    }
+  ],
+  "wcfState": "active-and-unchanged",
+  "limitations": [
+    "not-deployed",
+    "runtime-parity-not-established",
+    "production-readiness-not-established",
+    "cutover-not-authorized",
+    "live-rollback-not-executed",
+    "wcf-retirement-not-authorized"
+  ]
+}

@@ -229,11 +229,10 @@ constraint during the window; the exit condition and the owner who declares it;
 and the risk that any adapter becomes permanent. A coexistence component is a
 temporary supporting element, never the migration target.
 
-> The coexistence routing configuration is code and may appear in an executable
-> `WP-coexistence-routing` package that writes repository-resident config files.
-> The traffic-shifting execution (moving live production traffic from WCF to
-> gRPC) is an offline operational action and must not appear as an executable
-> work package.
+> Coexistence topology and routing are offline handoff guidance. Neither
+> repository routing configuration nor a live traffic shift may appear as an
+> executable work package. Code may keep the new gRPC host locally runnable
+> alongside the unchanged WCF host without selecting or mutating live routes.
 
 ## 14. `consumer-cutover`
 
@@ -260,7 +259,8 @@ by static analysis.
 > **Non-executable offline guidance.** This section defines observable
 > retirement *criteria* only. It does not generate executable `WP-*` packages,
 > does not authorize WCF endpoint removal, and does not constitute a production
-> retirement decision. The criteria become `roadmap.retirementCriteria` entries
+> retirement decision. The criteria become retirement entries in
+> `roadmap.offlineHandoffCriteria`
 > in the migration specification and are presented to the human retirement
 > authority as a checklist. Actual retirement execution is an out-of-scope
 > authority action that must occur outside this workflow.

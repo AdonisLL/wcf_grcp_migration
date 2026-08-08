@@ -14,7 +14,7 @@ $pluginManifestPath = Join-Path $pluginRoot "plugin.json"
 $fixtureRoot = Join-Path $pluginRoot "tests/fixtures"
 $docsRoot = Join-Path $repoRoot "docs"
 $fixtureSchemaPath = Join-Path $fixtureRoot "fixture-expectations.schema.json"
-$stableIdPattern = "^(?:INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
+$stableIdPattern = "^(?:INV|DLOG|MRES|MREV|MMAP|MRSK|MBLK|MDEF|MSPEC|ISET|CHOFF|OBL|REPO|SOL|PRJ|HOST|SVC|OP|DC|FLD|END|CON|DEP|EVD|RSK|QST|DEC|OPT|APV|SPEC|RPC|MSG|PF|PHS|WP|AC|VAL|ISSUE|LBL|TRC|IMP|VRPT|VF|FIX)-[a-z0-9]+(?:-[a-z0-9]+)*$"
 
 function Add-Check {
     param(
@@ -353,7 +353,7 @@ $skillFiles = @(Get-ChildItem -LiteralPath $skillsPath -Recurse -File -Filter "S
 $agentFiles = @(Get-ChildItem -LiteralPath $agentsPath -File -Filter "*.agent.md")
 Add-Check ($skillFiles.Count -gt 0) "No skills were discovered from plugin.json."
 Add-Check ($agentFiles.Count -gt 0) "No agents were discovered from plugin.json."
-Add-Check ($agentFiles.Count -eq 8) "Expected 8 plugin agents, found $($agentFiles.Count)."
+Add-Check ($agentFiles.Count -eq 9) "Expected 9 plugin agents, found $($agentFiles.Count)."
 foreach ($requiredAgent in @(
     "wcf-migration-orchestrator.agent.md",
     "wcf-codebase-analyst.agent.md",
@@ -362,6 +362,7 @@ foreach ($requiredAgent in @(
     "grpc-migration-architect.agent.md",
     "grpc-migration-issue-publisher.agent.md",
     "grpc-migration-implementer.agent.md",
+    "grpc-code-handoff-author.agent.md",
     "grpc-parity-validator.agent.md"
 )) {
     Add-Check ($agentFiles.Name -contains $requiredAgent) "Required plugin agent '$requiredAgent' is missing."
@@ -435,31 +436,51 @@ if ((Test-Path -LiteralPath $pluginReadmePath -PathType Leaf) -and (Test-Path -L
     $interviewerPath = Join-Path $agentsPath "wcf-migration-decision-interviewer.agent.md"
     $orchestratorPath = Join-Path $agentsPath "wcf-migration-orchestrator.agent.md"
     $architectPath = Join-Path $agentsPath "grpc-migration-architect.agent.md"
+    $parityValidatorPath = Join-Path $agentsPath "grpc-parity-validator.agent.md"
+    $handoffAuthorPath = Join-Path $agentsPath "grpc-code-handoff-author.agent.md"
+    $issuePublisherPath = Join-Path $agentsPath "grpc-migration-issue-publisher.agent.md"
     $catalogPath = Join-Path $pluginRoot "skills/interview-migration-decisions/references/question-catalog.md"
     foreach ($requiredText in @("prepare-draft", "resolve-blocker", "record-bundle-approval", "partial-draft-ready", "ready-for-draft")) {
         Add-Check ((Get-Content -LiteralPath $interviewerPath -Raw) -like "*$requiredText*") "Decision interviewer is missing '$requiredText' workflow guidance."
     }
-    foreach ($requiredClass in @("agent-proposed", "review-required", "immediate-answer-required", "deferred-operational", "separate-authority-gate")) {
+    foreach ($requiredClass in @("agent-proposed", "review-required", "immediate-answer-required", "deferred-operational", "out-of-scope-handoff")) {
         Add-Check ((Get-Content -LiteralPath $catalogPath -Raw) -like "*$requiredClass*") "Question catalog is missing '$requiredClass'."
     }
     Add-Check ((Get-Content -LiteralPath $architectPath -Raw) -like "*migration-review.schema.json*") "Architect does not reference the migration-review schema."
     Add-Check ((Get-Content -LiteralPath $orchestratorPath -Raw) -like "*record-bundle-approval*") "Orchestrator does not coordinate bundle decision approval."
-    Add-Check ((Get-Content -LiteralPath $orchestratorPath -Raw) -like "*does not grant GitHub mutation*") "Orchestrator does not preserve action-specific authority gates."
+    $orchestratorText = Get-Content -LiteralPath $orchestratorPath -Raw
+    Add-Check ($orchestratorText -like "*only external mutation*") "Orchestrator does not preserve Issue publication as the only external mutation."
+    Add-Check ($orchestratorText -notmatch "grpc-parity-validator") "Code-only orchestrator must never dispatch or depend on the parity validator."
+    Add-Check ($orchestratorText -notmatch "allowHarness|allowGoldenTraffic|allowLoadTest|allowProductionAccess") "Code-only orchestrator still declares an operational permission."
+    Add-Check ($orchestratorText -like "*code-complete*" -and $orchestratorText -like "*offline handoff*") "Orchestrator lacks its code-complete terminal handoff."
+    Add-Check ((Get-Content -LiteralPath $parityValidatorPath -Raw) -like "*never dispatched by the migration orchestrator*") "Parity validator is not clearly documented as manual-only."
+    Add-Check ((Get-Content -LiteralPath $handoffAuthorPath -Raw) -like "*never changes product code*") "Code handoff author lacks its read-only product boundary."
+    $issuePublisherText = Get-Content -LiteralPath $issuePublisherPath -Raw
+    Add-Check ($issuePublisherText -like "*previewDigest*" -and $issuePublisherText -like "*publish-approved*") "Optional Issue publication no longer requires digest-bound confirmation."
+
+    $orchestrationSchemaText = Get-Content -LiteralPath (Join-Path $pluginRoot "schemas/orchestration-state.schema.json") -Raw
+    Add-Check ($orchestrationSchemaText -notmatch '"validationRuns"|"retirementOutcome"|"allowHarness"|"allowGoldenTraffic"|"allowLoadTest"|"allowProductionAccess"') "Orchestration state still stores removed operational gates or outcomes."
+    Add-Check ($orchestrationSchemaText -like '*"code-complete"*' -and $orchestrationSchemaText -like '*"offline-handoff"*') "Orchestration state lacks code-only completion stages."
 
     $streamliningFixturePath = Join-Path $fixtureRoot "decision-streamlining.json"
     $streamliningFixture = $jsonDocuments[$streamliningFixturePath]
     $streamliningGroups = @(
         @(Get-PropertyValue $streamliningFixture "bundledForReview"),
         @(Get-PropertyValue $streamliningFixture "immediateOnlyIfEvidenceCannotSupportPreservation"),
-        @(Get-PropertyValue $streamliningFixture "deferredOperational"),
-        @(Get-PropertyValue $streamliningFixture "separateAuthorityGates")
+        @(Get-PropertyValue $streamliningFixture "deferredCodeInputs"),
+        @(Get-PropertyValue $streamliningFixture "outOfScopeHandoff")
     )
     $streamliningIds = @($streamliningGroups | ForEach-Object { $_ })
     Add-Check ((Get-PropertyValue $streamliningFixture "totalDecisions") -eq 40) "Decision streamlining regression fixture must cover 40 decisions."
     Add-Check ($streamliningIds.Count -eq 40) "Decision streamlining groups must contain all 40 decisions."
     Add-Check (($streamliningIds | Sort-Object -Unique).Count -eq 40) "Decision streamlining groups contain duplicate decision IDs."
-    Add-Check (@(Get-PropertyValue $streamliningFixture "bundledForReview").Count -ge 25) "Decision streamlining fixture must bundle standard defaults rather than prompt individually."
+    $nonInterruptingDecisionCount =
+        @(Get-PropertyValue $streamliningFixture "bundledForReview").Count +
+        @(Get-PropertyValue $streamliningFixture "deferredCodeInputs").Count +
+        @(Get-PropertyValue $streamliningFixture "outOfScopeHandoff").Count
+    Add-Check ($nonInterruptingDecisionCount -ge 35) "Decision streamlining fixture must avoid individual prompts for safe defaults and offline handoff topics."
     Add-Check ((Get-PropertyValue $streamliningFixture "expectedMaximumImmediatePrompts") -le 4) "Decision streamlining fixture permits too many immediate prompts."
+    Add-Check (@(Get-PropertyValue $streamliningFixture "outOfScopeHandoff").Count -ge 10) "Deployment-era decisions were not moved to the offline handoff."
     $immediateDecisionIds = @(Get-PropertyValue $streamliningFixture "immediateOnlyIfEvidenceCannotSupportPreservation")
     Add-Check ($immediateDecisionIds.Count -le (Get-PropertyValue $streamliningFixture "expectedMaximumImmediatePrompts")) "Decision streamlining fixture exceeds its immediate-prompt limit."
     $expectedImmediateIds = @("DEC-audit-requirements", "DEC-state-concurrency", "DEC-state-lifetime", "DEC-state-storage")
@@ -481,6 +502,20 @@ if ((Test-Path -LiteralPath $pluginReadmePath -PathType Leaf) -and (Test-Path -L
         "DEC-transport-security"
     )
     Add-Check (@(Compare-Object ($streamliningIds | Sort-Object) ($expectedStreamliningIds | Sort-Object)).Count -eq 0) "Decision streamlining fixture does not match the authoritative 40-decision sample."
+
+    $codeOnlyFixturePath = Join-Path $fixtureRoot "code-only-workflow.json"
+    $codeOnlyFixture = $jsonDocuments[$codeOnlyFixturePath]
+    $expectedStages = @(
+        "intake", "inventory", "decision-preparation", "mapping",
+        "specification", "consolidated-review", "publication", "implementation",
+        "final-local-checkpoint", "offline-handoff"
+    )
+    Add-Check (@(Compare-Object (@(Get-PropertyValue $codeOnlyFixture "stages") | Sort-Object) ($expectedStages | Sort-Object)).Count -eq 0) "Code-only fixture stage sequence is incomplete."
+    Add-Check (@(Get-PropertyValue $codeOnlyFixture "permissions").Count -eq 2) "Code-only fixture must expose only network and optional GitHub mutation permissions."
+    Add-Check ((Get-PropertyValue $codeOnlyFixture "terminalOutcome") -eq "code-complete") "Code-only fixture has the wrong terminal outcome."
+    Add-Check ((Get-PropertyValue (Get-PropertyValue $codeOnlyFixture "finalWorkPackage") "kind") -eq "final-local-verification") "Code-only fixture lacks a final local verification package."
+    Add-Check (@(Get-PropertyValue $codeOnlyFixture "offlineCategories").Count -ge 10) "Code-only fixture does not cover the offline handoff."
+    Add-Check (@(Get-PropertyValue $codeOnlyFixture "forbiddenOrchestratedActions").Count -eq 8) "Code-only fixture does not enumerate every forbidden operational action."
     foreach ($skillFile in $skillFiles) {
         $skillReference = "skills/$($skillFile.Directory.Name)/"
         Add-Check ($pluginReadme -like "*$skillReference*") "Plugin README does not document skill '$($skillFile.Directory.Name)'."
@@ -549,6 +584,14 @@ $schemaValidationPairs = @(
     @{
         Json = Join-Path $pluginRoot "skills/map-wcf-to-grpc/examples/mapping-result.example.json"
         Schema = Join-Path $pluginRoot "schemas/mapping-result.schema.json"
+    },
+    @{
+        Json = Join-Path $pluginRoot "skills/finalize-code-handoff/examples/code-handoff.example.json"
+        Schema = Join-Path $pluginRoot "schemas/code-handoff.schema.json"
+    },
+    @{
+        Json = Join-Path $fixtureRoot "orchestration-state-code-complete.json"
+        Schema = Join-Path $pluginRoot "schemas/orchestration-state.schema.json"
     }
 )
 foreach ($expectedFile in Get-ChildItem -LiteralPath $fixtureRoot -Recurse -File -Filter "expected.json") {
@@ -585,6 +628,39 @@ foreach ($artifactFile in $artifactJsonFiles) {
                 Get-PropertyValue $dependency "workPackageId"
             }
         } "$($artifactFile.FullName) work packages"
+        $workPackages = @(Get-PropertyValue $artifact "workPackages")
+        Add-Check ($workPackages.Count -gt 0) "Migration specification has no code work packages."
+        Add-Check (@($workPackages | Where-Object { (Get-PropertyValue $_ "kind") -eq "final-local-verification" }).Count -eq 1) "Migration specification must contain exactly one final local verification package."
+        foreach ($workPackage in $workPackages) {
+            Add-Check ((Get-PropertyValue $workPackage "kind") -in @("code-implementation", "final-local-verification")) "Work package '$((Get-PropertyValue $workPackage "id"))' is not code-only."
+            $executableSurface = [ordered]@{
+                objective = Get-PropertyValue $workPackage "objective"
+                scope = Get-PropertyValue $workPackage "scope"
+                deliverables = Get-PropertyValue $workPackage "deliverables"
+                acceptanceCriteria = Get-PropertyValue $workPackage "acceptanceCriteria"
+                validation = Get-PropertyValue $workPackage "validation"
+            }
+            $packageText = $executableSurface | ConvertTo-Json -Depth 100
+            Add-Check ($packageText -notmatch "(?i)deploy(?:ment)? manifest|infrastructure-as-code|traffic cutover|execute live rollback|disable WCF|remove WCF|retire WCF") "Work package '$((Get-PropertyValue $workPackage "id"))' contains an executable operational action."
+        }
+    }
+    elseif ($artifactType -eq "code-handoff") {
+        Add-Check ((Get-PropertyValue (Get-PropertyValue $artifact "codeCompletion") "status") -eq "code-complete") "Code handoff lacks code-complete status."
+        Add-Check ((Get-PropertyValue $artifact "wcfState") -eq "active-and-unchanged") "Code handoff does not keep WCF active."
+        $obligations = @(Get-PropertyValue $artifact "offlineObligations")
+        Add-Check ($obligations.Count -ge 10) "Code handoff does not cover enough operational topics."
+        $expectedOfflineCategories = @(
+            "environment-configuration", "secrets", "deployment",
+            "service-discovery", "identity-and-tls", "data-and-state",
+            "external-dependencies", "observability-health-capacity",
+            "environment-parity-validation", "consumer-cutover",
+            "live-rollback", "wcf-retirement"
+        )
+        $actualOfflineCategories = @($obligations | ForEach-Object { Get-PropertyValue $_ "category" })
+        Add-Check (@(Compare-Object ($actualOfflineCategories | Sort-Object -Unique) ($expectedOfflineCategories | Sort-Object)).Count -eq 0) "Code handoff does not cover the exact required offline categories."
+        foreach ($obligation in $obligations) {
+            Add-Check ((Get-PropertyValue $obligation "executionState") -eq "not-executed") "Offline obligation '$((Get-PropertyValue $obligation "id"))' was represented as executed."
+        }
     }
     elseif ($artifactType -eq "issue-set") {
         Test-DependencyDag @(Get-PropertyValue $artifact "issues") {

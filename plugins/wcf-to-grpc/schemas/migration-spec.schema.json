@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "./migration-spec.schema.json",
   "title": "WCF to gRPC migration specification and work packages",
-  "description": "Target architecture, per-service Protobuf contract designs, migration roadmap, and dependency-aware implementation work packages.",
+  "description": "Code-only target architecture, per-service Protobuf contracts, dependency-aware repository work packages, final local verification, and non-executable offline operational guidance.",
   "allOf": [
     {
       "$ref": "./common.schema.json#/$defs/artifactBase"
@@ -44,7 +44,19 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/workPackage"
-          }
+          },
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "final-local-verification"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
         }
       },
       "required": [
@@ -517,6 +529,12 @@
             "retirement"
           ]
         },
+        "scope": {
+          "enum": [
+            "code",
+            "offline-handoff"
+          ]
+        },
         "state": {
           "enum": [
             "unresolved",
@@ -565,6 +583,7 @@
       },
       "required": [
         "topic",
+        "scope",
         "state",
         "design",
         "decisionIds",
@@ -573,6 +592,37 @@
         "evidenceIds"
       ],
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "topic": {
+                "enum": [
+                  "deployment",
+                  "coexistence",
+                  "consumer-cutover",
+                  "retirement"
+                ]
+              }
+            },
+            "required": [
+              "topic"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "const": "offline-handoff"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "scope": {
+                "const": "code"
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {
@@ -1189,7 +1239,7 @@
           },
           "minItems": 1
         },
-        "retirementCriteria": {
+        "offlineHandoffCriteria": {
           "type": "array",
           "items": {
             "$ref": "./common.schema.json#/$defs/acceptanceCriterion"
@@ -1201,7 +1251,7 @@
         "strategy",
         "pilotServiceId",
         "phases",
-        "retirementCriteria"
+        "offlineHandoffCriteria"
       ],
       "additionalProperties": false
     },
@@ -1283,6 +1333,12 @@
             "blocked",
             "completed",
             "superseded"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "code-implementation",
+            "final-local-verification"
           ]
         },
         "approval": {
@@ -1389,6 +1445,7 @@
       "required": [
         "id",
         "title",
+        "kind",
         "status",
         "approval",
         "objective",
@@ -1433,6 +1490,32 @@
                     "const": "approved"
                   }
                 }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "final-local-verification"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "fleet": {
+                "properties": {
+                  "suitability": {
+                    "const": "sequential"
+                  }
+                }
+              },
+              "integrationCheckpoints": {
+                "minItems": 1
               }
             }
           }
@@ -1609,6 +1692,7 @@
     },
     "rollbackPlan": {
       "type": "object",
+      "description": "Repository-code revert and local compatibility plan only; never a live environment rollback.",
       "properties": {
         "strategy": {
           "$ref": "./common.schema.json#/$defs/resolvedString"
@@ -1654,6 +1738,7 @@
     },
     "coexistencePlan": {
       "type": "object",
+      "description": "Code-side ability to keep WCF runnable alongside gRPC. It does not configure routing or execute traffic changes.",
       "properties": {
         "required": {
           "$ref": "./common.schema.json#/$defs/resolvedBoolean"

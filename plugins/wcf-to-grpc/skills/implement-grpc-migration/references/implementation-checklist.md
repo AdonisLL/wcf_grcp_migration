@@ -184,26 +184,34 @@ Only implement the surfaces your assigned package's `scope` and
 - Add the tests the package's `acceptanceCriteria` and `validation` steps
   require: contract shape/field mapping (including edge cases), fault-to-
   status mapping, authorization (allow and deny), deadline/cancellation
-  behavior, streaming lifecycle, and — when the package covers it —
-  coexistence routing.
+  behavior, streaming lifecycle, and — when the package covers it — local
+  side-by-side WCF/gRPC compatibility without routing changes.
 - Place tests only in the project(s)/paths the package owns. Use the
   repository's existing test framework and conventions; do not introduce a
   new test framework.
 - A test proves the acceptance criterion it is linked to; do not write a
   test that merely exercises unrelated code to pad coverage.
 
-## 11. Deployment changes
+## 11. Offline dependencies and local configuration
 
-- Change only the deployment artifacts (Dockerfiles, orchestration manifests,
-  pipeline definitions, configuration) the package's `deliverables` name, and
-  only for the rollout mechanics, coexistence routing, or scaling/resource
-  baseline the `deployment`/`coexistence` sections specify.
-- Any routing change during coexistence must keep the legacy WCF endpoint
-  reachable per the package's `coexistence` plan; do not remove a route the
-  plan says must stay routable.
-- Database or shared-state migrations included in a package must be additive
-  and backward compatible during coexistence, matching the `deployment`
-  section's data-ordering rule.
+- Capture every NuGet package reference, SDK version, and tooling version the
+  new projects require. List them in the handoff report under **offline
+  dependencies** so that an air-gapped or restricted build environment can
+  pre-fetch them before building.
+- Configuration values (ports, endpoints, feature flags) must be wired to
+  existing project-local configuration abstractions (appsettings, user secrets,
+  environment variables read at startup) — never hardcoded in source.
+- Do **not** create, modify, or delete deployment manifests, IaC templates,
+  CI/CD pipeline definitions, container image recipes, reverse-proxy or gateway
+  routing rules, or any production-traffic configuration. Those artifacts live
+  outside this skill's boundary.
+- Do **not** implement cutover steps, live traffic migration, canary/blue-green
+  rollout mechanics, or any change that would affect a running production or
+  staging environment. This skill produces code that is ready to deploy, not
+  code that deploys itself.
+- Database or shared-state schema changes (if any) must be additive and
+  backward compatible; record them in the handoff report as offline migration
+  steps, not as automated runners invoked during the build.
 
 ## Cross-references
 
@@ -221,3 +229,37 @@ Only implement the surfaces your assigned package's `scope` and
 A construct appearing in this table with no corresponding approved design in
 the spec is not something this checklist authorizes you to design yourself —
 report it as a blocking gap.
+
+## Out-of-scope surfaces (do not implement)
+
+The following are explicitly outside this skill's boundary. Including any of
+them in a deliverable is a scope violation — report the spec entry as
+miscategorized and stop that deliverable:
+
+- Deployment manifests, Dockerfiles, Helm/Kubernetes charts, Terraform or
+  Bicep templates, or any other IaC artifact.
+- CI/CD pipeline definitions (GitHub Actions, Azure Pipelines, Jenkins, etc.).
+- Reverse-proxy or API-gateway routing rules (YARP, Nginx, Envoy configs).
+- Canary, blue-green, or traffic-weight rollout configuration.
+- Protected or production-traffic configuration of any kind.
+- Cutover steps that re-route live consumers from WCF to gRPC.
+- Live rollback execution (stop/start services, drain traffic, swap endpoints).
+  Rollback is limited to: code revert instructions and local compatibility
+  verification (see §Rollback below).
+- WCF retirement (disabling, removing, or decommissioning WCF endpoints or
+  their hosting infrastructure). WCF must remain untouched and runnable.
+- Claims of runtime parity or deployment readiness — those require an
+  independent validation stage.
+
+## Rollback definition for this skill
+
+Rollback in this context means **code revert** and **local compatibility**
+only:
+
+1. Document the exact `git revert` or file-removal steps that undo this
+   package's changes without touching WCF code.
+2. Confirm (via a local build) that reverting the changes leaves the WCF
+   project and any shared project in a compilable, runnable state.
+3. Do **not** include instructions for stopping services, draining live
+   traffic, swapping load-balancer targets, or restoring production databases.
+   Those are operational steps that belong outside this skill's boundary.

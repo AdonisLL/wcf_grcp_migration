@@ -1,8 +1,8 @@
 # Validation Handoff Contract
 
-The interface between the caller — the `wcf-migration-orchestrator` agent, or
-a human operator invoking this stage directly — and the parity-validation
-stage (`grpc-parity-validator` running [`../SKILL.md`](../SKILL.md)). It
+The interface between a human operator invoking optional post-workflow
+validation and `grpc-parity-validator` running [`../SKILL.md`](../SKILL.md).
+The code-only orchestrator never uses this contract. It
 mirrors the discipline of the architecture stage's
 [`orchestrator-handoff.md`](../../author-migration-specs/references/orchestrator-handoff.md)
 and the implementation stage's
@@ -13,17 +13,20 @@ upstream artifacts it points at are schema-validated.
 
 ## Preconditions the caller must satisfy
 
-1. `migration-spec.json` exists, validates against
+1. `code-handoff.json` exists, validates against
+   [`code-handoff.schema.json`](../../../schemas/code-handoff.schema.json), and
+   names the revision deployed for this manual validation.
+2. `migration-spec.json` exists, validates against
    [`migration-spec.schema.json`](../../../schemas/migration-spec.schema.json),
    and its architecture and contract surfaces for the scope are `approved`.
-2. `inventory.json` and `decision-log.json` exist for the same repository and
+3. `inventory.json` and `decision-log.json` exist for the same repository and
    cover the scope, so a legacy baseline is available.
-3. The in-scope work packages have implementation reports (`completed` or
+4. The in-scope work packages have implementation reports (`completed` or
    `partial`) under
    `docs/wcf-grpc-migration/implementation-reports/`.
-4. For behavioral gates, a runnable environment is reachable, and the caller
+5. For behavioral gates, a runnable environment is reachable, and the caller
    states which environment it is.
-5. Any golden-traffic permission is already recorded per
+6. Any golden-traffic permission is already recorded per
    [`golden-traffic-and-safety.md`](golden-traffic-and-safety.md).
 
 If a precondition fails, the stage returns `status: blocked`, writes a report
@@ -37,6 +40,7 @@ containing only `blocked` gate results, and changes nothing else.
   "repositoryRoot": ".",
   "outputDirectory": "docs/wcf-grpc-migration",
   "inputs": {
+    "codeHandoffPath": "docs/wcf-grpc-migration/code-handoff.json",
     "migrationSpecPath": "docs/wcf-grpc-migration/migration-spec.json",
     "inventoryPath": "docs/wcf-grpc-migration/inventory.json",
     "decisionLogPath": "docs/wcf-grpc-migration/decision-log.json",
@@ -168,7 +172,7 @@ Computation rules are normative in
 
 | Consumer | Receives | Not permitted here |
 |---|---|---|
-| Caller/orchestrator | `status`, gate matrix, findings, `nextRequiredAction` to decide remediation or progression | This stage does not dispatch work packages |
+| Human caller | `status`, gate matrix, findings, `nextRequiredAction` for offline remediation or operational planning | This validator does not dispatch work packages or alter orchestration state |
 | [`implement-grpc-migration`](../../implement-grpc-migration/SKILL.md) | Blocking/non-blocking findings with owners, as remediation input for the named work package | This stage never implements the fix |
 | [`author-migration-specs`](../../author-migration-specs/SKILL.md) | Findings whose remediation is a specification or decision change | This stage never edits the spec |
 | Interview stage | Findings that reveal an unresolved decision (`QST-*`/`DEC-*` needed) | This stage never answers a decision |

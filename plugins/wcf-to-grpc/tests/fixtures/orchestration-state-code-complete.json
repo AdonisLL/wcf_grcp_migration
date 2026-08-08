@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "orchestration-state",
+  "runId": "ORUN-code-only-example",
+  "generation": {
+    "generator": "wcf-migration-orchestrator",
+    "generatorVersion": "2.0.0",
+    "generatedAt": "2026-08-08T18:05:00Z",
+    "sourceRevision": {
+      "state": "known",
+      "value": "git:0123456789abcdef"
+    },
+    "sourceDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "mode": "full"
+  },
+  "repository": {
+    "root": ".",
+    "kind": "service-host",
+    "scope": {
+      "summary": "Migrate the Orders WCF service code to gRPC.",
+      "includeIds": [
+        "SVC-order-service"
+      ],
+      "excludeIds": []
+    }
+  },
+  "outputDirectory": "docs/wcf-grpc-migration",
+  "targetRuntime": {
+    "state": "known",
+    "value": ".NET 10 LTS"
+  },
+  "permissions": {
+    "allowNetwork": false,
+    "allowGitHubMutation": false
+  },
+  "outcome": "code-complete",
+  "stages": [
+    {
+      "stage": "intake",
+      "status": "complete",
+      "owner": "orchestrator",
+      "updatedAt": "2026-08-08T12:00:00Z",
+      "resultSummary": "Scope recorded.",
+      "artifactPaths": [],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "inventory",
+      "status": "complete",
+      "owner": "wcf-codebase-analyst",
+      "updatedAt": "2026-08-08T12:30:00Z",
+      "resultSummary": "Inventory complete.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/inventory.json"
+      ],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "decision-preparation",
+      "status": "complete",
+      "owner": "wcf-migration-decision-interviewer",
+      "updatedAt": "2026-08-08T13:00:00Z",
+      "resultSummary": "Code decisions prepared.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/decision-log.json"
+      ],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "mapping",
+      "status": "complete",
+      "owner": "wcf-to-grpc-mapper",
+      "updatedAt": "2026-08-08T13:20:00Z",
+      "resultSummary": "Mapping complete.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/mapping-result.json"
+      ],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "specification",
+      "status": "complete",
+      "owner": "grpc-migration-architect",
+      "updatedAt": "2026-08-08T14:00:00Z",
+      "resultSummary": "Code-only specification complete.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/migration-spec.json"
+      ],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "consolidated-review",
+      "status": "complete",
+      "owner": "reviewer",
+      "updatedAt": "2026-08-08T14:30:00Z",
+      "resultSummary": "Exact-digest code plan approved.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/migration-review.json"
+      ],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "publication",
+      "status": "skipped",
+      "owner": "grpc-migration-issue-publisher",
+      "updatedAt": "2026-08-08T14:31:00Z",
+      "resultSummary": "Optional publication was not requested.",
+      "artifactPaths": [],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "implementation",
+      "status": "complete",
+      "owner": "grpc-migration-implementer",
+      "updatedAt": "2026-08-08T17:30:00Z",
+      "resultSummary": "All code work packages completed.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/implementation-reports/orders-server.json"
+      ],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "final-local-checkpoint",
+      "status": "complete",
+      "owner": "grpc-migration-implementer",
+      "updatedAt": "2026-08-08T17:55:00Z",
+      "resultSummary": "Affected solution build and repository-local tests passed.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/reports/final-local-checkpoint.json"
+      ],
+      "blockingItemIds": []
+    },
+    {
+      "stage": "offline-handoff",
+      "status": "complete",
+      "owner": "grpc-code-handoff-author",
+      "updatedAt": "2026-08-08T18:05:00Z",
+      "resultSummary": "Code handoff covers all not-executed operational obligations.",
+      "artifactPaths": [
+        "docs/wcf-grpc-migration/code-handoff.json",
+        "docs/wcf-grpc-migration/code-handoff.md"
+      ],
+      "blockingItemIds": []
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact": {
+        "artifactType": "code-handoff",
+        "id": "CHOFF-example-orders"
+      },
+      "path": "docs/wcf-grpc-migration/code-handoff.json",
+      "sourceDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "approvalState": "not-applicable",
+      "freshness": "current",
+      "observedAt": "2026-08-08T18:05:00Z"
+    }
+  ],
+  "blockingItems": [],
+  "waves": [
+    {
+      "wave": 1,
+      "phaseId": "PHS-orders-code",
+      "integrationCheckpoint": true,
+      "checkpointReportPath": "docs/wcf-grpc-migration/reports/final-local-checkpoint.json",
+      "checkpointState": "reconciled",
+      "packages": [
+        {
+          "workPackageId": "WP-final-local-checkpoint",
+          "dispatchMode": "sequential",
+          "dispatchState": "reported",
+          "reportPath": "docs/wcf-grpc-migration/reports/final-local-checkpoint.json",
+          "reportStatus": "completed",
+          "exclusiveWritePaths": []
+        }
+      ],
+      "ownershipConflicts": []
+    }
+  ],
+  "finalCheckpoint": {
+    "workPackageId": "WP-final-local-checkpoint",
+    "reportPath": "docs/wcf-grpc-migration/reports/final-local-checkpoint.json",
+    "validatedRevision": {
+      "state": "known",
+      "value": "git:0123456789abcdef"
+    },
+    "affectedBuildsPassed": true,
+    "requiredLocalTestsPassed": true,
+    "commandsExecuted": [
+      "dotnet build Contoso.Orders.sln --no-restore",
+      "dotnet test Contoso.Orders.sln --no-build"
+    ],
+    "status": "passed"
+  },
+  "approvalsObserved": [],
+  "reviewBundle": null,
+  "observations": [],
+  "nextRequiredAction": {
+    "owner": "none",
+    "action": "Code-only orchestration is complete; operational follow-up is outside this run.",
+    "blockingItemIds": []
+  }
+}

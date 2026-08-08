@@ -624,7 +624,7 @@ consumer still within its negotiated window → **non-blocking**.
 This gate is assessed only on a `retirement` run and is governed by
 [`retirement-gate.md`](retirement-gate.md). Summary of required checks:
 
-1. Every criterion in the roadmap's `retirementCriteria` is satisfied with
+1. Every retirement criterion in the roadmap's `offlineHandoffCriteria` is satisfied with
    observed, referenced evidence produced by this stage.
 2. Gates 1–12 are `pass` (or `not-applicable` with proof) for **all**
    services in the retirement scope, and no blocking finding is open.
@@ -661,4 +661,4 @@ otherwise the gate is `fail` or `blocked` and retirement is refused.
 | `performance-and-limits` | recorded baseline, binding quotas | spec SLA/limits decisions |
 | `operational-readiness` | legacy hosting/monitoring | spec `observability`/`health-checks`/`deployment` |
 | `client-cutover` | inventory `CON-*` | spec `coexistence`/`consumer-cutover` |
-| `retirement-readiness` | all of the above | roadmap `retirementCriteria` |
+| `retirement-readiness` | all of the above | roadmap retirement `offlineHandoffCriteria` |

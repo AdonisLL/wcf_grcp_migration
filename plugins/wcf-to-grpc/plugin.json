@@ -1,7 +1,7 @@
 {
   "name": "wcf-to-grpc",
-  "description": "Orchestrated WCF to gRPC migration workflow: read-only inventory, evidence-backed decision proposals, focused blockers, consolidated plan review, mapping, specification authoring, confirmation-gated issue publication, fleet-ready implementation, and independent parity validation.",
-  "version": "1.0.0",
+  "description": "Code-only WCF to gRPC migration workflow: evidence-backed planning, optional Issue publication, implementation, repository-local build/tests, and an offline operational handoff.",
+  "version": "2.0.0",
   "keywords": [
     "wcf",
     "grpc",

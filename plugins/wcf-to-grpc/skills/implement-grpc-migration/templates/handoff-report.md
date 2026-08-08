@@ -11,8 +11,9 @@ generated_at: {{generated_at_utc}}
 **Objective (from spec):** {{objective}}
 **Run mode:** {{mode}} (`implement` | `resume`)
 
-This report does not authorize WCF retirement and does not approve its own
-work package.
+This report does not claim runtime parity with WCF, does not assert
+deployment readiness, does not authorize WCF retirement, and does not
+approve its own work package.
 
 ## Preflight verification
 
@@ -22,7 +23,7 @@ work package.
 - Claim marker written: `{{claim_marker_path}}`
 - Current repository state re-read (not assumed): {{reread_confirmation}}
 
-## Changed files
+## Changed projects and files
 
 | Path | Action | Ownership mode | Notes |
 |---|---|---|---|
@@ -48,7 +49,7 @@ work package.
 
 {{new_risks_or_decisions_or_none}}
 
-## Deviations from the package
+## Code gaps / deviations from the package
 
 For each deviation, use:
 
@@ -64,18 +65,37 @@ Next action: {{smallest_unblocking_step}}
 
 ## Coexistence state
 
-- Legacy WCF endpoint still routable and unaffected: {{coexistence_state}}
-- Schema/proto changes made are additive and backward compatible:
-  {{additive_confirmation}}
+- Legacy WCF endpoint untouched and locally runnable: {{coexistence_state}}
+- Schema/proto changes made are additive and backward compatible: {{additive_confirmation}}
 - Matches package's coexistence plan: {{plan_match_confirmation}}
 
-## Rollback readiness
+## Code rollback
 
-- Rollback steps implemented/exercisable: {{rollback_readiness}}
-- Trigger conditions still valid: {{rollback_triggers_confirmation}}
-- Owner: {{rollback_owner}}
+- `git revert` / file-removal steps: {{rollback_steps}}
+- Local build result after revert (WCF and shared projects still compile/run): {{rollback_local_build_result}}
 
-## Integration checkpoint participation
+> Rollback is limited to code revert and local compatibility verification.
+> Live traffic drain, service restart, and load-balancer changes are outside
+> this skill's scope.
+
+## Offline dependencies
+
+| Package / SDK / Tool | Version required | Source / feed |
+|---|---|---|
+| {{name}} | {{version}} | {{feed}} |
+
+## Final sequential integration checkpoint
+
+| Command | Working directory | Result |
+|---|---|---|
+| `{{build_command}}` | `{{working_directory}}` | {{build_result}} |
+| `{{test_command}}` | `{{working_directory}}` | {{test_result}} |
+
+> **Scope of this checkpoint:** Confirms the code compiles and existing
+> repository-local tests pass. It does **not** constitute runtime parity
+> evidence, WCF behavior equivalence, or deployment readiness.
+
+## Integration checkpoint participation (fleet)
 
 {{integration_checkpoint_notes_or_not_applicable}}
 

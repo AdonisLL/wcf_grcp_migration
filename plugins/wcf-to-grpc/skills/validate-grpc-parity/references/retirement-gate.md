@@ -1,12 +1,12 @@
-# WCF Retirement Gate
+# Optional WCF Retirement Readiness
 
-The conditions under which `validate-grpc-parity` may report that legacy WCF
+The conditions under which manually invoked `validate-grpc-parity` may report that legacy WCF
 endpoints are ready to be switched off — and the many conditions under which
 it must refuse. This reference governs checklist gate 13
 ([`parity-checklist.md`](parity-checklist.md)) and is the counterpart of the
-implementation stage's
+code-only implementation guidance in
 [`validation-and-gates.md`](../../implement-grpc-migration/references/validation-and-gates.md),
-which blocks `WP-wcf-retirement` until the evidence defined here exists.
+which leaves retirement entirely outside plugin orchestration.
 
 ## 1. What this stage decides, and what it does not
 
@@ -17,11 +17,11 @@ which blocks `WP-wcf-retirement` until the evidence defined here exists.
 | Names exactly what is missing and who must act | Accepts residual risk, explicitly and in writing |
 
 `retirement-ready` is a **readiness statement, not an authorization**. The
-implementation stage may execute `WP-wcf-retirement` only when this stage's
-referenced evidence exists **and** a separate recorded human approval
-exists. This stage never records that approval, never edits
-`migration-spec.json`'s `roadmap.retirementCriteria`, and never marks a
-decision approved.
+plugin never creates or executes a WCF retirement work package. Any retirement
+action belongs to a separate human-owned process after this stage's referenced
+evidence and explicit approval exist. This stage never records that approval,
+changes orchestration state, disables WCF, edits `migration-spec.json`'s
+`roadmap.offlineHandoffCriteria`, or marks a decision approved.
 
 ## 2. Required conditions
 
@@ -30,7 +30,8 @@ verified by this stage in the retirement run.
 
 ### 2.1 Criteria satisfaction
 
-1. Every `AC-*` in the roadmap's `retirementCriteria` is met, with its
+1. Every applicable retirement `AC-*` in the roadmap's
+   `offlineHandoffCriteria` is met, with its
    `evidenceRequired` actually produced and cited by `EVD-*` id.
 2. Each criterion's linked `VAL-*` steps ran and passed in a
    production-equivalent environment.

@@ -1,0 +1,52 @@
+{
+  "fixture": "code-only-terminal-workflow",
+  "stages": [
+    "intake",
+    "inventory",
+    "decision-preparation",
+    "mapping",
+    "specification",
+    "consolidated-review",
+    "publication",
+    "implementation",
+    "final-local-checkpoint",
+    "offline-handoff"
+  ],
+  "permissions": [
+    "allowNetwork",
+    "allowGitHubMutation"
+  ],
+  "terminalOutcome": "code-complete",
+  "finalWorkPackage": {
+    "kind": "final-local-verification",
+    "dispatchMode": "sequential",
+    "requiredEvidence": [
+      "affected-project-builds",
+      "repository-local-tests"
+    ]
+  },
+  "offlineCategories": [
+    "environment-configuration",
+    "secrets",
+    "deployment",
+    "service-discovery",
+    "identity-and-tls",
+    "data-and-state",
+    "external-dependencies",
+    "observability-health-capacity",
+    "environment-parity-validation",
+    "consumer-cutover",
+    "live-rollback",
+    "wcf-retirement"
+  ],
+  "forbiddenOrchestratedActions": [
+    "environment-provisioning",
+    "deployment-execution",
+    "protected-traffic",
+    "production-access",
+    "environment-parity-validation",
+    "consumer-cutover",
+    "live-rollback",
+    "wcf-retirement"
+  ]
+}

@@ -1,0 +1,506 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./code-handoff.schema.json",
+  "title": "WCF to gRPC code-only handoff",
+  "description": "Terminal evidence for locally completed migration code plus explicit not-executed operational obligations.",
+  "allOf": [
+    {
+      "$ref": "./common.schema.json#/$defs/artifactBase"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "artifactType": {
+          "const": "code-handoff"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^CHOFF-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "approval": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "not-applicable"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        },
+        "migrationSpecId": {
+          "type": "string",
+          "pattern": "^MSPEC-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "reviewBundleDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "codeCompletion": {
+          "$ref": "#/$defs/codeCompletion"
+        },
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deliverable"
+          },
+          "minItems": 1
+        },
+        "localRunInstructions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "localValidation": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/localValidation"
+          },
+          "minItems": 1
+        },
+        "codeGaps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/codeGap"
+          }
+        },
+        "codeRollback": {
+          "$ref": "#/$defs/codeRollback"
+        },
+        "offlineObligations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/offlineObligation"
+          },
+          "minItems": 12,
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "environment-configuration"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "secrets"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "deployment"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "service-discovery"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "identity-and-tls"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "data-and-state"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "external-dependencies"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "observability-health-capacity"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "environment-parity-validation"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "consumer-cutover"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "live-rollback"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "category": {
+                    "const": "wcf-retirement"
+                  }
+                },
+                "required": [
+                  "category"
+                ]
+              }
+            }
+          ]
+        },
+        "wcfState": {
+          "const": "active-and-unchanged"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "not-deployed",
+              "runtime-parity-not-established",
+              "production-readiness-not-established",
+              "cutover-not-authorized",
+              "live-rollback-not-executed",
+              "wcf-retirement-not-authorized"
+            ]
+          },
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "migrationSpecId",
+        "reviewBundleDigest",
+        "codeCompletion",
+        "deliverables",
+        "localRunInstructions",
+        "localValidation",
+        "codeGaps",
+        "codeRollback",
+        "offlineObligations",
+        "wcfState",
+        "limitations"
+      ]
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "codeCompletion": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "code-complete"
+        },
+        "sourceRevision": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "implementationReportIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^IMP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "finalCheckpointWorkPackageId": {
+          "type": "string",
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "finalCheckpointReportPath": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "affectedBuildsPassed": {
+          "const": true
+        },
+        "requiredLocalTestsPassed": {
+          "const": true
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "status",
+        "sourceRevision",
+        "implementationReportIds",
+        "finalCheckpointWorkPackageId",
+        "finalCheckpointReportPath",
+        "affectedBuildsPassed",
+        "requiredLocalTestsPassed",
+        "completedAt"
+      ],
+      "additionalProperties": false
+    },
+    "deliverable": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "kind": {
+          "enum": [
+            "project",
+            "proto-contract",
+            "server",
+            "client",
+            "adapter",
+            "configuration",
+            "test",
+            "documentation",
+            "other"
+          ]
+        },
+        "change": {
+          "enum": [
+            "created",
+            "modified"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "change",
+        "summary",
+        "sourceIds"
+      ],
+      "additionalProperties": false
+    },
+    "localValidation": {
+      "type": "object",
+      "properties": {
+        "validationId": {
+          "type": "string",
+          "pattern": "^VAL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "const": "passed"
+        },
+        "reportPath": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "evidenceIds": {
+          "$ref": "./common.schema.json#/$defs/evidenceIdArray"
+        }
+      },
+      "required": [
+        "validationId",
+        "command",
+        "scope",
+        "outcome",
+        "reportPath",
+        "evidenceIds"
+      ],
+      "additionalProperties": false
+    },
+    "codeGap": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^MBLK-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "severity": {
+          "const": "non-blocking"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "severity",
+        "summary",
+        "owner",
+        "nextAction"
+      ],
+      "additionalProperties": false
+    },
+    "codeRollback": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "const": "repository-code-only"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "localCompatibilityCheck": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "scope",
+        "steps",
+        "localCompatibilityCheck"
+      ],
+      "additionalProperties": false
+    },
+    "offlineObligation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^OBL-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "category": {
+          "enum": [
+            "environment-configuration",
+            "secrets",
+            "deployment",
+            "service-discovery",
+            "identity-and-tls",
+            "data-and-state",
+            "external-dependencies",
+            "observability-health-capacity",
+            "environment-parity-validation",
+            "consumer-cutover",
+            "live-rollback",
+            "wcf-retirement"
+          ]
+        },
+        "executionState": {
+          "const": "not-executed"
+        },
+        "guidance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "executionState",
+        "guidance",
+        "owner",
+        "nextAction",
+        "sourceIds",
+        "prerequisites"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

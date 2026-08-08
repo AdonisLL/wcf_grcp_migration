@@ -460,7 +460,7 @@
             "review-required",
             "immediate-answer-required",
             "deferred-operational",
-            "separate-authority-gate"
+            "out-of-scope-handoff"
           ]
         },
         "confidence": {
@@ -497,11 +497,9 @@
             "draft",
             "architecture-review",
             "implementation",
-            "validation",
+            "final-local-checkpoint",
             "publication",
-            "cutover",
-            "rollback",
-            "retirement"
+            "offline-handoff"
           ]
         }
       },
@@ -513,6 +511,27 @@
         "assumptions",
         "authorityRequired",
         "downstreamGate"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "interactionClass": {
+                "const": "out-of-scope-handoff"
+              }
+            },
+            "required": [
+              "interactionClass"
+            ]
+          },
+          "then": {
+            "properties": {
+              "downstreamGate": {
+                "const": "offline-handoff"
+              }
+            }
+          }
+        }
       ],
       "additionalProperties": false
     },

@@ -89,12 +89,12 @@ If a precondition fails, the stage returns `status: blocked` with
   "blockingItems": [
     {
       "kind": "unresolved-decision",
-      "questionIds": ["QST-external-consumer-upgrade-control"],
-      "decisionIds": ["DEC-consumer-cutover"],
-      "riskIds": ["RSK-external-soap-consumers"],
-      "blocks": ["architecture:coexistence", "SPEC-order-service", "WP-coexistence-routing"],
-      "whyBlocking": "Cutover sequencing and legacy endpoint retention cannot be specified.",
-      "nextAction": "Interview stage must resolve consumer upgrade control and record an approved decision."
+      "questionIds": ["QST-state-storage"],
+      "decisionIds": ["DEC-state-storage"],
+      "riskIds": ["RSK-session-state"],
+      "blocks": ["architecture:service-boundaries", "SPEC-order-service", "WP-order-service-state-redesign"],
+      "whyBlocking": "The state lifetime and concurrency semantics materially change generated service code.",
+      "nextAction": "Interview stage must resolve the irreducible state-storage choice."
     }
   ],
   "deferredItems": [],

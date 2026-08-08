@@ -861,7 +861,7 @@
         ],
         "id": "PHS-pilot-order-service",
         "integrationCheckpoint": true,
-        "objective": "Migrate the pilot order service contract and implementation with parity tests.",
+        "objective": "Migrate the pilot order service contract and implementation with repository-local behavior tests.",
         "sequence": 1,
         "title": "Pilot service migration",
         "workPackageIds": [
@@ -875,20 +875,20 @@
         ],
         "exitCriteria": [
           {
-            "evidenceRequired": "Full solution build log, parity test results, coexistence routing configuration review, and health probe confirmation.",
+            "evidenceRequired": "Full solution build log, required repository-local test results, local WCF/gRPC compatibility review, and local health probe confirmation.",
             "id": "AC-integration-verification-complete",
-            "statement": "The complete solution builds, all parity tests pass, coexistence routing configuration is reviewed, and the gRPC host health probe reports SERVING — producing the integration evidence package for the offline retirement-gate review.",
+            "statement": "The complete solution builds, all required repository-local tests pass, WCF remains unchanged, and the locally run gRPC host health probe reports SERVING.",
             "validationIds": [
               "VAL-integration-full-build",
-              "VAL-integration-parity-tests",
-              "VAL-integration-coexistence-review",
+              "VAL-integration-local-tests",
+              "VAL-integration-local-compatibility",
               "VAL-integration-health-probe"
             ]
           }
         ],
         "id": "PHS-integration-verification",
         "integrationCheckpoint": true,
-        "objective": "Run the final sequential integration checkpoint: build, test, and evidence-collect across all executable packages before handing integration evidence to the offline retirement-gate review.",
+        "objective": "Run the final sequential integration checkpoint across all affected projects and tests before producing the code handoff.",
         "sequence": 2,
         "title": "Integration verification",
         "workPackageIds": [
@@ -918,7 +918,7 @@
         ]
       }
     ],
-    "strategy": "Incremental: build the shared foundation sequentially, migrate the order service as the pilot slice, run integration verification, then hand integration evidence to the offline retirement-gate review. Production traffic cutover, coexistence routing execution, WCF endpoint removal, and retirement are non-executable offline guidance executed by the human retirement authority after the integration evidence and parity evidence are reviewed."
+    "strategy": "Incremental: build the shared foundation sequentially, migrate the order service as the pilot slice, run final repository-local integration verification, then produce the code handoff. Deployment, production traffic cutover, coexistence routing, live rollback, WCF endpoint removal, and retirement remain non-executable offline guidance."
   },
   "schemaVersion": "1.0.0",
   "targetArchitecture": {
@@ -1310,7 +1310,7 @@
       "state": "unresolved",
       "to": {
         "artifactType": "migration-spec",
-        "id": "ARCH-coexistence"
+        "id": "MSPEC-contoso-orders"
       }
     }
   ],
@@ -1488,7 +1488,7 @@
       "coexistence": {
         "durationOrExitCondition": {
           "state": "known",
-          "value": "The WCF host keeps serving all traffic until the pilot service is validated."
+          "value": "WCF remains unchanged and runnable while the new gRPC host is exercised locally."
         },
         "legacyEndpointRetained": {
           "state": "known",
@@ -1500,11 +1500,11 @@
         },
         "strategy": {
           "state": "known",
-          "value": "The new host is deployed alongside the WCF host and receives no production traffic until cutover."
+          "value": "The new gRPC project is locally runnable alongside the unchanged WCF project."
         },
         "trafficControl": {
-          "state": "known",
-          "value": "Load balancer routing; the gRPC listener is registered but not advertised to consumers."
+          "reason": "Routing is an offline handoff responsibility and is not changed by this package.",
+          "state": "not-applicable"
         },
         "validationIds": [
           "VAL-host-health-probe"
@@ -1580,22 +1580,22 @@
       "rollback": {
         "dataImpact": {
           "state": "known",
-          "value": "None; the host serves no production traffic yet."
+          "value": "None; this package changes repository code and local configuration only."
         },
         "owner": {
           "state": "known",
           "value": "Platform hosting owner"
         },
         "steps": [
-          "Stop and remove the new host deployment.",
-          "Confirm the WCF host still serves all traffic."
+          "Revert the new gRPC host project changes.",
+          "Build the unchanged WCF project and run its existing repository-local tests."
         ],
         "strategy": {
           "state": "known",
-          "value": "Remove the new deployment; the WCF host is unaffected."
+          "value": "Revert only the new gRPC project changes; the WCF project is unaffected."
         },
         "triggers": [
-          "TLS or authentication configuration fails in a shared environment."
+          "The local host build, startup, authentication tests, or health check fails."
         ],
         "validationIds": [
           "VAL-host-health-probe"
@@ -1819,8 +1819,8 @@
       },
       "coexistence": {
         "durationOrExitCondition": {
-          "state": "known",
-          "value": "Until the consumer cutover decision is approved and internal consumers are migrated."
+          "reason": "Consumer cutover timing is offline handoff guidance, not a package exit condition.",
+          "state": "not-applicable"
         },
         "legacyEndpointRetained": {
           "state": "known",
@@ -1835,8 +1835,8 @@
           "value": "The gRPC implementation delegates to the existing order domain services so both stacks share behavior and data."
         },
         "trafficControl": {
-          "state": "known",
-          "value": "No production traffic until cutover; internal test clients only."
+          "reason": "This package does not create or modify routing.",
+          "state": "not-applicable"
         },
         "validationIds": [
           "VAL-order-service-tests"
@@ -1925,20 +1925,19 @@
       "rollback": {
         "dataImpact": {
           "state": "known",
-          "value": "None; the implementation is not receiving production traffic."
+          "value": "None; this package changes repository code only."
         },
         "owner": {
           "state": "known",
           "value": "Order service owner"
         },
         "steps": [
-          "Unregister the service endpoint from the host.",
           "Revert the service implementation commit.",
-          "Confirm the WCF endpoint still serves all consumers."
+          "Build the affected solution and run the existing WCF and gRPC repository-local tests."
         ],
         "strategy": {
           "state": "known",
-          "value": "Revert the implementation and unregister the endpoint; WCF continues to serve traffic."
+          "value": "Revert the gRPC implementation changes; WCF remains unchanged."
         },
         "triggers": [
           "Streaming subscriptions leak resources under load.",
@@ -1996,19 +1995,19 @@
           ]
         },
         {
-          "evidenceRequired": "Test output showing all parity-test suites passing.",
-          "id": "AC-integration-parity-tests",
-          "statement": "All parity tests — covering contract, fault, authorization, deadline, streaming, and decimal edge cases — pass.",
+          "evidenceRequired": "Test output showing all required repository-local suites passing.",
+          "id": "AC-integration-local-tests",
+          "statement": "All required repository-local contract, fault, authorization, deadline, streaming, and serialization tests pass.",
           "validationIds": [
-            "VAL-integration-parity-tests"
+            "VAL-integration-local-tests"
           ]
         },
         {
-          "evidenceRequired": "Review record confirming coexistence routing configuration routes each consumer class correctly.",
-          "id": "AC-integration-coexistence-review",
-          "statement": "A reviewer confirms the coexistence routing configuration matches the approved topology.",
+          "evidenceRequired": "Review record confirming the WCF project and endpoint configuration remain unchanged and both project sets build locally.",
+          "id": "AC-integration-local-compatibility",
+          "statement": "A reviewer confirms the migration is additive and does not modify WCF or repository routing configuration.",
           "validationIds": [
-            "VAL-integration-coexistence-review"
+            "VAL-integration-local-compatibility"
           ]
         },
         {
@@ -2026,7 +2025,7 @@
       "coexistence": {
         "durationOrExitCondition": {
           "state": "known",
-          "value": "This package does not change traffic; it collects evidence that the implementation is ready."
+          "value": "This package verifies local additive compatibility only."
         },
         "legacyEndpointRetained": {
           "state": "known",
@@ -2038,7 +2037,7 @@
         },
         "strategy": {
           "state": "known",
-          "value": "Read-only verification; no production traffic is touched."
+          "value": "Local verification of the new gRPC project alongside unchanged WCF code."
         },
         "trafficControl": {
           "reason": "No traffic is shifted by this package.",
@@ -2050,13 +2049,13 @@
       "deliverables": [
         {
           "action": "create",
-          "description": "Integration evidence report capturing build output, test results, coexistence routing review, and health probe confirmation.",
+          "description": "Integration evidence report capturing affected builds, repository-local tests, additive WCF compatibility, and the local health probe.",
           "path": "docs/wcf-grpc-migration/integration-evidence.md"
         }
       ],
       "dependencies": [
         {
-          "reason": "Implementation and parity tests must be complete.",
+          "reason": "Implementation and required repository-local tests must be complete.",
           "state": "pending",
           "type": "hard",
           "workPackageId": "WP-order-service-server"
@@ -2086,14 +2085,14 @@
       "id": "WP-integration-verification",
       "kind": "final-local-verification",
       "integrationCheckpoints": [
-        "Final integration checkpoint: solution builds, all parity tests pass, coexistence configuration reviewed, health probe confirmed. Output feeds the offline retirement-gate review."
+        "Final integration checkpoint: affected projects build, required repository-local tests pass, WCF remains unchanged, and the local gRPC health probe succeeds."
       ],
       "nonGoals": [
         "Do not perform production traffic shifts.",
-        "Do not retire or remove WCF endpoints.",
+        "Keep every legacy WCF endpoint intact and runnable.",
         "Do not approve the migration or authorize retirement."
       ],
-      "objective": "Run the final sequential integration checkpoint and produce the integration evidence package for the offline retirement-gate review.",
+      "objective": "Run the final sequential repository-local checkpoint and produce the evidence consumed by the code handoff.",
       "riskIds": [],
       "rollback": {
         "dataImpact": {
@@ -2113,9 +2112,9 @@
           "value": "Re-run after fixing the failing package; no deployment is affected."
         },
         "triggers": [
-          "Any parity test failure.",
+          "Any required repository-local test failure.",
           "Health probe failure.",
-          "Coexistence routing configuration rejected in review."
+          "WCF or repository routing files changed unexpectedly."
         ],
         "validationIds": [
           "VAL-integration-full-build"
@@ -2123,8 +2122,8 @@
       },
       "scope": [
         "Build the complete solution from a clean clone.",
-        "Run all parity-test suites and record results.",
-        "Conduct a coexistence routing configuration review.",
+        "Run all required repository-local test suites and record results.",
+        "Confirm WCF and repository routing files remain unchanged.",
         "Run the gRPC host health probe and record the response.",
         "Produce the integration-evidence.md report linking all evidence."
       ],
@@ -2149,16 +2148,16 @@
         {
           "command": "dotnet test tests/Contoso.Orders.Grpc.Tests/Contoso.Orders.Grpc.Tests.csproj",
           "evidenceIds": [],
-          "expectedResult": "All parity tests pass.",
-          "id": "VAL-integration-parity-tests",
+          "expectedResult": "All required repository-local tests pass.",
+          "id": "VAL-integration-local-tests",
           "kind": "test",
           "status": "not-run",
           "workingDirectory": "."
         },
         {
           "evidenceIds": [],
-          "expectedResult": "A reviewer confirms the coexistence routing configuration routes each consumer class to its intended stack.",
-          "id": "VAL-integration-coexistence-review",
+          "expectedResult": "A reviewer confirms WCF and repository routing files remain unchanged and the migration is additive.",
+          "id": "VAL-integration-local-compatibility",
           "kind": "manual",
           "status": "not-run"
         },

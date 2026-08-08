@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "./orchestration-state.schema.json",
-  "title": "WCF to gRPC orchestration state",
-  "description": "Resumable run state owned by the WCF Migration Orchestrator. It records stage progress, artifact states, gate outcomes, wave dispatch, and the single next required action. It records observed approvals; it never grants them.",
+  "title": "WCF to gRPC code-only orchestration state",
+  "description": "Resumable state for code generation through repository-local build/tests and offline handoff. Operational deployment, traffic, parity, cutover, rollback execution, and retirement are outside this state machine.",
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "const": "1.0.0"
+      "const": "2.0.0"
     },
     "artifactType": {
       "const": "orchestration-state"
@@ -30,12 +30,142 @@
     "permissions": {
       "$ref": "#/$defs/permissions"
     },
+    "outcome": {
+      "enum": [
+        "in-progress",
+        "blocked",
+        "code-complete"
+      ]
+    },
     "stages": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/stage"
       },
-      "minItems": 1
+      "minItems": 10,
+      "maxItems": 10,
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "intake"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "inventory"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "decision-preparation"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "mapping"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "specification"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "consolidated-review"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "publication"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "implementation"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "final-local-checkpoint"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "stage": {
+                "const": "offline-handoff"
+              }
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        }
+      ]
     },
     "artifacts": {
       "type": "array",
@@ -55,11 +185,15 @@
         "$ref": "#/$defs/wave"
       }
     },
-    "validationRuns": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/validationRun"
-      }
+    "finalCheckpoint": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/finalCheckpoint"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "approvalsObserved": {
       "type": "array",
@@ -96,14 +230,114 @@
     "outputDirectory",
     "targetRuntime",
     "permissions",
+    "outcome",
     "stages",
     "artifacts",
     "blockingItems",
     "waves",
-    "validationRuns",
+    "finalCheckpoint",
     "approvalsObserved",
+    "reviewBundle",
     "observations",
     "nextRequiredAction"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "code-complete"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "finalCheckpoint": {
+            "type": "object",
+            "properties": {
+              "affectedBuildsPassed": {
+                "const": true
+              },
+              "requiredLocalTestsPassed": {
+                "const": true
+              },
+              "status": {
+                "const": "passed"
+              }
+            }
+          },
+          "stages": {
+            "allOf": [
+              {
+                "contains": {
+                  "properties": {
+                    "stage": {
+                      "const": "final-local-checkpoint"
+                    },
+                    "status": {
+                      "const": "complete"
+                    }
+                  },
+                  "required": [
+                    "stage",
+                    "status"
+                  ]
+                }
+              },
+              {
+                "contains": {
+                  "properties": {
+                    "stage": {
+                      "const": "offline-handoff"
+                    },
+                    "status": {
+                      "const": "complete"
+                    }
+                  },
+                  "required": [
+                    "stage",
+                    "status"
+                  ]
+                }
+              }
+            ]
+          },
+          "artifacts": {
+            "contains": {
+              "properties": {
+                "artifact": {
+                  "properties": {
+                    "artifactType": {
+                      "const": "code-handoff"
+                    }
+                  },
+                  "required": [
+                    "artifactType"
+                  ]
+                },
+                "freshness": {
+                  "const": "current"
+                }
+              },
+              "required": [
+                "artifact",
+                "freshness"
+              ]
+            }
+          },
+          "nextRequiredAction": {
+            "properties": {
+              "owner": {
+                "const": "none"
+              }
+            }
+          }
+        }
+      }
+    }
   ],
   "additionalProperties": false,
   "$defs": {
@@ -152,34 +386,18 @@
     },
     "permissions": {
       "type": "object",
-      "description": "Every permission defaults to false until the operator explicitly grants it.",
+      "description": "Code-only permissions. Network and optional GitHub Issue mutation default to false.",
       "properties": {
         "allowNetwork": {
           "type": "boolean"
         },
         "allowGitHubMutation": {
           "type": "boolean"
-        },
-        "allowHarness": {
-          "type": "boolean"
-        },
-        "allowGoldenTraffic": {
-          "type": "boolean"
-        },
-        "allowLoadTest": {
-          "type": "boolean"
-        },
-        "allowProductionAccess": {
-          "type": "boolean"
         }
       },
       "required": [
         "allowNetwork",
-        "allowGitHubMutation",
-        "allowHarness",
-        "allowGoldenTraffic",
-        "allowLoadTest",
-        "allowProductionAccess"
+        "allowGitHubMutation"
       ],
       "additionalProperties": false
     },
@@ -187,15 +405,14 @@
       "enum": [
         "intake",
         "inventory",
-        "interview",
+        "decision-preparation",
         "mapping",
         "specification",
-        "approval",
+        "consolidated-review",
         "publication",
         "implementation",
-        "integration-checkpoints",
-        "validation",
-        "retirement"
+        "final-local-checkpoint",
+        "offline-handoff"
       ]
     },
     "stage": {
@@ -216,8 +433,7 @@
         },
         "owner": {
           "type": "string",
-          "minLength": 1,
-          "description": "The agent, skill, or human role that owns this stage. The orchestrator never lists itself as the owner of a stage other than intake."
+          "minLength": 1
         },
         "updatedAt": {
           "type": "string",
@@ -320,10 +536,9 @@
             "ownership-conflict",
             "dependency-cycle",
             "unreconciled-checkpoint",
-            "validation-failure",
+            "local-validation-failure",
             "evidence-gap",
-            "missing-permission",
-            "missing-environment"
+            "missing-permission"
           ]
         },
         "blocks": {
@@ -461,69 +676,56 @@
       ],
       "additionalProperties": false
     },
-    "validationRun": {
+    "finalCheckpoint": {
       "type": "object",
       "properties": {
-        "reportId": {
+        "workPackageId": {
           "type": "string",
-          "pattern": "^VRPT-[a-z0-9]+(?:-[a-z0-9]+)*$"
-        },
-        "scopeKey": {
-          "type": "string",
-          "minLength": 1
-        },
-        "intent": {
-          "enum": [
-            "gate",
-            "retirement"
-          ]
-        },
-        "status": {
-          "enum": [
-            "pass",
-            "conditional-pass",
-            "fail",
-            "blocked"
-          ]
+          "pattern": "^WP-[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
         "reportPath": {
           "$ref": "./common.schema.json#/$defs/relativePath"
         },
-        "openBlockingFindingIds": {
+        "validatedRevision": {
+          "$ref": "./common.schema.json#/$defs/resolvedString"
+        },
+        "affectedBuildsPassed": {
+          "type": "boolean"
+        },
+        "requiredLocalTestsPassed": {
+          "type": "boolean"
+        },
+        "commandsExecuted": {
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^VF-[a-z0-9]+(?:-[a-z0-9]+)*$"
+            "minLength": 1
           },
-          "uniqueItems": true
+          "minItems": 1
         },
-        "retirementOutcome": {
+        "status": {
           "enum": [
-            "not-assessed",
-            "retirement-ready",
-            "retirement-not-ready",
-            "retirement-blocked"
+            "pending",
+            "passed",
+            "failed",
+            "blocked",
+            "stale"
           ]
-        },
-        "validatedRevision": {
-          "$ref": "./common.schema.json#/$defs/resolvedString"
         }
       },
       "required": [
-        "reportId",
-        "scopeKey",
-        "intent",
-        "status",
+        "workPackageId",
         "reportPath",
-        "openBlockingFindingIds",
-        "retirementOutcome",
-        "validatedRevision"
+        "validatedRevision",
+        "affectedBuildsPassed",
+        "requiredLocalTestsPassed",
+        "commandsExecuted",
+        "status"
       ],
       "additionalProperties": false
     },
     "approvalObservation": {
       "type": "object",
-      "description": "An approval the orchestrator read somewhere else. The orchestrator never writes an approval into an upstream artifact.",
       "properties": {
         "subject": {
           "enum": [
@@ -531,8 +733,7 @@
             "migration-review",
             "decision-bundle",
             "work-package",
-            "issue-preview",
-            "retirement"
+            "issue-preview"
           ]
         },
         "subjectId": {
@@ -640,7 +841,8 @@
             "prompt-injection-attempt",
             "artifact-conflict",
             "assumed-default",
-            "refusal"
+            "refusal",
+            "legacy-state-migration"
           ]
         },
         "source": {
@@ -673,14 +875,13 @@
             "operator",
             "reviewer",
             "wcf-codebase-analyst",
-            "interview-stage",
             "wcf-migration-decision-interviewer",
             "wcf-to-grpc-mapper",
             "grpc-migration-architect",
-            "publication-stage",
             "grpc-migration-issue-publisher",
             "grpc-migration-implementer",
-            "grpc-parity-validator"
+            "grpc-code-handoff-author",
+            "none"
           ]
         },
         "action": {

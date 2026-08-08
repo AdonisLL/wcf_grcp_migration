@@ -2,8 +2,15 @@
 
 Copilot CLI plugin that takes a legacy .NET WCF codebase to **gRPC for
 .NET**: evidence-backed analysis, an explicit decision record, a
-reviewable specification, gated implementation, and independent parity
-validation ending at a WCF retirement gate that will not open without proof.
+reviewable specification, and gated implementation ending with an affected
+solution build, repository-local tests, and a structured code handoff.
+
+The normal layout is a **new modern .NET gRPC project added alongside the
+existing WCF project**. WCF remains unchanged throughout. Deployment,
+environment provisioning, production/protected traffic, runtime parity
+validation, cutover, live rollback, and WCF retirement are out-of-scope
+offline activities — guidance for those activities is in
+[migration-methodology.md](../../docs/migration-methodology.md).
 
 Installation, quick-start prompts, troubleshooting, and the safety model live
 in the [repository README](../../README.md). Deeper documentation:
@@ -18,12 +25,15 @@ in the [repository README](../../README.md). Deeper documentation:
   coordinates the whole migration: scope and target-runtime intake, read-only
   inventory, targeted interview, mapping, architecture and specification, the
   human approval gate, optional confirmation-gated issue publication,
-  dependency-ordered implementation waves, integration checkpoints, independent
-  parity validation, and the retirement gate. It enforces every approval and
-  artifact-state gate, keeps resumable run state in `orchestration-state.json`,
-  and directly delegates each machine-owned stage to its owning custom agent.
+  dependency-ordered implementation waves, and integration checkpoints ending
+  with an affected solution build, repository-local tests, and a structured
+  code handoff. It enforces every approval and artifact-state gate, keeps
+  resumable run state in `orchestration-state.json`, and directly delegates
+  each machine-owned stage to its owning custom agent.
   It writes no artifact but its own state, executes no commands, approves
   nothing, and cannot invoke `/fleet`, `/tasks`, or any other slash command.
+  Parity validation, cutover, and retirement are out-of-scope offline
+  activities not orchestrated by this agent.
 - [`agents/wcf-codebase-analyst.agent.md`](agents/wcf-codebase-analyst.agent.md)
   is read-only with respect to application code and writes only its validated
   inventory artifact.
@@ -45,10 +55,21 @@ in the [repository README](../../README.md). Deeper documentation:
   approved `migration-spec.json` — `.proto`/codegen, gRPC for .NET
   hosting, adapters to existing business logic, clients, auth/authz,
   interceptors/errors, deadlines/cancellation/retries/idempotency,
-  telemetry/health, streaming/state/transaction redesign, tests, and
-  deployment — respecting fleet waves and bounded file ownership, preserving
-  coexistence/rollback, and reporting spec deviations instead of guessing. It
-  never edits migration artifacts and never retires WCF.
+  telemetry/health, streaming/state/transaction redesign, and repository-local
+  tests — respecting fleet waves and bounded file ownership, keeping WCF
+  runnable, and reporting spec deviations instead of guessing. It never edits
+  migration artifacts or performs deployment, routing, cutover, live rollback,
+  or WCF retirement work.
+- [`agents/grpc-code-handoff-author.agent.md`](agents/grpc-code-handoff-author.agent.md)
+  is the terminal code-only stage. It reconciles the approved specification,
+  every implementation report, and the final repository-local build/test
+  checkpoint into schema-valid `code-handoff.json` and `code-handoff.md`
+  artifacts. It records exact local evidence, marks every operational obligation
+  (`deployment`, `environment-parity-validation`, `consumer-cutover`,
+  `live-rollback`, `wcf-retirement`, and more) as `not-executed` with an owner
+  role and next action, and states explicitly that WCF remains active and
+  unchanged. It never changes product code, executes commands, deploys, claims
+  runtime parity, or authorizes an operational action.
 - [`agents/grpc-parity-validator.agent.md`](agents/grpc-parity-validator.agent.md)
   independently decides whether a migrated gRPC service is a faithful,
   operable replacement for the WCF service it replaces. It executes builds,
@@ -57,7 +78,9 @@ in the [repository README](../../README.md). Deeper documentation:
   non-blocking findings with stable IDs, evidence, trace links, confidence,
   and remediation, and assesses WCF retirement readiness. It is read-only
   with respect to application code, never fixes what it finds, writes only
-  validation artifacts, and never approves retirement.
+  validation artifacts, and never approves retirement. **Invoke this agent
+  manually after deploying to a test environment; it is not an orchestrated
+  stage.**
 
 ## Skills
 
@@ -102,11 +125,19 @@ in the [repository README](../../README.md). Deeper documentation:
   Copilot CLI `/fleet` and `/tasks` remaining optional operator controls);
   [validation and gates](skills/implement-grpc-migration/references/validation-and-gates.md);
   and the [handoff report contract](skills/implement-grpc-migration/references/handoff-report-contract.md).
+- [`skills/finalize-code-handoff/`](skills/finalize-code-handoff/SKILL.md) defines
+  the terminal handoff procedure: input validation rules, required coverage
+  (deliverables, local validation results, code gaps, code rollback, and twelve
+  categories of offline obligation), schema use guidance for
+  [`schemas/code-handoff.schema.json`](schemas/code-handoff.schema.json), and
+  output contract for `code-handoff.json` and `code-handoff.md`.
 - [`skills/validate-grpc-parity/`](skills/validate-grpc-parity/) defines the
-  independent parity-validation workflow, including the thirteen-gate
+  independent parity-validation workflow for **optional manual use after
+  deployment to a test environment**. It is not an orchestrated stage. Includes
+  the thirteen-gate
   [parity checklist](skills/validate-grpc-parity/references/parity-checklist.md);
   [evidence, findings, and run-status rules](skills/validate-grpc-parity/references/evidence-and-findings.md);
-  [golden-traffic, privacy, and safety controls](skills/validate-grpc-parity/references/golden-traffic-and-safety.md);
+  [safety controls](skills/validate-grpc-parity/references/golden-traffic-and-safety.md);
   the [WCF retirement gate](skills/validate-grpc-parity/references/retirement-gate.md);
   the [validation handoff contract](skills/validate-grpc-parity/references/validation-handoff.md);
   report/checklist/retirement templates; and a worked
@@ -116,7 +147,8 @@ in the [repository README](../../README.md). Deeper documentation:
 
 - [`schemas/`](schemas/) contains strict JSON Schema Draft 2020-12 contracts
   for inventory, decisions, persisted mappings, migration reviews,
-  specifications/work packages, issue previews, orchestration run state, and the
+  specifications/work packages, issue previews, orchestration run state, the
+  code handoff (`code-handoff.schema.json`), and the
   [shared vocabulary](schemas/common.schema.json).
 - [`tests/`](tests/) contains static legacy WCF fixture repositories, expected
   analysis/mapping/specification assertions, local validation instructions,
@@ -135,11 +167,10 @@ in the [repository README](../../README.md). Deeper documentation:
   human against its digest.
 - **No parallel batch with overlapping or shared file ownership.** Shared and
   schema infrastructure is sequential and single-owner.
-- **Parity is proven, never inferred.** A green build or an implementer's claim
-  is not behavioral evidence.
-- **WCF retirement stays blocked** until `validate-grpc-parity` produces a
-  current `VRPT-*` report whose retirement outcome is `retirement-ready` for the
-  deployed revision *and* a human records the retirement approval in the
-  decision log.
+- **Orchestration ends at code handoff.** The affected solution must build
+  clean and repository-local tests must pass before the orchestrator declares
+  the workflow complete. Deployment, production/protected traffic, runtime
+  parity validation, cutover, live rollback, and WCF retirement are out-of-scope
+  offline activities.
 - **No secret value is ever written** into an artifact, report, evidence
   capture, or test, and no agent can invoke a Copilot CLI slash command.

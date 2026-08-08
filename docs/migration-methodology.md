@@ -4,6 +4,18 @@ The playbook for running a WCF-to-gRPC migration with this plugin: what happens
 at each stage, what you must decide, what you must approve, and what the plugin
 refuses to do for you.
 
+**Scope of the orchestrated workflow:** stages 1–9 (through integration
+checkpoints, solution build, repository-local tests, and the structured code
+handoff). Deployment, environment provisioning,
+production/protected traffic, runtime parity validation, cutover, live rollback,
+and WCF retirement are out-of-scope offline activities. Guidance for those
+activities is in §9–11 of this document for reference; the orchestrator does
+not invoke them.
+
+**Normal repository layout:** the implementation stage adds a new modern .NET
+gRPC project alongside the existing WCF project. WCF is never modified and
+continues to serve throughout; every change made during coexistence is additive.
+
 For how the plugin is built see [architecture.md](architecture.md); for the
 files it produces see [output-contracts.md](output-contracts.md).
 
@@ -12,10 +24,10 @@ files it produces see [output-contracts.md](output-contracts.md).
 | Question | Why it matters |
 |---|---|
 | What is in scope? | One service, one solution, or a bounded slice. Everything downstream is scoped by this answer. |
-| Does this repository host WCF services, only consume them, or both? | A client-only repository is fully supported but produces no server work packages and cannot own the retirement gate (§8). |
+| Does this repository host WCF services, only consume them, or both? | A client-only repository is fully supported but produces no server work packages. |
 | Which .NET version will host the gRPC services? | The plugin proposes the current supported .NET LTS and highlights constraints; override it in consolidated review. |
-| Who approves architecture, publication, and retirement? | Architecture decisions/spec/work packages share one scoped review; publication and retirement remain distinct acts. |
-| What may the agents do? Network, GitHub mutation, test harness, golden traffic, load test, production access? | All default to off. Nothing is granted implicitly. |
+| Who approves architecture and publication? | Architecture decisions/spec/work packages share one scoped review; publication is a distinct act. |
+| What may the agents do? Network, GitHub mutation? | All default to off. Nothing is granted implicitly. |
 
 The **target is always gRPC for .NET**. This is a fixed product
 decision, not a recommendation the plugin will renegotiate. A WCF construct
@@ -60,11 +72,12 @@ reversible, behavior-preserving recommendations become proposed assumptions.
 They are not approvals. The agent interrupts only when no safe default exists;
 each such focused question states its evidence and blocked design surface.
 
-Typical topics: target runtime; service boundaries; transport security and
-authentication model; authorization model; error model and status mapping;
-deadlines, retries, and idempotency; session-state redesign; transaction
-redesign; streaming shape; observability; hosting platform; coexistence and
-consumer cutover; rollback; golden-traffic permission; retirement criteria.
+Typical code topics are target runtime, service boundaries, transport security
+abstractions, authentication/authorization, error mapping, deadlines, retries,
+idempotency, state/transaction redesign, streaming, and observability.
+Environment hosting values, coexistence routing, consumer cutover, and live
+rollback are recorded as `out-of-scope-handoff` guidance rather than
+interactive code-generation blockers.
 
 **What you do:** answer an irreducible blocker when one exists; otherwise review
 all proposals later in one bundle. Operational numbers and platform details may
@@ -156,9 +169,9 @@ Review at minimum: recommendations, assumptions, confidence and alternatives;
 scope; each architecture section and its state; per-service
 contracts including field numbering and reservations; roadmap phases and
 integration checkpoints; work packages with fleet suitability and file
-ownership; retirement criteria; open risks and deferred items. This approval
-explicitly excludes publication mutation, protected traffic, production,
-cutover, rollback execution, and retirement.
+ownership; open risks and deferred items. This approval explicitly excludes
+GitHub mutation, production/protected traffic, cutover, rollback execution,
+and retirement.
 
 ## 7. Stage 6 — Optional GitHub Issue publication
 
@@ -193,24 +206,23 @@ the package is approved, its `hard` dependencies are satisfied, its wave is
 open, the previous integration checkpoint reconciled, and its file ownership is
 uncontested — then records a claim marker.
 
+The normal layout is a **new modern .NET gRPC project added alongside the
+existing WCF project**. WCF is never modified; every schema, database, and
+proto change is additive and backward compatible.
+
 Waves are dispatched with Copilot CLI `/fleet` and observed with `/tasks`, by a
 human. Parallel batches contain only packages with pairwise-disjoint
 `exclusive-write` ownership. Shared and schema infrastructure — proto
 conventions and shared protos, generated-code build configuration,
 solution/project/package-management files, host bootstrap and DI composition,
-the interceptor chain, auth configuration, shared-state migrations,
-gateway/proxy routing, coexistence routing, cutover, and retirement — is always
-sequential and single-owner.
+the interceptor chain, auth configuration, shared-state migrations, solution
+files, and code-generation configuration — is always sequential and
+single-owner. Gateway/proxy and coexistence routing are offline work.
 
 The implementer stops and reports rather than improvising when the spec
 contradicts the real code, a policy is unspecified, or a design choice is
 genuinely open. It never marks its own validation passed, never edits migration
-artifacts, and never retires WCF.
-
-**Coexistence is a real capability, not a paragraph.** The legacy WCF endpoint
-keeps serving throughout; every schema, database, and proto change made during
-coexistence is additive and backward compatible; each package's rollback steps
-are implemented so they can actually be exercised.
+artifacts, and never modifies WCF.
 
 ### Client-only repositories
 
@@ -218,11 +230,10 @@ A repository that consumes WCF through generated proxies or `ChannelFactory`
 and owns no service implementation is a first-class case. It still gets a full
 inventory (proxies, channel usage, endpoint configuration, consumers), a
 decision log, contract alignment against the service owner's Protobuf
-specification, client work packages, coexistence and cutover planning, and
-client-cutover validation. It produces no server work packages, and it cannot
-own the retirement gate — the service owner does.
+specification, client work packages, and coexistence planning. It produces no
+server work packages.
 
-## 9. Stage 8 — Integration checkpoints
+## 9. Stage 8 — Final local integration checkpoint
 
 A roadmap phase marked `integrationCheckpoint: true` holds the next wave until
 `implementation-reports/checkpoint-<phase-id>.md` records the checkpoint
@@ -231,10 +242,36 @@ diffed, shared contract and DI registration consistency verified, and the
 affected tests run. A missing, stale, or unresolved checkpoint report blocks the
 next wave.
 
-## 10. Stage 9 — Independent parity validation
+### Stage 9 — Code handoff
+
+When all waves are complete and the final integration checkpoint
+are reconciled, the orchestrator invokes the **gRPC Code Handoff Author**
+(skill: `finalize-code-handoff`). It reads the approved specification, every
+implementation report, and the final checkpoint, verifies from those reports
+that the affected solution built cleanly and repository-local tests passed,
+then writes
+`code-handoff.json` and `code-handoff.md`. This is the end of the orchestrated
+workflow.
+
+`code-handoff.json` records: deliverables, local validation evidence, code
+gaps, code-rollback steps, and twelve categories of offline obligation — each
+marked `not-executed` with an owner role and next action. `wcfState` is always
+`"active-and-unchanged"`. Six explicit limitations are embedded: `not-deployed`,
+`runtime-parity-not-established`, `production-readiness-not-established`,
+`cutover-not-authorized`, `live-rollback-not-executed`, and
+`wcf-retirement-not-authorized`.
+
+## 10. After the plugin finishes — optional parity validation (offline)
 
 **Agent:** gRPC Parity Validator · **Skill:** `validate-grpc-parity` ·
 **Output:** `validation-reports/`
+
+The parity validator is an independent read-only tool you invoke manually after
+you deploy to a test environment. It is not an orchestrated stage. The
+orchestrator does not invoke it and does not gate handoff on its results.
+
+When you are ready, select the **gRPC Parity Validator** agent and grant the
+permissions your test environment requires (network access, test harness).
 
 Thirteen gates: contract and Protobuf compatibility with reserved fields; build
 and tests; success-path behavior; typed faults and status/error details;
@@ -248,36 +285,30 @@ Non-negotiables:
 
 - **Parity is proven, never inferred.** A green build, a passing unit test, a
   matching signature, or an implementer's claim is not behavioral evidence.
-- **A comparison needs both sides.** No legacy baseline means no verdict; the
-  gRPC implementation is never its own baseline.
+- **A comparison needs both sides.** No legacy baseline means no verdict.
 - **Run status is computed mechanically** — `fail`, then `blocked`, then
   `conditional-pass`, then `pass` — never rounded up.
-- **Golden production traffic requires recorded permission** plus masking,
-  retention, and deletion controls. Default to synthetic or masked data. Never
-  replay mutating traffic against production.
 - The validator is read-only on the product and **never fixes what it finds**.
 
-## 11. Stage 10 — WCF retirement gate
+## 11. WCF retirement gate (offline)
 
-Retiring WCF requires all of the following, each verified by reading an
-artifact:
+Retiring WCF is an offline activity owned by your team. When parity validation
+produces a `retirement-ready` outcome, it is a readiness statement — not an
+authorization. A human must separately record a retirement approval in the
+decision log. The plugin does not orchestrate retirement.
+
+Prerequisites the plugin can help you document:
 
 - a current `VRPT-*` report whose retirement outcome is `retirement-ready` for
   the retirement scope, produced against the deployed revision;
 - every roadmap `retirementCriteria` entry met with cited evidence;
-- gates 1–12 `pass` or justified `not-applicable` across the whole retirement
-  scope, with zero open blocking findings;
-- every consumer in a terminal state, with **zero unknown callers** — "we
-  believe nobody uses it" is not evidence, and absent monitoring is a blocking
-  gap;
+- gates 1–12 `pass` or justified `not-applicable`, with zero open blocking findings;
+- every consumer in a terminal state, with zero unknown callers;
 - WCF endpoint traffic at or below the agreed quiesce threshold for the agreed
   duration, measured;
-- operational readiness proven in a production-equivalent environment, with
-  capacity evidence for 100% of traffic;
-- rollback **rehearsed** and observed to work, with date, operator,
-  environment, and result;
-- a recorded **human retirement approval**, distinct from architecture and
-  work-package approval, referencing that `VRPT-*` id.
+- operational readiness proven in a production-equivalent environment;
+- rollback rehearsed and observed to work, with date, operator, environment, and result;
+- a recorded human retirement approval referencing the `VRPT-*` id.
 
 `retirement-ready` is a readiness statement, not an authorization. There is no
 such thing as "ready with a caveat" — a caveat means not ready, with a named
@@ -290,7 +321,6 @@ condition.
 | A stage reports `blocked` | Read the named blocking item; it states the owner and the smallest next action |
 | A decision was wrong | Record a superseding decision; re-run the architect incrementally. Never hand-edit an artifact |
 | The code contradicts the spec | The implementer reports a `spec-deviation`; route it back to the architect |
-| Validation fails | Route each finding by its owner; re-validate the **same** scope, never a narrower one |
 | The migration is paused | Everything needed to resume is on disk; the orchestrator re-derives the next action from artifact state |
 | You are told to skip a gate | The plugin refuses, names the gate, and states what would satisfy it |
 

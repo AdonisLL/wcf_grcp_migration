@@ -100,7 +100,7 @@ risk IDs that must resolve them.
   capture production traffic, or authorize any action requiring a separate
   operational authority. Deployment-era operations — production cutover, WCF
   endpoint removal, and retirement — are **non-executable offline guidance**
-  recorded in `roadmap.retirementCriteria` and the `deployment`, `coexistence`,
+  recorded in `roadmap.offlineHandoffCriteria` and the `deployment`, `coexistence`,
   `consumer-cutover`, and `retirement` architecture sections. They describe
   observable criteria and named approval gates; they never become `WP-*`
   packages.
@@ -166,7 +166,7 @@ question, risk, and evidence IDs.
 | `observability` | `code` |
 | `health-checks` | `code` |
 | `deployment` | `offline-handoff` |
-| `coexistence` | `offline-handoff` (routing *configuration files* authored by `WP-coexistence-routing` are `code`; the traffic-shifting operation is `offline-handoff`) |
+| `coexistence` | `offline-handoff` |
 | `consumer-cutover` | `offline-handoff` |
 | `retirement` | `offline-handoff` |
 
@@ -190,8 +190,8 @@ Cover at minimum:
 - observability (logging, tracing, metrics, redaction) and health checks;
 - deployment mechanism and rollout mechanics (offline-handoff; environment
   values are deferred-operational offline prerequisites);
-- coexistence routing configuration (the configuration artifact is code; the
-  traffic-shifting execution is offline-handoff);
+- coexistence and routing guidance (offline-handoff; no routing configuration
+  or traffic change is an executable work package);
 - consumer cutover plan (offline-handoff);
 - WCF retirement gates (offline-handoff);
 - session/state redesign, transaction and reliable-session redesign, duplex

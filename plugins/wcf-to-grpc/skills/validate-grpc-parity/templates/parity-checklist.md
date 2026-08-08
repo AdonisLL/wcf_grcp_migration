@@ -171,7 +171,7 @@ recorded in `{{retirement_readiness_path}}`.
 
 | # | Condition group | State | Evidence | Finding |
 |---|---|---|---|---|
-| 1 | Roadmap `retirementCriteria` satisfied with observed evidence | {{state}} | {{EVD}} | {{VF}} |
+| 1 | Roadmap retirement `offlineHandoffCriteria` satisfied with observed evidence | {{state}} | {{EVD}} | {{VF}} |
 | 2 | Gates 1–12 `pass`/`not-applicable` across the whole retirement scope | {{state}} | {{EVD}} | {{VF}} |
 | 3 | Consumers complete or waived; zero unknown callers | {{state}} | {{EVD}} | {{VF}} |
 | 4 | Operational readiness proven in a production-equivalent environment | {{state}} | {{EVD}} | {{VF}} |

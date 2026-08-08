@@ -1,8 +1,8 @@
 # Validation and Gates
 
-Normative rules for how this agent runs validation and how the WCF-retirement
-gate is enforced during implementation. Validation-step *authoring* rules
-(what a `VAL-*` step must contain) are defined by `author-migration-specs`'s
+Normative rules for how this agent runs validation during implementation.
+Validation-step *authoring* rules (what a `VAL-*` step must contain) are
+defined by `author-migration-specs`'s
 [`work-package-patterns.md`](../../author-migration-specs/references/work-package-patterns.md#validation-steps);
 this reference is the *implementer's* side — how to execute what was
 authored, without broadening or weakening it.
@@ -63,43 +63,28 @@ or unit-test run, constitutes runtime parity evidence between WCF and gRPC
 behavior. This agent may and should verify its own package's contract shape,
 unit behavior, and the acceptance criteria it was given — but it must never
 claim, imply, or record in a handoff report that its package's validation
-constitutes the independent parity validation the roadmap's
-`retirementCriteria` requires. That evidence comes only from the
-parity-validation stage
+constitutes independent parity evidence. That evidence is produced only by
+the parity-validation stage
 ([`validate-grpc-parity`](../../validate-grpc-parity/SKILL.md)).
 
-## 5. The WCF-retirement gate
+## 5. Final sequential integration checkpoint
 
-`WP-wcf-retirement` (and any change that disables or removes a legacy WCF
-endpoint outside that package) may be executed only when **all** of the
-following hold:
+After all `VAL-*` steps complete, every package run by this skill must
+execute a **final sequential integration checkpoint** before the handoff
+report is written:
 
-1. Every criterion in the roadmap's `retirementCriteria` is satisfied, with
-   its required evidence present and referenced by ID — not merely
-   asserted in prose.
-2. That evidence was produced by an independent validation run — the
-   parity-validation stage's report
-   ([`validate-grpc-parity`](../../validate-grpc-parity/SKILL.md)), whose
-   retirement outcome is `retirement-ready` per its
-   [retirement gate](../../validate-grpc-parity/references/retirement-gate.md)
-   — not by this agent's own package-level validation.
-3. An explicit, recorded human retirement-approval decision exists in the
-   decision log (`decision-log.json`), separate from architecture approval
-   or any individual work package's approval.
-4. Coexistence exit criteria for every affected consumer are met, and any
-   temporary coexistence component (SOAP adapter, reverse-proxy routing
-   rule, JSON-transcoding shim) either has been removed or has a dated
-   removal plan the decision log records.
+1. Build every project the package created or modified (or, if an affected
+   solution exists, build that solution). Use the narrowest existing
+   repository command (for example `dotnet build <project>.csproj` or
+   `dotnet build <solution>.sln`). Do not introduce a new build tool.
+2. Run all existing repository-local tests that exercise the changed code
+   (for example `dotnet test <test-project>.csproj`). Do not introduce a
+   new test framework.
+3. Record the exact command, working directory, and full result (pass/fail,
+   test count) in the handoff report.
+4. State explicitly: *"This checkpoint confirms the code compiles and
+   existing tests pass. It does not constitute runtime parity evidence,
+   WCF behavior equivalence, or deployment readiness."*
 
-Condition 2 is satisfied only by a current `VRPT-*` validation report whose
-retirement outcome is `retirement-ready` for the retirement scope, produced
-against the deployed revision. **Treat `WP-wcf-retirement` as blocked**
-whenever that report is absent, stale, or reports `retirement-not-ready` or
-`retirement-blocked`. If assigned this package in that state, stop
-immediately, do not touch any legacy endpoint, and report the block with the
-missing evidence named explicitly as the next required action.
-
-This agent never marks the retirement decision approved, never marks
-`retirementCriteria` satisfied on its own authority, and never edits
-`migration-spec.json`'s `roadmap.retirementCriteria` — that remains the
-architecture stage's artifact.
+If the build or tests fail, the handoff status is `partial` or `blocked`;
+do not report `completed`.

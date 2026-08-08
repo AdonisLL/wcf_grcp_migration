@@ -1,7 +1,7 @@
 ---
 name: validate-grpc-parity
 description: >
-  Independently validates whether an implemented gRPC service is a faithful,
+  Optionally and manually validates whether an implemented gRPC service is a faithful,
   operable WCF replacement and whether retirement is permitted. Uses approved
   migration artifacts and executes builds, tests, compatibility checks,
   security and resilience probes, streaming and concurrency exercises, and
@@ -16,16 +16,18 @@ description: >
 
 ## Purpose
 
-Prove — with executed, reproducible evidence — whether the migrated gRPC
+After the code-only workflow has completed, manually prove — with executed,
+reproducible evidence — whether the migrated gRPC
 surface behaves like the WCF surface it replaces, and produce the blocking
-and non-blocking findings that decide whether the migration advances,
-remediates, or stops. This skill is used by the **gRPC Parity Validator**
+and non-blocking findings that support the user's offline operational
+decisions. This skill is used directly by the **gRPC Parity Validator**
 agent
 ([`../../agents/grpc-parity-validator.agent.md`](../../agents/grpc-parity-validator.agent.md)).
 
-It is the only stage that may declare parity, and the only stage that may
-produce the independent evidence the roadmap's `retirementCriteria` demand.
-It is deliberately **not** the stage that fixes anything: every defect it
+It is never orchestrated and cannot change the completed code-only run. It is
+the only plugin capability that may declare parity, and it may produce
+independent evidence for the roadmap's `offlineHandoffCriteria`. It is
+deliberately **not** the capability that fixes anything: every defect it
 finds becomes a finding routed back to
 [`implement-grpc-migration`](../implement-grpc-migration/SKILL.md) or
 [`author-migration-specs`](../author-migration-specs/SKILL.md).
@@ -35,31 +37,34 @@ publish issues, or implement code.
 
 ## Required inputs
 
-1. An approved `migration-spec.json` conforming to
+1. A schema-valid `code-handoff.json` conforming to
+   [`../../schemas/code-handoff.schema.json`](../../schemas/code-handoff.schema.json),
+   matching the revision actually deployed for validation.
+2. An approved `migration-spec.json` conforming to
    [`../../schemas/migration-spec.schema.json`](../../schemas/migration-spec.schema.json),
    read from `docs/wcf-grpc-migration/migration-spec.json` unless another
    path is given. It supplies `contracts` (`SPEC-*`, `RPC-*`, `MSG-*`,
-   `PF-*`), `targetArchitecture` sections, `roadmap.retirementCriteria`,
+   `PF-*`), `targetArchitecture` sections, `roadmap.offlineHandoffCriteria`,
    and each work package's `acceptanceCriteria` (`AC-*`) and `validation`
    (`VAL-*`) definitions.
-2. The `inventory.json` produced by
+3. The `inventory.json` produced by
    [`inventory-wcf-codebase`](../inventory-wcf-codebase/SKILL.md) — the only
    authoritative statement of what the legacy WCF surface actually was
    (`SVC-*`, `OP-*`, `DC-*`, `FLD-*`, `END-*`, `CON-*`, `RSK-*`).
-3. The `decision-log.json` — for approved semantic tolerances, the security
+4. The `decision-log.json` — for approved semantic tolerances, the security
    model, coexistence/cutover decisions, golden-traffic permission, and any
    accepted-risk decision a finding may reference.
-4. The implementation handoff reports under
+5. The implementation handoff reports under
    `docs/wcf-grpc-migration/implementation-reports/` (see
    [`../implement-grpc-migration/references/handoff-report-contract.md`](../implement-grpc-migration/references/handoff-report-contract.md)).
    These are a **starting point for verification, never a substitute for
    it**: an implementer's claim that a criterion is met is a hypothesis this
    stage tests.
-5. The **current** repository working tree, re-read fresh this run.
-6. The validation scope: one or more `WP-*`, `SVC-*`, or `SPEC-*` ids, or
+6. The **current** repository working tree, re-read fresh this run.
+7. The validation scope: one or more `WP-*`, `SVC-*`, or `SPEC-*` ids, or
    `full-scope`. Plus the run intent: `gate` (assess the assigned scope) or
    `retirement` (additionally assess the retirement gate).
-7. An environment in which the service can actually be exercised, when the
+8. An environment in which the service can actually be exercised, when the
    scope includes behavioral gates. If no such environment exists, those
    gates are `blocked` — never `pass`.
 
@@ -209,7 +214,7 @@ Never round a status up because most things worked.
 ### 8. Assess retirement (only when asked)
 
 When the run intent is `retirement`, evaluate every criterion in the
-roadmap's `retirementCriteria` plus the consumer, operational, and rollback
+roadmap's retirement entries in `offlineHandoffCriteria` plus the consumer, operational, and rollback
 conditions in
 [`references/retirement-gate.md`](references/retirement-gate.md), and emit
 the retirement-readiness assessment. Emit `retirement-ready` only when every
@@ -248,7 +253,7 @@ evidence, and default severity — is in
 | `performance-and-limits` | Message/payload limits, latency and throughput against the SLA baseline | Yes |
 | `operational-readiness` | Health checks, logs/traces/metrics, deployment, service discovery | Yes |
 | `client-cutover` | Consumer migration status, coexistence behavior, rollback rehearsal | Yes |
-| `retirement-readiness` | Roadmap `retirementCriteria`, consumer/ops/rollback completeness | Yes |
+| `retirement-readiness` | Roadmap retirement `offlineHandoffCriteria`, consumer/ops/rollback completeness | Yes |
 
 ## Outputs
 
@@ -273,7 +278,7 @@ from the scope, so parallel validation runs never collide.
 SVC-*/OP-*/DC-* (inventory)
   -> SPEC-*/RPC-*/MSG-* (spec) -> WP-*/AC-*/VAL-*
   -> implementation report     -> VRPT-*/VF-*/EVD-* (this stage)
-  -> roadmap retirementCriteria AC-*
+  -> roadmap offlineHandoffCriteria retirement AC-*
 ```
 
 Every gate result links to the spec or inventory ids it compared; every
