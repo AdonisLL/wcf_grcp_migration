@@ -135,6 +135,21 @@ constraints, unresolved questions, and their evidence. Separate facts from
 derived conclusions. Complexity is justified by the risks and the inventory, not
 asserted.
 
+For every row in the rendered `assessment.md` **Unresolved facts** table:
+
+- write **Why needed** in plain language for a reader who is unfamiliar with
+  WCF or gRPC. Explain both what the repository establishes and what remains
+  unknown; do not merely repeat a risk, question, or technology label;
+- write **What it blocks** as the concrete migration milestone or claim that
+  cannot proceed, such as protected-environment deployment, runtime-parity
+  acceptance, consumer cutover, or WCF retirement;
+- distinguish an immediate code or consolidated-review blocker from an
+  eventual offline operational gate. When code implementation may proceed,
+  say so explicitly rather than leaving `Blocking: true` open to
+  interpretation; and
+- retain the affected impact area and next decision so the reader can see who
+  or what must resolve the unknown.
+
 ### 4. Author the target architecture
 
 Produce all fifteen schema sections plus the cross-cutting redesigns in the

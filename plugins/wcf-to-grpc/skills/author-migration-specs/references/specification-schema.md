@@ -148,7 +148,9 @@ approved destination and the adapter has explicit exit criteria.
 `migration-spec.schema.json` contains four connected surfaces:
 
 1. `assessment`: scope, complexity, services, dependencies, risks,
-   constraints, unresolved questions, and evidence.
+   constraints, unresolved questions, and evidence. Its rendered unresolved
+   facts explain in plain language why each fact is needed and identify the
+   concrete code or offline migration milestone that the fact blocks.
 2. `targetArchitecture`: individually approved design sections plus topology
    nodes and edges. The schema requires exactly fifteen sections covering
    runtime, hosting, service boundaries, Protobuf/versioning, data types,

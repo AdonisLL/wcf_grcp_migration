@@ -49,9 +49,13 @@ Overall complexity: **{{complexity}}**
 
 ## Unresolved facts
 
-| Question ID | Blocking | Why needed | Next decision |
-|---|---:|---|---|
-| {{question_id}} | {{blocking}} | {{why_needed}} | {{decision_id_or_unassigned}} |
+`Blocking: true` identifies a migration gate. The **What it blocks** column
+states whether that gate affects current code implementation or a later
+offline milestone.
+
+| Question ID | Blocking | Impact area | Why needed | What it blocks | Next decision |
+|---|---:|---|---|---|---|
+| {{question_id}} | {{blocking}} | {{impact_area}} | {{plain_language_why_needed}} | {{concrete_blocked_milestone_or_claim}} | {{decision_id_or_unassigned}} |
 
 ## Evidence
 
