@@ -15,7 +15,6 @@ description: >
   rollback, runs only the package's own narrow validation, and stops to
   report spec deviations or undecided architecture instead of guessing. It
   never retires WCF and never marks its own validation as passed.
-tools: [read, search, edit, execute]
 ---
 
 # gRPC Migration Implementer

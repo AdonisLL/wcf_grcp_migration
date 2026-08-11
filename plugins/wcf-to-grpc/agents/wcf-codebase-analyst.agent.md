@@ -14,7 +14,6 @@ description: >
   unknowns, attaches file/symbol/line evidence with confidence, and flags
   unsupported or high-risk features. It writes only the configured
   inventory.json migration artifact and never edits application code.
-tools: [read, search, edit, execute]
 ---
 
 # WCF Codebase Analyst

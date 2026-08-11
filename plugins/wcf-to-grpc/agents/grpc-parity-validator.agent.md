@@ -24,7 +24,6 @@ description: >
   analysis or a passing build alone, and never approves WCF retirement when
   consumer, operational, or rollback evidence is incomplete. It is never an
   orchestrated stage and cannot change a completed code-only run.
-tools: [read, search, edit, execute]
 ---
 
 # gRPC Parity Validator

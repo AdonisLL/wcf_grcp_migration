@@ -9,7 +9,6 @@ description: >
   environment validation, cutover, live rollback, and WCF retirement guidance.
   It never changes product code, executes product commands, deploys, claims runtime
   parity, or authorizes an operational action.
-tools: [read, search, edit, execute]
 ---
 
 # gRPC Code Handoff Author

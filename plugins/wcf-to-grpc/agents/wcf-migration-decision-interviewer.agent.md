@@ -5,7 +5,6 @@ description: >
   inventory. Persists safe recommendations as proposed assumptions in one
   pass, asks only irreducible focused blockers, and records digest-matched
   human bundle approvals without assuming child conversational state.
-tools: [read, search, edit, execute, web]
 ---
 
 # WCF Migration Decision Interviewer

@@ -62,33 +62,35 @@ Frontmatter is deliberately minimal and validated by
 [`Validate-Plugin.ps1`](../plugins/wcf-to-grpc/scripts/Validate-Plugin.ps1):
 
 - Skills: `name` (must equal the directory name) and `description`.
-- Agents: `name`, `description`, and `tools`, using the narrowest supported
-  aliases from `read`, `search`, `edit`, `execute`, `agent`, and `web`.
+- Agents: `name` and `description`. The `tools` field is deliberately omitted:
+  Copilot CLI plugin loading currently passes documented aliases to an exact
+  tool registry, producing unknown-tool warnings. Omission uses the portable
+  CLI default toolset; each agent prompt enforces its narrower behavioral
+  boundaries.
 
 ## 3. Agents and their tool boundaries
 
 | Agent | Tools | May write | Never |
 |---|---|---|---|
-| [WCF Codebase Analyst](../plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | `read`, `search`, `edit`, `execute` | `inventory.json` only | Mutate application files, build, restore, or format; choose a target |
-| [WCF Migration Decision Interviewer](../plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | `read`, `search`, `edit`, `execute`, `web` | `decision-log.json` | Fabricate organizational facts, infer approval, alter a review bundle |
-| [WCF-to-gRPC Mapper](../plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | `read`, `search`, `edit`, `execute` | `mapping-result.json` | Drop a construct, resolve a decision, author architecture |
-| [gRPC Migration Architect](../plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | `read`, `search`, `edit`, `execute` | `migration-spec.json`, `migration-review.json/.md`, rendered design docs | Application code, issues, implementations, inferred approvals |
-| [gRPC Migration Issue Publisher](../plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | `read`, `search`, `edit`, `execute` | Issue preview and publication artifacts | Mutate GitHub without approved inputs, exact confirmation, and permission |
-| [gRPC Migration Implementer](../plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | `read`, `search`, `edit`, `execute` | Only its assigned work package's `exclusive-write` paths | Migration artifacts, other packages' paths, deployment/routing/cutover/live rollback, any WCF removal |
-| [gRPC Code Handoff Author](../plugins/wcf-to-grpc/agents/grpc-code-handoff-author.agent.md) | `read`, `search`, `edit` | Only `code-handoff.json` and `code-handoff.md` | Application code, migration artifacts, commands, deployment, parity claims |
-| [gRPC Parity Validator](../plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | `read`, `search`, `edit`, `execute` | Only `validation-reports/` | Application code, upstream artifacts, fixing findings, granting retirement |
-| [WCF Migration Orchestrator](../plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | `read`, `search`, `edit`, `agent` | Only `orchestration-state.json` and the optional status view | Any stage work, any approval, any command execution, any slash command |
+| [WCF Codebase Analyst](../plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | CLI default; prompt-bounded | `inventory.json` only | Mutate application files, build, restore, or format; choose a target |
+| [WCF Migration Decision Interviewer](../plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | CLI default; prompt-bounded | `decision-log.json` | Fabricate organizational facts, infer approval, alter a review bundle |
+| [WCF-to-gRPC Mapper](../plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | CLI default; prompt-bounded | `mapping-result.json` | Drop a construct, resolve a decision, author architecture |
+| [gRPC Migration Architect](../plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | CLI default; prompt-bounded | `migration-spec.json`, `migration-review.json/.md`, rendered design docs | Application code, issues, implementations, inferred approvals |
+| [gRPC Migration Issue Publisher](../plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | CLI default; prompt-bounded | Issue preview and publication artifacts | Mutate GitHub without approved inputs, exact confirmation, and permission |
+| [gRPC Migration Implementer](../plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | CLI default; prompt-bounded | Only its assigned work package's `exclusive-write` paths | Migration artifacts, other packages' paths, deployment/routing/cutover/live rollback, any WCF removal |
+| [gRPC Code Handoff Author](../plugins/wcf-to-grpc/agents/grpc-code-handoff-author.agent.md) | CLI default; prompt-bounded | Only `code-handoff.json` and `code-handoff.md` | Application code, migration artifacts, commands, deployment, parity claims |
+| [gRPC Parity Validator](../plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | CLI default; prompt-bounded | Only `validation-reports/` | Application code, upstream artifacts, fixing findings, granting retirement |
+| [WCF Migration Orchestrator](../plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | CLI default; prompt-bounded | Only `orchestration-state.json` and the optional status view | Any stage work, any approval, any command execution, any slash command |
 
-The orchestrator deliberately has **no `execute` tool**. It coordinates and
-records, while `agent` lets it invoke a specialist with a bounded envelope.
-Every executed command belongs to that stage agent or to the operator. Keeping
-`execute` absent removes an entire class of failure in which a coordinator "just
+The orchestrator prompt explicitly forbids command execution. It coordinates
+and records while delegating specialists with bounded envelopes. Every executed
+command belongs to that stage agent or to the operator. Keeping the prohibition
+explicit prevents a coordinator from "just
 builds it quickly" and silently becomes an implementer.
 
-`execute` on the analyst is limited by its agent contract to non-mutating
-inspection. The tool alias grants capability; the agent contract, the skill,
-and the reference files constrain its use, and the validator constrains which
-aliases may be declared at all.
+The analyst prompt limits command use to non-mutating inspection. The agent
+contract, skill, and reference files constrain that behavior even though the
+portable default toolset is available.
 
 ## 4. Skills
 

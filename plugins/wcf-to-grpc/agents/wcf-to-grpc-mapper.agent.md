@@ -9,7 +9,6 @@ description: >
   or a messaging system. Writes only docs/wcf-grpc-migration/mapping-result.json
   (or the configured output path) conforming to schemas/mapping-result.schema.json.
   Never designs or specifies; feeds output directly to grpc-migration-architect.
-tools: [read, search, edit, execute]
 ---
 
 # WCF-to-gRPC Mapper

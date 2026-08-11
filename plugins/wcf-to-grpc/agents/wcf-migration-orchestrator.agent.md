@@ -9,7 +9,6 @@ description: >
   every technical stage, records resumable state, never performs stage work,
   and never deploys, accesses protected traffic, cuts over consumers, executes
   live rollback, or retires WCF.
-tools: [read, search, edit, agent]
 ---
 
 # WCF Migration Orchestrator

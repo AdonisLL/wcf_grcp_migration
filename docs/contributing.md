@@ -58,9 +58,8 @@ It fails the build on any of:
   components;
 - skill frontmatter that is missing `name`/`description`, carries an
   unsupported field, or whose `name` does not match its directory;
-- agent frontmatter that is missing `name`/`description`/`tools`, carries an
-  unsupported field, or declares a tool outside `read`, `search`, `edit`,
-  `execute`;
+- agent frontmatter that is missing `name`/`description` or carries an
+  unsupported field, including a non-portable `tools` allowlist;
 - a duplicate skill or agent name;
 - a schema that is not Draft 2020-12, has no `$id`, or has a `$ref` whose file
   or JSON-pointer fragment does not exist;
@@ -84,11 +83,11 @@ failure.
 
 ### Agents (`agents/*.agent.md`)
 
-- Frontmatter: `name`, `description`, `tools` only. `tools` is a YAML flow
-  sequence drawn from the supported aliases `read`, `search`, `edit`,
-  `execute`, `agent`, and `web` — request the narrowest set that lets the agent
-  do its job. `agent` invokes another custom agent; it does not grant command
-  execution or permission to bypass either agent's boundaries.
+- Frontmatter: `name` and `description` only. Omit `tools`: current Copilot CLI
+  plugin loading passes the documented aliases to an exact runtime registry,
+  where aliases and wildcards produce unknown-tool warnings. The omitted field
+  uses the portable CLI default toolset. Enforce narrower access behavior in
+  the agent description and body.
 - `description` is a single folded block that states what the agent does, what
   it produces, and what it refuses. It is the text a user sees when choosing an
   agent.

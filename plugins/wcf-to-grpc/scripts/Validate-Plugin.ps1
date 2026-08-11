@@ -494,25 +494,13 @@ $agentNames = @()
 foreach ($agentFile in $agentFiles) {
     $frontmatter = Read-Frontmatter $agentFile.FullName
     foreach ($key in $frontmatter.Keys) {
-        Add-Check ($key -in @("name", "description", "tools")) "Agent $($agentFile.FullName) has unsupported frontmatter field '$key'."
+        Add-Check ($key -in @("name", "description")) "Agent $($agentFile.FullName) has unsupported frontmatter field '$key'."
     }
-    foreach ($required in @("name", "description", "tools")) {
+    foreach ($required in @("name", "description")) {
         Add-Check ($frontmatter.ContainsKey($required)) "Agent $($agentFile.FullName) is missing frontmatter $required."
     }
     if ($frontmatter.ContainsKey("name")) {
         $agentNames += $frontmatter["name"]
-    }
-    if ($frontmatter.ContainsKey("tools")) {
-        $tools = $frontmatter["tools"].Trim().TrimStart("[").TrimEnd("]").Split(",") |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ }
-        foreach ($tool in $tools) {
-            Add-Check ($tool -in @("read", "search", "edit", "execute", "agent", "web")) "Agent $($agentFile.FullName) declares unsupported tool '$tool'."
-        }
-        if ($agentFile.Name -eq "wcf-migration-orchestrator.agent.md") {
-            Add-Check ($tools -contains "agent") "The migration orchestrator must declare the agent delegation tool."
-            Add-Check ($tools -notcontains "execute") "The migration orchestrator must not declare the execute tool."
-        }
     }
 }
 foreach ($duplicate in $agentNames | Group-Object | Where-Object Count -gt 1) {

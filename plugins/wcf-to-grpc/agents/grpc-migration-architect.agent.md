@@ -20,7 +20,6 @@ description: >
   WP-* implementation packages. It blocks on unresolved blocking decisions, keeps
   evidence and stable traceability, and writes only migration artifacts — never
   application code, issues, or implementations.
-tools: [read, search, edit, execute]
 ---
 
 # gRPC Migration Architect

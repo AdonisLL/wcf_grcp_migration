@@ -9,7 +9,6 @@ description: >
   links without collecting or storing credentials. Owns publication artifacts
   only; never approves specifications, implements work packages, executes
   validation, or claims runtime parity.
-tools: [read, search, edit, execute]
 ---
 
 # gRPC Migration Issue Publisher
