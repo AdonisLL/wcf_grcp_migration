@@ -205,6 +205,22 @@ eligible stage.
 > then links to every digest-bound architecture, contract, roadmap, and work
 > package artifact. Do not record approval until I confirm the exact digest.
 
+After reviewing every linked rendering, approve using the exact digest shown by
+the orchestrator:
+
+> I approve the migration review with digest `<sha256-digest>` as
+> `<reviewer identity>`.
+
+The orchestrator recomputes each linked rendering's content digest before
+recording approval. If any artifact changed, review and approve the newly
+generated digest instead.
+
+**Understand the final handoff.** A successful orchestrated run ends with
+`code-handoff.json` and `code-handoff.md`. Code completion is not deployment
+readiness, runtime parity, cutover authorization, live rollback completion, or
+WCF retirement authorization. The handoff records those operational
+obligations as `not-executed` with an owner and next action.
+
 **After the plugin finishes — optional manual parity check.** Select **gRPC
 Parity Validator** once your gRPC service is deployed to a test environment:
 
