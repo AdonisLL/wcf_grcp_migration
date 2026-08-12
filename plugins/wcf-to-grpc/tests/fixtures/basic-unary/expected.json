@@ -108,7 +108,7 @@
       {
         "sourceTypeId": "DC-basic-customer-record",
         "targetType": "CustomerRecord",
-        "notes": "Use string for Guid, Timestamp for UTC DateTime, a lossless decimal message, enum zero UNSPECIFIED, and repeated string tags."
+        "notes": "Use string for Guid, Timestamp for UTC DateTime, a full-range lossless decimal representation, enum zero UNSPECIFIED, and repeated string tags."
       }
     ],
     "redesignRiskIds": [

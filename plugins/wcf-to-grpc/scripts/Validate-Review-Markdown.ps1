@@ -1,3 +1,5 @@
+#Requires -Version 7.5
+
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
@@ -21,7 +23,7 @@ if ([regex]::Matches($markdown, [regex]::Escape($expectedStateLine)).Count -ne 1
 }
 $stateMarkers = [regex]::Matches(
     $markdown,
-    "(?im)^\*\*Approval state:\*\*\s+`(draft|review-requested|approved|rejected|superseded|not-applicable)`\s*$"
+    '(?im)^\*\*Approval state:\*\*\s+`(draft|review-requested|approved|rejected|superseded|not-applicable)`\s*$'
 )
 if ($stateMarkers.Count -ne 1) {
     $errors.Add("Markdown must contain exactly one structured approval-state statement.")
@@ -61,6 +63,19 @@ foreach ($item in @($review.offlineHandoffItems)) {
     if ($markdown -notmatch [regex]::Escape($item.decisionId) -or
         $markdown -notmatch [regex]::Escape($item.gate)) {
         $errors.Add("Markdown omits offline handoff item '$($item.decisionId)' or its gate.")
+    }
+}
+foreach ($artifact in @($review.renderedArtifacts)) {
+    if ($markdown -notmatch [regex]::Escape($artifact.path)) {
+        $errors.Add("Markdown omits rendered review artifact path '$($artifact.path)'.")
+    }
+    if ($markdown -notmatch [regex]::Escape($artifact.contentDigest)) {
+        $errors.Add("Markdown omits content digest '$($artifact.contentDigest)' for '$($artifact.path)'.")
+    }
+    foreach ($boundId in @($artifact.boundIds)) {
+        if ($markdown -notmatch [regex]::Escape($boundId)) {
+            $errors.Add("Markdown omits digest-bound id '$boundId' for '$($artifact.path)'.")
+        }
     }
 }
 

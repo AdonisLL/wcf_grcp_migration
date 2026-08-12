@@ -1,5 +1,6 @@
 ---
 name: gRPC Migration Implementer
+user-invocable: false
 description: >
   Implements one approved, fleet-ready WCF-to-gRPC work package at a time
   from an approved migration-spec.json, turning its acceptance criteria into
@@ -8,7 +9,7 @@ description: >
   generated gRPC clients, authentication/authorization, interceptors and
   error mapping, deadlines/cancellation/retries/idempotency, telemetry and
   health checks, streaming/session-state/transaction redesigns, tests, and
-  the deployment changes the package specifies. It re-reads the current code
+  repository-local runtime configuration. It re-reads the current code
   and specification before acting, verifies dependency and wave readiness,
   claims only its bounded file ownership, treats shared/schema
   infrastructure as single-owner sequential work, preserves coexistence and

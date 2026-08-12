@@ -7,7 +7,7 @@ description: >
   business logic, generated gRPC clients, authentication/authorization,
   interceptors and error mapping, deadlines/cancellation/retries/idempotency,
   telemetry and health checks, streaming/session-state/transaction
-  redesigns, tests, and the deployment changes the package specifies. It
+  redesigns, tests, and repository-local runtime configuration. It
   re-reads the current code and specification before acting, verifies
   dependency and fleet-wave readiness, claims only its bounded file
   ownership, treats shared or schema infrastructure as single-owner
@@ -52,9 +52,10 @@ Those stages are [`author-migration-specs`](../author-migration-specs/SKILL.md),
 3. The repository root and the **current** state of the working tree
    (a fresh `git status`/`git diff`, not a summary from an earlier turn or
    another agent).
-4. Any prior implementation report for the assigned package(s), read from
-   `docs/wcf-grpc-migration/implementation-reports/<work-package-id>.md`, to
-   detect whether this is a fresh start or a resumption.
+4. Any prior implementation report for the assigned package(s), resolved from
+   `docs/wcf-grpc-migration/implementation-reports/<work-package-id>/current.json`
+   to its immutable `attempt-<attempt-id>.md`, to detect whether this is a
+   fresh start or a resumption.
 5. The resolved `.NET` target framework, gRPC stack, and tooling versions
    from `targetArchitecture` sections `target-runtime` and `hosting` in the
    approved spec. Never hardcode a framework moniker, SDK version, or
@@ -354,7 +355,8 @@ produce.
 | Output | Content |
 |---|---|
 | Application source, `.proto` files, project/build files, configuration, and tests declared as the assigned package's `deliverables` | The actual migration code (no deployment manifests, IaC, pipelines, or routing changes) |
-| `docs/wcf-grpc-migration/implementation-reports/<work-package-id>.md` | Detailed handoff report: changed projects/files with ownership mode, exact local commands run and results, acceptance evidence, assumptions, new risks/decisions, code gaps/deviations, code-revert rollback steps, offline dependency list, final sequential integration checkpoint results |
+| `docs/wcf-grpc-migration/implementation-reports/<work-package-id>/attempt-<attempt-id>.md` | Immutable detailed handoff report: changed projects/files with ownership mode, exact local commands run and results, acceptance evidence, assumptions, new risks/decisions, code gaps/deviations, code-revert rollback steps, offline dependency list, final sequential integration checkpoint results |
+| `docs/wcf-grpc-migration/implementation-reports/<work-package-id>/current.json` | Small mutable index pointing to the latest immutable attempt |
 | `docs/wcf-grpc-migration/implementation-reports/<work-package-id>.claim.json` | Transient ownership claim marker (see fleet reference) |
 | `docs/wcf-grpc-migration/implementation-reports/checkpoint-<phase-id>.md` | Integration-checkpoint reconciliation report, when applicable |
 

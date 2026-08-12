@@ -38,7 +38,7 @@
     },
     "digestAlgorithmVersion": {
       "const": "sha256-rfc8785-v1",
-      "description": "Versioned semantic digest algorithm implemented by scripts/Semantic-Digest.mjs."
+      "description": "Versioned semantic digest algorithm implemented byte-equivalently by scripts/Semantic-Digest.ps1 and scripts/Semantic-Digest.mjs."
     },
     "semanticDigest": {
       "type": "string",

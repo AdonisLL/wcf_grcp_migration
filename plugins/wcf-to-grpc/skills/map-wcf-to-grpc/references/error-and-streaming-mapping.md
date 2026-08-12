@@ -280,8 +280,10 @@ available in gRPC.
   local transactions with compensating rollback actions.
 - **Outbox pattern:** write events to a local database table atomically, then
   publish them to downstream services asynchronously.
-- **Application-level two-phase commit:** a coordinator service implementing
-  a prepare → commit/rollback protocol over gRPC calls.
+- **Explicit coordinator workflow:** only when the domain requires coordinated
+  reservation/confirmation semantics, design a durable state machine such as
+  try-confirm/cancel. Do not describe this as preserving MSDTC atomicity and do
+  not simulate an ambient two-phase commit over ordinary gRPC calls.
 
 The right pattern depends on the consistency requirements, failure modes, and
 operational complexity the user is willing to accept.

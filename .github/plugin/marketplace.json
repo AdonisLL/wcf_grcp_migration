@@ -2,17 +2,17 @@
   "name": "wcf-grpc-marketplace",
   "metadata": {
     "description": "Marketplace for Copilot CLI plugins that plan and implement WCF to gRPC code migrations with offline operational handoffs.",
-    "version": "2.2.1"
+    "version": "2.3.0"
   },
   "owner": {
-    "name": "wcf-to-grpc plugin maintainers",
-    "email": "wcf-to-grpc-maintainers@example.com"
+    "name": "AdonisLL",
+    "email": "adonisll@users.noreply.github.com"
   },
   "plugins": [
     {
       "name": "wcf-to-grpc",
       "description": "Code-only WCF to gRPC migration workflow: planning, optional Issue publication, implementation, repository-local build/tests, and offline operational handoff.",
-      "version": "2.2.1",
+      "version": "2.3.0",
       "source": "./plugins/wcf-to-grpc"
     }
   ]

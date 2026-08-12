@@ -32,8 +32,9 @@ in the [repository README](../../README.md). Deeper documentation:
   code handoff. It enforces every approval and artifact-state gate, keeps
   resumable run state in `orchestration-state.json`, and directly delegates
   each machine-owned stage to its owning custom agent.
-  It writes no artifact but its own state, executes no commands, approves
-  nothing, and cannot invoke `/fleet`, `/tasks`, or any other slash command.
+  It writes no artifact but its own state, runs only repository digest/artifact
+  gate checks, approves nothing, and cannot invoke `/fleet`, `/tasks`, or any
+  other slash command.
   Parity validation, cutover, and retirement are out-of-scope offline
   activities not orchestrated by this agent.
 - [`agents/wcf-codebase-analyst.agent.md`](agents/wcf-codebase-analyst.agent.md)
@@ -66,7 +67,8 @@ in the [repository README](../../README.md). Deeper documentation:
   is the terminal code-only stage. It reconciles the approved specification,
   every implementation report, and the final repository-local build/test
   checkpoint into schema-valid `code-handoff.json` and `code-handoff.md`
-  artifacts. It records exact local evidence, marks every operational obligation
+  artifacts. It records exact local evidence, runs only handoff schema
+  validation, marks every operational obligation
   (`deployment`, `environment-parity-validation`, `consumer-cutover`,
   `live-rollback`, `wcf-retirement`, and more) as `not-executed` with an owner
   role and next action, and states explicitly that WCF remains active and
@@ -121,7 +123,8 @@ in the [repository README](../../README.md). Deeper documentation:
   [implementation checklist](skills/implement-grpc-migration/references/implementation-checklist.md)
   covering `.proto`/codegen, hosting, adapters, clients, auth/authz,
   interceptors/errors, deadlines/retries/idempotency, telemetry/health,
-  streaming/state/transaction redesign, tests, and deployment;
+  streaming/state/transaction redesign, tests, and repository-local runtime
+  configuration;
   [fleet execution and ownership](skills/implement-grpc-migration/references/fleet-execution-and-ownership.md)
   (including how the orchestrator plans and directly delegates safe waves, with
   Copilot CLI `/fleet` and `/tasks` remaining optional operator controls);

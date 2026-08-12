@@ -22,8 +22,11 @@ Render the companion view with
 ## Rules
 
 - Validate all inputs before writing output.
-- Do not execute commands or infer results. Copy exact commands, outcomes,
-  revision, and evidence from current reports.
+- Do not execute product commands or infer product results. Copy exact build,
+  test, revision, and evidence outcomes from current reports. You may execute
+  only `scripts/Validate-Artifact.ps1` and
+  `scripts/Validate-Handoff-Markdown.ps1` for the handoff artifacts you just
+  rendered.
 - Block when any package is partial/blocked, the final checkpoint did not
   successfully build every affected project/solution, a required
   repository-local test did not pass, or report revisions conflict.
@@ -66,5 +69,7 @@ Return artifact paths, artifact ID, source revision, source digest, local
 validation summary, unresolved code-gap count, offline obligation count, and
 schema-validation result. Run
 `scripts/Validate-Artifact.ps1 -ArtifactPath <code-handoff.json> -SchemaPath <code-handoff.schema.json>`
-and report its observed machine-readable result; manual inspection is not a
-schema-validation result. A blocked response contains no success claim.
+and
+`scripts/Validate-Handoff-Markdown.ps1 -HandoffJsonPath <code-handoff.json> -HandoffMarkdownPath <code-handoff.md>`.
+Report both observed machine-readable results; manual inspection is not a
+validation result. A blocked response contains no success claim.

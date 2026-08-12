@@ -80,7 +80,7 @@ channel, or .NET hosting configuration setting.
 |-------------|-----------------|------|
 | `BasicHttpBinding` | gRPC unary over HTTPS | LOW–MEDIUM (SOAP interop is lost) |
 | `WSHttpBinding` | gRPC over HTTPS with a JWT or certificate credential (`security-mapping.md`) | MEDIUM–HIGH |
-| `NetTcpBinding` | gRPC over HTTPS on Kestrel | LOW |
+| `NetTcpBinding` | gRPC over HTTPS on Kestrel | MEDIUM by transport alone; HIGH when Windows credentials, sessions, reliable sessions, transactions, or transport-specific behavior are used |
 | `NetNamedPipeBinding` | gRPC over a named pipe or Unix domain socket | LOW–MEDIUM |
 | `NetMsmqBinding` | **UNSUPPORTED** — no gRPC transport for durable queuing | HIGH |
 | `WSDualHttpBinding` (duplex) | Bidirectional streaming (redesign required) | HIGH |

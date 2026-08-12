@@ -1,5 +1,6 @@
 ---
 name: WCF Codebase Analyst
+user-invocable: false
 description: >
   Read-only analyst that inventories a legacy .NET WCF repository and produces
   an evidence-backed inventory conforming to schemas/inventory.schema.json. It

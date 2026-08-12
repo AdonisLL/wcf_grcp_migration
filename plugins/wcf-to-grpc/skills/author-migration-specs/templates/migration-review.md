@@ -51,6 +51,17 @@ any other action under **Out-of-scope actions**.
 
 {{roadmapSummary.summary}}
 
+## Digest-bound review artifacts
+
+Approval binds the exact artifacts below. Review each linked artifact before
+confirming the semantic digest.
+
+| Kind | Artifact | Content digest | Bound IDs |
+|---|---|---|---|
+{{#each renderedArtifacts}}
+| {{kind}} | [{{title}}]({{path}}) | `{{contentDigest}}` | {{boundIds}} |
+{{/each}}
+
 ## Immediate blockers
 
 {{#each blockingDecisionIds}}

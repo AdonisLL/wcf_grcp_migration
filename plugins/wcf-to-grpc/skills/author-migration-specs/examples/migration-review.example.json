@@ -105,6 +105,55 @@
     "WP-orders-server",
     "WP-integration-verification"
   ],
+  "renderedArtifacts": [
+    {
+      "kind": "architecture",
+      "path": "target-architecture.md",
+      "title": "Target architecture",
+      "boundIds": [
+        "DEC-target-runtime"
+      ],
+      "contentDigest": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    {
+      "kind": "contract",
+      "path": "contracts/SPEC-orders.md",
+      "title": "Orders gRPC contract",
+      "boundIds": [
+        "SPEC-orders"
+      ],
+      "contentDigest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    {
+      "kind": "roadmap",
+      "path": "roadmap.md",
+      "title": "Migration roadmap",
+      "boundIds": [
+        "PHS-foundation",
+        "WP-orders-server",
+        "WP-integration-verification"
+      ],
+      "contentDigest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+    },
+    {
+      "kind": "work-package",
+      "path": "work-packages/WP-orders-server.md",
+      "title": "Orders server work package",
+      "boundIds": [
+        "WP-orders-server"
+      ],
+      "contentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "kind": "work-package",
+      "path": "work-packages/WP-integration-verification.md",
+      "title": "Final integration verification work package",
+      "boundIds": [
+        "WP-integration-verification"
+      ],
+      "contentDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
   "blockingDecisionIds": [],
   "offlineHandoffItems": [
     {

@@ -1,5 +1,6 @@
 ---
 name: gRPC Migration Issue Publisher
+user-invocable: false
 description: >
   Generates deterministic, issue-ready Markdown and issue-set.json payloads
   from an approved WCF-to-gRPC migration specification, previews the complete

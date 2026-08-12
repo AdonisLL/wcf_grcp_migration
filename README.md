@@ -1,7 +1,8 @@
 # WCF to gRPC migration plugin for GitHub Copilot CLI
 
 A GitHub Copilot CLI plugin marketplace containing **`wcf-to-grpc`**: nine
-agents, eight skills, nine artifact schemas, and a dependency-free validator that
+agents, eight skills, eight artifact schemas, one shared schema, and a
+package-dependency-free validator that
 take a legacy .NET WCF codebase to **gRPC for .NET** — through
 evidence-backed analysis, an explicit decision record, a reviewable
 specification, and gated implementation ending with an affected solution build,
@@ -38,12 +39,14 @@ test-passing code handoff; what happens after is owned by your team.
 | Requirement | Why |
 |---|---|
 | GitHub Copilot CLI, authenticated | Runs the plugin, its agents, and skills |
-| PowerShell 7+ (`pwsh`) | Runs the repository validator on Windows, macOS, or Linux |
+| PowerShell 7.5+ (`pwsh`) | Runs Draft 2020-12 schema, semantic-artifact, and digest validation on Windows, macOS, or Linux |
+| Node.js 20+ (`node`) | Cross-checks RFC 8785 semantic digests against the PowerShell implementation during repository validation |
 | A .NET WCF repository | The subject of the migration — services, clients, or both |
 | GitHub write access *(optional)* | Only if you use the confirmation-gated Issue publication stage |
 
-The plugin itself has no runtime dependency, no build step, no MCP server, and
-no hooks.
+The installed plugin has no package installation or build step, no MCP server,
+and no hooks. Repository contributors need PowerShell and Node.js only for the
+cross-runtime validator.
 
 The product-facing target is **gRPC for .NET**. Server projects run on Kestrel
 and use the literal `Grpc.AspNetCore` package name; that package is unrelated to
@@ -93,11 +96,11 @@ copilot plugin install OWNER/REPO
 copilot plugins list --kind plugin --kind skill
 ```
 
-Then start `copilot` and run `/agent`. Nine agents should be selectable: **WCF
-Migration Orchestrator**, **WCF Codebase Analyst**, **WCF Migration Decision
-Interviewer**, **WCF-to-gRPC Mapper**, **gRPC Migration Architect**, **gRPC
-Migration Issue Publisher**, **gRPC Migration Implementer**, **gRPC Code
-Handoff Author**, and **gRPC Parity Validator**.
+Then start `copilot` and run `/agent`. **WCF Migration Orchestrator** and
+**gRPC Parity Validator** are the two supported user entry points. The other
+seven agents carry `user-invocable: false` and are internal stage specialists;
+older CLI versions may still display them even though the orchestrator is the
+supported way to invoke them.
 
 ### Updating, reinstalling, removing
 
@@ -122,7 +125,7 @@ Full command reference:
 ## Quick start
 
 Run Copilot CLI from the root of the WCF repository you want to migrate, then
-pick an agent with `/agent` and prompt it.
+select **WCF Migration Orchestrator** with `/agent`.
 
 **Run the whole migration (recommended).** Select **WCF Migration
 Orchestrator**. You can start interactively with:
@@ -183,25 +186,24 @@ the orchestrator's **next required action in the same conversation**; it reads
 the saved orchestration state, re-checks the gate, and resumes at the first
 eligible stage.
 
-**Just understand what you have.** Select **WCF Codebase Analyst**:
+**Show status without advancing the workflow.**
 
-> Inventory every WCF service, contract, binding, host, consumer, and
-> unsupported feature in this repository. Cite file and line evidence, and list
-> the questions that static analysis cannot answer.
+> Read `docs/wcf-grpc-migration/orchestration-state.json` and render or refresh
+> `migration-status.md`. Show stage progress, blockers, risk summary, changes
+> since the last review, and the exact next action. Do not advance a stage.
 
-**Design the target.** Select **gRPC Migration Architect** (needs a validated
-inventory, decision log, and mapping result):
+**Resume a paused migration.**
 
-> Author the gRPC target architecture, Protobuf contract specifications,
-> roadmap, fleet-ready work packages, and consolidated review bundle from the
-> proposed decisions. Block only surfaces with an irreducible unresolved
-> decision.
+> Resume this migration from the saved orchestration state. Revalidate the
+> current gate and continue from the first eligible stage without repeating
+> completed work.
 
-**Build one work package.** Select **gRPC Migration Implementer**:
+**Review the approval bundle.**
 
-> Implement `WP-order-service-server` from the approved migration spec. Stay
-> inside its declared file ownership and report any deviation instead of
-> guessing.
+> Present the consolidated migration review using progressive disclosure:
+> first the blockers and high-risk decisions, then changed-since-last-review,
+> then links to every digest-bound architecture, contract, roadmap, and work
+> package artifact. Do not record approval until I confirm the exact digest.
 
 **After the plugin finishes — optional manual parity check.** Select **gRPC
 Parity Validator** once your gRPC service is deployed to a test environment:
@@ -257,15 +259,15 @@ custom-agent delegation is unavailable or fails.
 
 | Agent | Tools | Does | Never |
 |---|---|---|---|
-| [WCF Migration Orchestrator](plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | CLI default; prompt-bounded | Sequences all stages, invokes their owning agents, enforces gates, keeps resumable run state | Does stage work, approves anything, runs commands or slash commands |
-| [WCF Codebase Analyst](plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | CLI default; prompt-bounded | Evidence-backed inventory of contracts, config, hosts, consumers, risks | Writes anything except its inventory artifact; picks a target |
-| [WCF Migration Decision Interviewer](plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | CLI default; prompt-bounded | Batch-proposes safe defaults, asks focused blockers, records bundle approvals | Fabricates organizational facts or self-approves decisions |
-| [WCF-to-gRPC Mapper](plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | CLI default; prompt-bounded | Produces the complete, persisted WCF-to-gRPC mapping result | Silently drops constructs or authors the target architecture |
-| [gRPC Migration Architect](plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | CLI default; prompt-bounded | Target architecture, Protobuf specs, roadmap, fleet-ready work packages | Application code, issues, implementations, self-approval |
-| [gRPC Migration Issue Publisher](plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | CLI default; prompt-bounded | Generates previews and performs explicitly confirmed, duplicate-safe publication | Publishes an unapproved package or mutates GitHub before digest confirmation |
-| [gRPC Migration Implementer](plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | CLI default; prompt-bounded | One approved code work package: protos, hosting, adapters, clients, authn/authz, interceptors, deadlines, telemetry, and repository-local tests | Touches other packages' files; edits artifacts; deploys, changes routing, cuts over, executes live rollback, or removes WCF |
-| [gRPC Code Handoff Author](plugins/wcf-to-grpc/agents/grpc-code-handoff-author.agent.md) | CLI default; prompt-bounded | Terminal stage: reconciles spec, implementation reports, and local build/test checkpoint into `code-handoff.json`/`.md`; marks every deployment, cutover, rollback, and retirement obligation `not-executed`; states WCF active and unchanged | Changes product code; executes commands; deploys; claims runtime parity |
-| [gRPC Parity Validator](plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | CLI default; prompt-bounded | Executes thirteen parity gates, produces findings with evidence, assesses retirement readiness — **invoke manually after deployment to a test environment; not an orchestrated stage** | Fixes anything; modifies product code; grants retirement |
+| [WCF Migration Orchestrator](plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | User-invocable; CLI default tools; prompt-bounded | Sequences all stages, invokes their owning agents, enforces gates, keeps resumable run state | Does stage work, approves anything, or runs product/deployment/GitHub mutation commands |
+| [WCF Codebase Analyst](plugins/wcf-to-grpc/agents/wcf-codebase-analyst.agent.md) | Internal stage agent; CLI default tools; prompt-bounded | Evidence-backed inventory of contracts, config, hosts, consumers, risks | Writes anything except its inventory artifact; picks a target |
+| [WCF Migration Decision Interviewer](plugins/wcf-to-grpc/agents/wcf-migration-decision-interviewer.agent.md) | Internal stage agent; CLI default tools; prompt-bounded | Batch-proposes safe defaults, asks focused blockers, records bundle approvals | Fabricates organizational facts or self-approves decisions |
+| [WCF-to-gRPC Mapper](plugins/wcf-to-grpc/agents/wcf-to-grpc-mapper.agent.md) | Internal stage agent; CLI default tools; prompt-bounded | Produces the complete, persisted WCF-to-gRPC mapping result | Silently drops constructs or authors the target architecture |
+| [gRPC Migration Architect](plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | Internal stage agent; CLI default tools; prompt-bounded | Target architecture, Protobuf specs, roadmap, fleet-ready work packages | Application code, issues, implementations, self-approval |
+| [gRPC Migration Issue Publisher](plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | Internal stage agent; CLI default tools; prompt-bounded | Generates previews and performs explicitly confirmed, duplicate-safe publication | Publishes an unapproved package or mutates GitHub before digest confirmation |
+| [gRPC Migration Implementer](plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | Internal stage agent; CLI default tools; prompt-bounded | One approved code work package: protos, hosting, adapters, clients, authn/authz, interceptors, deadlines, telemetry, and repository-local tests | Touches other packages' files; edits artifacts; deploys, changes routing, cuts over, executes live rollback, or removes WCF |
+| [gRPC Code Handoff Author](plugins/wcf-to-grpc/agents/grpc-code-handoff-author.agent.md) | Internal stage agent; CLI default tools; prompt-bounded | Terminal stage: reconciles spec, implementation reports, and local build/test checkpoint into `code-handoff.json`/`.md`; marks every deployment, cutover, rollback, and retirement obligation `not-executed`; states WCF active and unchanged | Changes product code; executes product commands; deploys; claims runtime parity |
+| [gRPC Parity Validator](plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | User-invocable only; automatic model invocation disabled; CLI default tools; prompt-bounded | Executes thirteen parity gates, produces findings with evidence, assesses retirement readiness — **invoke manually after deployment to a test environment; not an orchestrated stage** | Fixes anything; modifies product code; grants retirement |
 
 ## Skills
 
@@ -291,7 +293,8 @@ mapping-result.json        migration-spec.json migration-review.json
 migration-review.md        issue-set.json      assessment.md
 decisions.md               target-architecture.md   roadmap.md
 contracts/<spec-id>.md     work-packages/<work-package-id>.md
-implementation-reports/<work-package-id>.md
+implementation-reports/<work-package-id>/current.json
+implementation-reports/<work-package-id>/attempt-<attempt-id>.md
 code-handoff.json          code-handoff.md
 validation-reports/<scope-key>.md
 ```
@@ -417,7 +420,7 @@ deliberately excluded from CI.
 | An agent refuses to start implementing | The specification or the work package is unapproved, or a hard dependency is unsatisfied. The refusal names the exact id |
 | The architect reports `blocked` | An unresolved blocking decision. Answer the named `QST-*`, record the `DEC-*`, re-run in incremental mode |
 | The validator fails on a Markdown link | A moved or renamed file. Local links and heading anchors are checked; fix the link, not the check |
-| `Test-Json` is unavailable | PowerShell 5.1 is being used. Run `pwsh` (PowerShell 7+) |
+| `Test-Json` is unavailable or validation stops at the version guard | Run `pwsh` with PowerShell 7.5 or later |
 
 ## References
 

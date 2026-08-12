@@ -7,135 +7,256 @@
     1e-27,
     1e-7,
     1e+21,
-    -0.0
+    1e+20,
+    1e-6,
+    -0.0,
+    1.7976931348623157e+308,
+    5e-324,
+    2.2250738585072014e-308
   ],
-  "expectedNumericCanonicalJson": "[333333333.3333333,1e+30,4.5,0.002,1e-27,1e-7,1e+21,0]",
-  "base": {
-    "artifactType": "migration-spec",
-    "approval": {
-      "state": "review-requested"
-    },
-    "generation": {
-      "generatedAt": "2026-08-08T12:00:00Z"
-    },
-    "targetArchitecture": {
-      "sections": [
-        {
-          "name": "hosting",
-          "state": "proposed",
-          "design": "Kestrel HTTP/2"
-        }
-      ]
-    },
-    "contracts": [
-      {
-        "id": "SPEC-calculator",
+  "expectedNumericCanonicalJson": "[333333333.3333333,1e+30,4.5,0.002,1e-27,1e-7,1e+21,100000000000000000000,0.000001,0,1.7976931348623157e+308,5e-324,2.2250738585072014e-308]",
+  "stringCorpus": [
+    "plain",
+    "\"\\\b\f\n\r\t\u000f",
+    "\u007f",
+    "\ud83d\ude00"
+  ],
+  "expectedStringCanonicalUtf8Hex": "5b22706c61696e222c225c225c5c5c625c665c6e5c725c745c7530303066222c227f222c22f09f9880225d",
+  "caseDistinctJson": "{\"A\":1,\"a\":2,\"Z\":3,\"z\":4,\"\\u007f\":6,\"\\ud83d\\ude00\":5}",
+  "expectedCaseDistinctCanonicalJson": "{\"A\":1,\"Z\":3,\"a\":2,\"z\":4,\"\u007f\":6,\"\ud83d\ude00\":5}",
+  "duplicateKeyJson": "{\"duplicate\":1,\"duplicate\":2}",
+  "lifecycleCases": [
+    {
+      "name": "migration-spec lifecycle",
+      "base": {
+        "artifactType": "migration-spec",
         "approval": {
           "state": "review-requested"
         },
-        "protoPackage": "calculator.v1"
-      }
-    ],
-    "workPackages": [
-      {
-        "id": "WP-contract",
-        "status": "ready-for-review",
-        "approval": {
-          "state": "review-requested"
+        "generation": {
+          "generatedAt": "2026-08-08T12:00:00Z"
         },
-        "objective": "Create the reviewed contract.",
-        "deliverables": [
-          "calculator.proto"
+        "targetArchitecture": {
+          "sections": [
+            {
+              "name": "hosting",
+              "state": "proposed",
+              "design": "Kestrel HTTP/2"
+            }
+          ]
+        },
+        "contracts": [
+          {
+            "id": "SPEC-calculator",
+            "approval": {
+              "state": "review-requested"
+            },
+            "protoPackage": "calculator.v1"
+          }
+        ],
+        "workPackages": [
+          {
+            "id": "WP-contract",
+            "status": "ready-for-review",
+            "approval": {
+              "state": "review-requested"
+            },
+            "objective": "Create the reviewed contract.",
+            "deliverables": [
+              "calculator.proto"
+            ]
+          }
+        ]
+      },
+      "lifecycleMutation": {
+        "artifactType": "migration-spec",
+        "approval": {
+          "state": "approved"
+        },
+        "generation": {
+          "generatedAt": "2026-08-08T13:00:00Z"
+        },
+        "approvalTransaction": {
+          "approvalEventId": "APV-calculator"
+        },
+        "targetArchitecture": {
+          "sections": [
+            {
+              "name": "hosting",
+              "state": "approved",
+              "design": "Kestrel HTTP/2"
+            }
+          ]
+        },
+        "contracts": [
+          {
+            "id": "SPEC-calculator",
+            "approval": {
+              "state": "approved"
+            },
+            "protoPackage": "calculator.v1"
+          }
+        ],
+        "workPackages": [
+          {
+            "id": "WP-contract",
+            "semanticSubDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "status": "completed",
+            "approval": {
+              "state": "approved"
+            },
+            "objective": "Create the reviewed contract.",
+            "deliverables": [
+              "calculator.proto"
+            ]
+          }
+        ]
+      },
+      "semanticMutation": {
+        "artifactType": "migration-spec",
+        "approval": {
+          "state": "approved"
+        },
+        "generation": {
+          "generatedAt": "2026-08-08T13:00:00Z"
+        },
+        "approvalTransaction": {
+          "approvalEventId": "APV-calculator"
+        },
+        "targetArchitecture": {
+          "sections": [
+            {
+              "name": "hosting",
+              "state": "approved",
+              "design": "Kestrel HTTP/2"
+            }
+          ]
+        },
+        "contracts": [
+          {
+            "id": "SPEC-calculator",
+            "approval": {
+              "state": "approved"
+            },
+            "protoPackage": "calculator.v1"
+          }
+        ],
+        "workPackages": [
+          {
+            "id": "WP-contract",
+            "semanticSubDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "status": "completed",
+            "approval": {
+              "state": "approved"
+            },
+            "objective": "Create a materially different contract.",
+            "deliverables": [
+              "calculator.proto"
+            ]
+          }
         ]
       }
-    ]
-  },
-  "lifecycleMutation": {
-    "artifactType": "migration-spec",
-    "approval": {
-      "state": "approved"
     },
-    "generation": {
-      "generatedAt": "2026-08-08T13:00:00Z"
-    },
-    "approvalTransaction": {
-      "approvalEventId": "APV-calculator"
-    },
-    "targetArchitecture": {
-      "sections": [
-        {
-          "name": "hosting",
-          "state": "approved",
-          "design": "Kestrel HTTP/2"
-        }
-      ]
-    },
-    "contracts": [
-      {
-        "id": "SPEC-calculator",
-        "approval": {
-          "state": "approved"
-        },
-        "protoPackage": "calculator.v1"
-      }
-    ],
-    "workPackages": [
-      {
-        "id": "WP-contract",
-        "semanticSubDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "status": "completed",
-        "approval": {
-          "state": "approved"
-        },
-        "objective": "Create the reviewed contract.",
-        "deliverables": [
-          "calculator.proto"
+    {
+      "name": "decision-log lifecycle",
+      "base": {
+        "artifactType": "decision-log",
+        "decisions": [
+          {
+            "id": "DEC-hosting",
+            "state": "proposed",
+            "approvals": [],
+            "title": "Use gRPC for .NET"
+          }
+        ]
+      },
+      "lifecycleMutation": {
+        "artifactType": "decision-log",
+        "decisions": [
+          {
+            "id": "DEC-hosting",
+            "state": "approved",
+            "approvals": [
+              {
+                "id": "APV-hosting",
+                "state": "approved",
+                "at": "2026-08-11T20:00:00Z"
+              }
+            ],
+            "title": "Use gRPC for .NET"
+          }
+        ]
+      },
+      "semanticMutation": {
+        "artifactType": "decision-log",
+        "decisions": [
+          {
+            "id": "DEC-hosting",
+            "state": "approved",
+            "approvals": [
+              {
+                "id": "APV-hosting",
+                "state": "approved",
+                "at": "2026-08-11T20:00:00Z"
+              }
+            ],
+            "title": "Use a different hosting model"
+          }
         ]
       }
-    ]
-  },
-  "semanticMutation": {
-    "artifactType": "migration-spec",
-    "approval": {
-      "state": "approved"
     },
-    "generation": {
-      "generatedAt": "2026-08-08T13:00:00Z"
-    },
-    "approvalTransaction": {
-      "approvalEventId": "APV-calculator"
-    },
-    "targetArchitecture": {
-      "sections": [
-        {
-          "name": "hosting",
-          "state": "approved",
-          "design": "Kestrel HTTP/2"
-        }
-      ]
-    },
-    "contracts": [
-      {
-        "id": "SPEC-calculator",
-        "approval": {
+    {
+      "name": "issue-set lifecycle",
+      "base": {
+        "artifactType": "issue-set",
+        "publication": {
           "state": "approved"
         },
-        "protoPackage": "calculator.v1"
-      }
-    ],
-    "workPackages": [
-      {
-        "id": "WP-contract",
-        "semanticSubDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-        "status": "completed",
-        "approval": {
-          "state": "approved"
+        "issues": [
+          {
+            "id": "ISSUE-hosting",
+            "state": "ready",
+            "github": null,
+            "title": "Implement the gRPC host"
+          }
+        ]
+      },
+      "lifecycleMutation": {
+        "artifactType": "issue-set",
+        "publication": {
+          "state": "published",
+          "publishedAt": "2026-08-11T20:00:00Z"
         },
-        "objective": "Create a materially different contract.",
-        "deliverables": [
-          "calculator.proto"
+        "issues": [
+          {
+            "id": "ISSUE-hosting",
+            "state": "published",
+            "github": {
+              "number": 42,
+              "url": "https://github.com/example/repository/issues/42"
+            },
+            "title": "Implement the gRPC host"
+          }
+        ]
+      },
+      "semanticMutation": {
+        "artifactType": "issue-set",
+        "publication": {
+          "state": "published",
+          "publishedAt": "2026-08-11T20:00:00Z"
+        },
+        "issues": [
+          {
+            "id": "ISSUE-hosting",
+            "state": "published",
+            "github": {
+              "number": 42,
+              "url": "https://github.com/example/repository/issues/42"
+            },
+            "title": "Implement a materially different host"
+          }
         ]
       }
-    ]
-  }
+    }
+  ]
 }

@@ -141,6 +141,67 @@
           },
           "uniqueItems": true
         },
+        "renderedArtifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/renderedArtifact"
+          },
+          "minItems": 4,
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "kind": {
+                    "const": "architecture"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "kind": {
+                    "const": "contract"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "kind": {
+                    "const": "roadmap"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "kind": {
+                    "const": "work-package"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "minContains": 1
+            }
+          ]
+        },
         "blockingDecisionIds": {
           "type": "array",
           "items": {
@@ -186,6 +247,7 @@
         "contractSummary",
         "roadmapSummary",
         "workPackageIds",
+        "renderedArtifacts",
         "blockingDecisionIds",
         "offlineHandoffItems",
         "outOfScopeActions",
@@ -306,6 +368,40 @@
         "summary",
         "includedIds",
         "unresolvedIds"
+      ],
+      "additionalProperties": false
+    },
+    "renderedArtifact": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "architecture",
+            "contract",
+            "roadmap",
+            "work-package"
+          ]
+        },
+        "path": {
+          "$ref": "./common.schema.json#/$defs/relativePath"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundIds": {
+          "$ref": "./common.schema.json#/$defs/idArray"
+        },
+        "contentDigest": {
+          "$ref": "./common.schema.json#/$defs/semanticDigest"
+        }
+      },
+      "required": [
+        "kind",
+        "path",
+        "title",
+        "boundIds",
+        "contentDigest"
       ],
       "additionalProperties": false
     },

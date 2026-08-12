@@ -58,15 +58,20 @@ fields are optional and default to `agents/` and `skills/`; they are declared
 explicitly here so discovery is unambiguous. See the
 [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference).
 
-Frontmatter is deliberately minimal and validated by
+Frontmatter is validated against the current documented field set by
 [`Validate-Plugin.ps1`](../plugins/wcf-to-grpc/scripts/Validate-Plugin.ps1):
 
-- Skills: `name` (must equal the directory name) and `description`.
-- Agents: `name` and `description`. The `tools` field is deliberately omitted:
-  Copilot CLI plugin loading currently passes documented aliases to an exact
-  tool registry, producing unknown-tool warnings. Omission uses the portable
-  CLI default toolset; each agent prompt enforces its narrower behavioral
-  boundaries.
+- Skills: `name` (must equal the directory name), `description`, and optional
+  `license`/`allowed-tools`.
+- Agents: `name`, `description`, `target`, `tools`, `model`,
+  `disable-model-invocation`, `user-invocable`, `mcp-servers`, and `metadata`.
+- The repository currently omits `tools` because Copilot CLI 1.0.79 rejects
+  several documented aliases while loading plugins, despite the platform
+  documentation describing them as supported. Omission uses the CLI default
+  toolset; prompts enforce narrower behavior until a compatibility test proves
+  that explicit allowlists load portably.
+- Internal stage agents use `user-invocable: false`. The parity validator uses
+  `disable-model-invocation: true` so only an explicit user action starts it.
 
 ## 3. Agents and their tool boundaries
 
@@ -78,15 +83,15 @@ Frontmatter is deliberately minimal and validated by
 | [gRPC Migration Architect](../plugins/wcf-to-grpc/agents/grpc-migration-architect.agent.md) | CLI default; prompt-bounded | `migration-spec.json`, `migration-review.json/.md`, rendered design docs | Application code, issues, implementations, inferred approvals |
 | [gRPC Migration Issue Publisher](../plugins/wcf-to-grpc/agents/grpc-migration-issue-publisher.agent.md) | CLI default; prompt-bounded | Issue preview and publication artifacts | Mutate GitHub without approved inputs, exact confirmation, and permission |
 | [gRPC Migration Implementer](../plugins/wcf-to-grpc/agents/grpc-migration-implementer.agent.md) | CLI default; prompt-bounded | Only its assigned work package's `exclusive-write` paths | Migration artifacts, other packages' paths, deployment/routing/cutover/live rollback, any WCF removal |
-| [gRPC Code Handoff Author](../plugins/wcf-to-grpc/agents/grpc-code-handoff-author.agent.md) | CLI default; prompt-bounded | Only `code-handoff.json` and `code-handoff.md` | Application code, migration artifacts, commands, deployment, parity claims |
+| [gRPC Code Handoff Author](../plugins/wcf-to-grpc/agents/grpc-code-handoff-author.agent.md) | CLI default; prompt-bounded | Only `code-handoff.json` and `code-handoff.md` | Application code, migration artifacts, product commands, deployment, parity claims |
 | [gRPC Parity Validator](../plugins/wcf-to-grpc/agents/grpc-parity-validator.agent.md) | CLI default; prompt-bounded | Only `validation-reports/` | Application code, upstream artifacts, fixing findings, granting retirement |
-| [WCF Migration Orchestrator](../plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | CLI default; prompt-bounded | Only `orchestration-state.json` and the optional status view | Any stage work, any approval, any command execution, any slash command |
+| [WCF Migration Orchestrator](../plugins/wcf-to-grpc/agents/wcf-migration-orchestrator.agent.md) | CLI default; prompt-bounded | Only `orchestration-state.json` and the optional status view | Any stage work, any approval, product/deployment/GitHub mutation commands, any slash command |
 
-The orchestrator prompt explicitly forbids command execution. It coordinates
-and records while delegating specialists with bounded envelopes. Every executed
-command belongs to that stage agent or to the operator. Keeping the prohibition
-explicit prevents a coordinator from "just
-builds it quickly" and silently becomes an implementer.
+The orchestrator may execute only repository digest and artifact-validation
+scripts required to verify a stage gate. Product builds, tests, restores, Git,
+deployment, and GitHub mutation remain owned by their stage agent or operator.
+This narrow exception prevents fabricated gate evidence without letting the
+coordinator become an implementer.
 
 The analyst prompt limits command use to non-mutating inspection. The agent
 contract, skill, and reference files constrain that behavior even though the

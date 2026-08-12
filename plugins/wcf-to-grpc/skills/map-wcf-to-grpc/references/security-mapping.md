@@ -43,11 +43,17 @@ transport layer for confidentiality and integrity.
 
 **Required redesign:**
 - Replace message-level encryption with TLS and, where needed, mutual TLS.
-- Replace message-level signing with a signed JWT (or an HMAC) carried in
-  gRPC metadata.
+- Use JWTs or other signed credentials in gRPC metadata only for caller and
+  claim authentication. They do **not** sign or cryptographically bind the
+  Protobuf payload.
+- If the original requirement includes end-to-end payload integrity,
+  selective signing, or non-repudiation across TLS termination, design an
+  application envelope with an explicit canonicalization algorithm, detached
+  signature, key identifier, replay protection, and verification policy.
 - If confidentiality beyond TLS is required for regulatory reasons, evaluate
-  application-level encryption of sensitive Protobuf `bytes` fields. This is
-  an architectural decision that must be recorded and approved by the user.
+  application-level envelope or field encryption. Payload signing and
+  encryption are high-risk architectural decisions that require security and
+  compliance approval; do not infer them from the presence of a JWT.
 
 **Regulatory note:** if message-level security exists for compliance reasons
 (PCI-DSS, HIPAA, etc.), the compliance posture must be re-evaluated with the

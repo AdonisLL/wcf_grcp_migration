@@ -41,13 +41,21 @@ not run it.
    copilot plugins list --kind plugin --kind skill
    ```
 
-   All seven plugin skills should appear.
-3. Start `copilot`, run `/agent`, and confirm these eight agents are selectable:
-   **WCF Migration Orchestrator**, **WCF Codebase Analyst**, **WCF Migration
-   Decision Interviewer**, **WCF-to-gRPC Mapper**, **gRPC Migration Architect**,
-   **gRPC Migration Issue Publisher**, **gRPC Migration Implementer**, and
-   **gRPC Parity Validator**.
-4. Installed plugins are cached copies; editing this working tree does not
+   All eight plugin skills should appear.
+3. Start `copilot`, run `/agent`, and confirm **WCF Migration Orchestrator**
+   and **gRPC Parity Validator** are selectable. Confirm the other seven stage
+   agents remain available for orchestrator delegation. On a client that
+   honors `user-invocable: false`, they are hidden from direct choices; record
+   the client/version when that metadata is not yet honored.
+4. Confirm the session starts without `Unknown tool name in the tool
+   allowlist` warnings. Record the tested CLI version. The current compatibility
+   baseline is:
+
+   | Copilot CLI | Agent `tools` policy | Expected result |
+   |---|---|---|
+   | `1.0.79` | Omit `tools`; use prompt-bounded default toolset | Plugin loads without unknown-tool warnings |
+   | Newer version | Re-run this smoke test before restoring documented aliases | No allowlist warning and agent boundaries remain enforceable |
+5. Installed plugins are cached copies; editing this working tree does not
    update an already installed copy. Exercise reinstall behavior after a local
    change:
 

@@ -253,7 +253,7 @@
             "value": "SubmitOrderRequest"
           }
         },
-        "adaptationNotes": "System.Decimal TotalAmount maps to a custom DecimalValue message (string-encoded). Nullable DateTime? maps to optional google.protobuf.Timestamp.",
+        "adaptationNotes": "System.Decimal TotalAmount maps losslessly to a canonical decimal string inside the shared DecimalValue message. Nullable DateTime? maps to optional google.protobuf.Timestamp.",
         "riskLevel": "medium"
       },
       "protoTypeMapping": {

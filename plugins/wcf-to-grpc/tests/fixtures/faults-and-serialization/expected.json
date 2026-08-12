@@ -142,7 +142,7 @@
       {
         "sourceTypeId": "DC-secure-invoice",
         "targetType": "Invoice",
-        "notes": "Use explicit presence, a lossless DecimalValue, UTC Timestamp policy, UNSPECIFIED enum zero, and oneof for payment subtypes."
+        "notes": "Use explicit presence, a full-range lossless decimal representation (canonical string or unscaled integer plus scale), UTC Timestamp policy, UNSPECIFIED enum zero, and oneof for payment subtypes."
       },
       {
         "sourceTypeId": "DC-secure-validation-fault",

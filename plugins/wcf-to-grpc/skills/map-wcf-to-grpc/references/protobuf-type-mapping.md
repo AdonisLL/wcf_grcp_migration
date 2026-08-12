@@ -122,7 +122,8 @@ financial or scientific data.
 | Option | Pros | Cons |
 |--------|------|------|
 | `string` | Lossless; human-readable | Serialization overhead; parsing required on both ends |
-| Custom `DecimalValue { int64 units; sfixed32 nanos; }` message | Compact; typed | Requires shared encode/decode helpers for every consumer |
+| Custom `DecimalValue { int64 units; sfixed32 nanos; }` message | Compact; typed | Limited to nine fractional digits and an `int64` whole component; not lossless for arbitrary `System.Decimal` |
+| Custom unscaled integer (`bytes` or canonical integer string) + scale | Lossless for full .NET decimal range when canonicalized | More complex validation and cross-language helpers |
 | `double` | Simple | Floating-point rounding error; **not safe for currency** |
 
 Microsoft's official gRPC-for-WCF-developers guidance recommends a custom
@@ -135,13 +136,19 @@ message DecimalValue {
   // Whole-number part (may be negative).
   int64 units = 1;
   // Fractional part: value = units + nanos / 10^9.
-  // Must be in the range [0, 999_999_999].
+  // Define and test one normalization rule for negative values.
   sfixed32 nanos = 2;
 }
 ```
 
-**Risk: HIGH.** Every decimal field requires explicit encode/decode helpers
-and end-to-end tests covering negative, zero, and large values.
+This representation is appropriate only when repository evidence proves that
+all values fit an `int64` whole component and at most nine fractional digits.
+It is not a lossless representation of the full .NET `decimal` domain.
+
+**Risk: HIGH.** Every decimal field requires an explicit precision/scale
+contract, encode/decode helpers, and end-to-end tests covering negative values,
+zero, maximum magnitude, and maximum supported scale. Use canonical strings or
+an unscaled integer plus scale when full `System.Decimal` fidelity is required.
 
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: WCF Migration Decision Interviewer
+user-invocable: false
 description: >
   Prepares an evidence-driven WCF-to-gRPC decision log from a validated
   inventory. Persists safe recommendations as proposed assumptions in one

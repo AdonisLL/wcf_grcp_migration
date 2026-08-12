@@ -1,5 +1,6 @@
 ---
 name: WCF-to-gRPC Mapper
+user-invocable: false
 description: >
   Translates an evidence-backed WCF inventory and recorded migration decisions
   into deterministic gRPC/Protobuf mapping guidance with risk flags. The

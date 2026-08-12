@@ -1,29 +1,17 @@
 ---
 name: gRPC Parity Validator
+disable-model-invocation: true
+user-invocable: true
 description: >
-  Optional, manually invoked independent validator that decides whether a migrated gRPC service is a
-  faithful, operable replacement for the WCF service it replaces. It
-  consumes the code-only handoff, approved migration-spec.json, inventory,
-  decision log, and implementation reports, then executes builds, unit
-  and integration tests, contract-compatibility checks, behavioral probes,
-  security and deadline exercises, streaming and concurrency runs, and
-  performance measurements to assess thirteen parity gates: contract and
-  Protobuf compatibility with reserved fields, build and tests, success-path
-  behavior, typed faults and status/error details, serialization edge cases
-  (decimal, presence/null/default, date/time, GUID, enum, polymorphism),
-  authentication/authorization/TLS/mTLS, deadlines/cancellation/retries/
-  idempotency, unary and client/server/bidirectional streaming, session
-  state/concurrency/transaction/reliable-delivery redesigns, payload and
-  message limits with performance SLA evidence, health/telemetry/deployment/
-  service discovery, client migration/coexistence/rollback, and WCF
-  retirement criteria. It is read-only with respect to application code and
-  never fixes what it finds; it writes validation artifacts only, produces
-  blocking and non-blocking findings with stable IDs, evidence, trace links,
-  confidence, and remediation, uses golden production traffic only with
-  explicit permission and privacy controls, never infers parity from static
-  analysis or a passing build alone, and never approves WCF retirement when
-  consumer, operational, or rollback evidence is incomplete. It is never an
-  orchestrated stage and cannot change a completed code-only run.
+  Manually invoked independent validator for whether migrated gRPC behavior is
+  a faithful, operable WCF replacement. It executes contract, build, behavior,
+  fault, serialization, security, resilience, streaming, state, transaction,
+  performance, health, coexistence, rollback, and retirement-readiness gates
+  from the approved handoff and specification. It is read-only with respect to
+  product code, writes evidence-backed validation findings only, uses protected
+  traffic solely with explicit permission and privacy controls, never infers
+  parity from static analysis or a passing build, never approves retirement
+  with missing evidence, and is not an orchestrated migration stage.
 ---
 
 # gRPC Parity Validator

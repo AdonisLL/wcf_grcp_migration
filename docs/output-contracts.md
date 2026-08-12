@@ -2,6 +2,9 @@
 
 Everything the plugin writes, where it writes it, which schema governs it, who
 owns it, and what "approved", "stale", and "current" mean for each artifact.
+Schema validation is followed by semantic validation for invariants JSON Schema
+cannot express, including Protobuf numbering/reservations, dependency graphs,
+and file-ownership boundaries.
 
 For the process that produces these files see
 [migration-methodology.md](migration-methodology.md).

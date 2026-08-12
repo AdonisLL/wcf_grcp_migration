@@ -18,9 +18,9 @@ fixtures, research standards, and release practice.
 └── plugins/wcf-to-grpc/            The plugin itself
     ├── plugin.json
     ├── README.md
-    ├── agents/                     5 agent definitions
-    ├── skills/                     7 skills with references/ and templates/
-    ├── schemas/                    6 JSON Schema Draft 2020-12 contracts
+    ├── agents/                     9 agent definitions
+    ├── skills/                     8 skills with references/ and templates/
+    ├── schemas/                    8 artifact schemas plus common vocabulary
     ├── tests/                      Fixtures, expectations, smoke-test guidance
     └── scripts/                    Dependency-free validator
 ```
@@ -32,12 +32,14 @@ fixtures, research standards, and release practice.
 
 ## 2. Prerequisites
 
-- **PowerShell 7+** (`pwsh`) to run the validator — on Windows, macOS, or
+- **PowerShell 7.5+** (`pwsh`) to run the validator — on Windows, macOS, or
   Linux. Nothing else is required: the validator uses only built-in PowerShell
-  and .NET features.
+  and .NET features for schema and artifact checks.
+- **Node.js 20+** (`node`) to run the independent RFC 8785 digest
+  implementation and prove byte equivalence with PowerShell.
 - **Copilot CLI**, authenticated, for the optional installation smoke test.
-- No package manager, no build step, no runtime dependency. If a change would
-  introduce one, raise it first.
+- No package install or build step is required. If a change would introduce a
+  package dependency, raise it first.
 
 ## 3. Run the validator before you push
 
@@ -58,13 +60,18 @@ It fails the build on any of:
   components;
 - skill frontmatter that is missing `name`/`description`, carries an
   unsupported field, or whose `name` does not match its directory;
-- agent frontmatter that is missing `name`/`description` or carries an
-  unsupported field, including a non-portable `tools` allowlist;
+- agent frontmatter that is missing `name`/`description`, exceeds platform
+  limits, or carries a field outside the documented supported set;
 - a duplicate skill or agent name;
 - a schema that is not Draft 2020-12, has no `$id`, or has a `$ref` whose file
   or JSON-pointer fragment does not exist;
 - an example or fixture `expected.json` that does not validate against its
   schema;
+- a migration specification with duplicate Protobuf field numbers/names,
+  reserved-field collisions, unresolved package dependencies, dependency
+  cycles, deliverables outside writable ownership, or same-wave writable
+  ownership overlap;
+- JSON/Markdown drift in the consolidated review or terminal code handoff;
 - a stable identifier that violates the shared grammar, or a duplicate id among
   siblings;
 - a dependency cycle, or a dependency on a node that does not exist;
@@ -83,11 +90,15 @@ failure.
 
 ### Agents (`agents/*.agent.md`)
 
-- Frontmatter: `name` and `description` only. Omit `tools`: current Copilot CLI
-  plugin loading passes the documented aliases to an exact runtime registry,
-  where aliases and wildcards produce unknown-tool warnings. The omitted field
-  uses the portable CLI default toolset. Enforce narrower access behavior in
-  the agent description and body.
+- Supported frontmatter follows the current custom-agent reference: `name`,
+  `description`, `target`, `tools`, `model`, `disable-model-invocation`,
+  `user-invocable`, `mcp-servers`, and `metadata`.
+- Copilot CLI 1.0.79 rejects several documented tool aliases during plugin
+  loading even though the platform documentation says unrecognized names are
+  ignored. Until the repository compatibility test proves otherwise, omit
+  `tools` and use the CLI default toolset with explicit prompt boundaries.
+  Treat this as a versioned runtime compatibility workaround, not a claim that
+  the documented field is invalid.
 - `description` is a single folded block that states what the agent does, what
   it produces, and what it refuses. It is the text a user sees when choosing an
   agent.
@@ -100,7 +111,8 @@ failure.
 
 ### Skills (`skills/<name>/SKILL.md`)
 
-- Frontmatter: `name` (must equal the directory name) and `description` only.
+- Supported frontmatter is `name`, `description`, optional `license`, and
+  optional `allowed-tools`. `name` must equal the directory name.
 - `SKILL.md` carries purpose, required inputs, non-negotiable rules, the
   ordered procedure, outputs, and a completion checklist.
 - Detail goes in `references/*.md`; output shapes go in `templates/*.md`;

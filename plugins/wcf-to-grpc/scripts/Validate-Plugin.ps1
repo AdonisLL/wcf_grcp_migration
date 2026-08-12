@@ -1,3 +1,5 @@
+#Requires -Version 7.5
+
 [CmdletBinding()]
 param()
 
@@ -108,10 +110,41 @@ function Read-Frontmatter {
     }
 
     $frontmatter = @{}
-    for ($index = 1; $index -lt $end; $index++) {
-        if ($lines[$index] -match "^([A-Za-z][A-Za-z0-9_-]*):(?:\s*(.*))?$") {
-            $frontmatter[$Matches[1]] = $Matches[2]
+    $index = 1
+    while ($index -lt $end) {
+        if ($lines[$index] -notmatch "^([A-Za-z][A-Za-z0-9_-]*):(?:\s*(.*))?$") {
+            if (-not [string]::IsNullOrWhiteSpace($lines[$index])) {
+                Add-Check $false "Unsupported YAML frontmatter syntax at $Path line $($index + 1)."
+            }
+            $index++
+            continue
         }
+
+        $key = $Matches[1]
+        $value = [string] $Matches[2]
+        if ($value -in @(">", "|") -or
+            ([string]::IsNullOrEmpty($value) -and
+                $index + 1 -lt $end -and $lines[$index + 1] -match "^\s+")) {
+            $folded = $value -eq ">"
+            $continuation = [System.Collections.Generic.List[string]]::new()
+            $index++
+            while ($index -lt $end -and
+                ($lines[$index] -match "^\s+" -or [string]::IsNullOrWhiteSpace($lines[$index]))) {
+                $continuation.Add($lines[$index].Trim())
+                $index++
+            }
+            $value = if ($folded) {
+                ($continuation -join " ").Trim()
+            }
+            else {
+                ($continuation -join "`n").Trim()
+            }
+        }
+        else {
+            $value = $value.Trim()
+            $index++
+        }
+        $frontmatter[$key] = $value
     }
 
     return $frontmatter
@@ -417,13 +450,17 @@ Add-Check ((Get-PropertyValue $marketplace "name") -match "^[a-z0-9]+(?:-[a-z0-9
 Add-Check ((Get-PropertyValue (Get-PropertyValue $marketplace "metadata") "version") -match "^\d+\.\d+\.\d+$") "Marketplace version is not semantic."
 
 Test-AllowedProperties $plugin @(
-    "name", "description", "version", "keywords", "skills", "agents",
-    "hooks", "mcpServers", "lspServers"
+    '$schema', "name", "description", "version", "author", "homepage",
+    "repository", "license", "keywords", "category", "tags", "skills",
+    "agents", "commands", "hooks", "extensions", "mcpServers", "lspServers"
 ) "Plugin manifest"
 Test-AllowedProperties $repositoryPlugin @(
-    "name", "description", "version", "keywords", "skills", "agents",
-    "hooks", "mcpServers", "lspServers"
+    '$schema', "name", "description", "version", "author", "homepage",
+    "repository", "license", "keywords", "category", "tags", "skills",
+    "agents", "commands", "hooks", "extensions", "mcpServers", "lspServers"
 ) "Repository plugin manifest"
+Test-AllowedProperties (Get-PropertyValue $plugin "author") @("name", "email", "url") "Plugin author"
+Test-AllowedProperties (Get-PropertyValue $repositoryPlugin "author") @("name", "email", "url") "Repository plugin author"
 Add-Check ((Get-PropertyValue $plugin "name") -match "^[a-z0-9]+(?:-[a-z0-9]+)*$") "Plugin name is missing or invalid."
 Add-Check ((Get-PropertyValue $plugin "version") -match "^\d+\.\d+\.\d+$") "Plugin version is not semantic."
 foreach ($property in @("name", "description", "version")) {
@@ -477,13 +514,18 @@ $skillNames = @()
 foreach ($skillFile in $skillFiles) {
     $frontmatter = Read-Frontmatter $skillFile.FullName
     foreach ($key in $frontmatter.Keys) {
-        Add-Check ($key -in @("name", "description")) "Skill $($skillFile.FullName) has unsupported frontmatter field '$key'."
+        Add-Check ($key -in @("name", "description", "license", "allowed-tools")) "Skill $($skillFile.FullName) has unsupported frontmatter field '$key'."
     }
     Add-Check ($frontmatter.ContainsKey("name")) "Skill $($skillFile.FullName) is missing frontmatter name."
     Add-Check ($frontmatter.ContainsKey("description")) "Skill $($skillFile.FullName) is missing frontmatter description."
     if ($frontmatter.ContainsKey("name")) {
         $skillNames += $frontmatter["name"]
         Add-Check ($frontmatter["name"] -eq $skillFile.Directory.Name) "Skill name '$($frontmatter["name"])' does not match directory '$($skillFile.Directory.Name)'."
+        Add-Check ($frontmatter["name"].Length -le 64) "Skill name '$($frontmatter["name"])' exceeds 64 characters."
+    }
+    if ($frontmatter.ContainsKey("description")) {
+        Add-Check (-not [string]::IsNullOrWhiteSpace($frontmatter["description"])) "Skill $($skillFile.FullName) has an empty description."
+        Add-Check ($frontmatter["description"].Length -le 1024) "Skill $($skillFile.FullName) description exceeds 1024 characters."
     }
 }
 foreach ($duplicate in $skillNames | Group-Object | Where-Object Count -gt 1) {
@@ -494,14 +536,29 @@ $agentNames = @()
 foreach ($agentFile in $agentFiles) {
     $frontmatter = Read-Frontmatter $agentFile.FullName
     foreach ($key in $frontmatter.Keys) {
-        Add-Check ($key -in @("name", "description")) "Agent $($agentFile.FullName) has unsupported frontmatter field '$key'."
+        Add-Check ($key -in @(
+            "name", "description", "target", "tools", "model",
+            "disable-model-invocation", "user-invocable", "mcp-servers", "metadata"
+        )) "Agent $($agentFile.FullName) has unsupported frontmatter field '$key'."
     }
     foreach ($required in @("name", "description")) {
         Add-Check ($frontmatter.ContainsKey($required)) "Agent $($agentFile.FullName) is missing frontmatter $required."
     }
     if ($frontmatter.ContainsKey("name")) {
         $agentNames += $frontmatter["name"]
+        Add-Check ($frontmatter["name"].Length -le 64) "Agent name '$($frontmatter["name"])' exceeds 64 characters."
     }
+    if ($frontmatter.ContainsKey("description")) {
+        Add-Check (-not [string]::IsNullOrWhiteSpace($frontmatter["description"])) "Agent $($agentFile.FullName) has an empty description."
+        Add-Check ($frontmatter["description"].Length -le 1024) "Agent $($agentFile.FullName) description exceeds 1024 characters."
+    }
+    foreach ($booleanKey in @("disable-model-invocation", "user-invocable")) {
+        if ($frontmatter.ContainsKey($booleanKey)) {
+            Add-Check ($frontmatter[$booleanKey] -in @("true", "false")) "Agent $($agentFile.FullName) frontmatter '$booleanKey' must be true or false."
+        }
+    }
+    $agentPromptLength = (Get-Content -LiteralPath $agentFile.FullName -Raw).Length
+    Add-Check ($agentPromptLength -le 30000) "Agent $($agentFile.FullName) exceeds the 30,000-character prompt limit."
 }
 foreach ($duplicate in $agentNames | Group-Object | Where-Object Count -gt 1) {
     Add-Check $false "Duplicate agent name '$($duplicate.Name)'."
@@ -551,19 +608,28 @@ if ((Test-Path -LiteralPath $pluginReadmePath -PathType Leaf) -and (Test-Path -L
     $issuePublisherText = Get-Content -LiteralPath $issuePublisherPath -Raw
     Add-Check ($issuePublisherText -like "*previewDigest*" -and $issuePublisherText -like "*publish-approved*") "Optional Issue publication no longer requires digest-bound confirmation."
     $digestScriptPath = Join-Path $pluginRoot "scripts/Semantic-Digest.ps1"
+    $digestNodeScriptPath = Join-Path $pluginRoot "scripts/Semantic-Digest.mjs"
     $digestRulesPath = Join-Path $pluginRoot "scripts/semantic-digest-rules.v1.json"
     $artifactValidatorPath = Join-Path $pluginRoot "scripts/Validate-Artifact.ps1"
+    $artifactSemanticValidatorPath = Join-Path $pluginRoot "scripts/Test-ArtifactSemantics.ps1"
     $reviewValidatorPath = Join-Path $pluginRoot "scripts/Validate-Review-Markdown.ps1"
+    $handoffMarkdownValidatorPath = Join-Path $pluginRoot "scripts/Validate-Handoff-Markdown.ps1"
     Add-Check (Test-Path -LiteralPath $digestScriptPath -PathType Leaf) "Shared semantic digest utility is missing."
+    Add-Check (Test-Path -LiteralPath $digestNodeScriptPath -PathType Leaf) "Node semantic digest utility is missing."
     Add-Check (Test-Path -LiteralPath $digestRulesPath -PathType Leaf) "Versioned semantic digest rules are missing."
     Add-Check (Test-Path -LiteralPath $artifactValidatorPath -PathType Leaf) "Runtime artifact validator is missing."
+    Add-Check (Test-Path -LiteralPath $artifactSemanticValidatorPath -PathType Leaf) "Artifact semantic validator is missing."
     Add-Check (Test-Path -LiteralPath $reviewValidatorPath -PathType Leaf) "Review Markdown consistency validator is missing."
+    Add-Check (Test-Path -LiteralPath $handoffMarkdownValidatorPath -PathType Leaf) "Handoff Markdown consistency validator is missing."
     if ((Test-Path -LiteralPath $digestScriptPath -PathType Leaf) -and
         (Test-Path -LiteralPath $digestRulesPath -PathType Leaf)) {
         try {
             $digestFixture = Join-Path $fixtureRoot "semantic-digest-lifecycle.json"
-            $digestResult = & $digestScriptPath self-test $digestFixture -RulesPath $digestRulesPath
-            Add-Check ($digestResult -like "Self-test passed*") "Semantic digest lifecycle self-test did not pass."
+            $digestResult = @(& $digestScriptPath self-test $digestFixture -RulesPath $digestRulesPath) -join "`n"
+            Add-Check ($digestResult -match "^Self-test passed \(3 lifecycle cases; corpus sha256:[a-f0-9]{64}\)\.$") "PowerShell semantic digest lifecycle and corpus self-test did not pass."
+            $nodeDigestResult = @(& node $digestNodeScriptPath self-test $digestFixture --rules $digestRulesPath) -join "`n"
+            Add-Check ($LASTEXITCODE -eq 0) "Node semantic digest lifecycle and corpus self-test did not pass."
+            Add-Check ($nodeDigestResult -ceq $digestResult) "PowerShell and Node semantic digest canonicalization are not byte-equivalent."
         }
         catch {
             Add-Check $false "Semantic digest lifecycle self-test failed: $($_.Exception.Message)"
@@ -739,6 +805,69 @@ foreach ($pair in $schemaValidationPairs) {
     catch {
         Add-Check $false "Could not schema-validate $($pair.Json): $($_.Exception.Message)"
     }
+}
+
+$migrationSpecExamplePath = Join-Path $pluginRoot "skills/author-migration-specs/examples/migration-spec.example.json"
+$migrationSpecSchemaPath = Join-Path $pluginRoot "schemas/migration-spec.schema.json"
+try {
+    $artifactValidation = @(
+        & $artifactValidatorPath -ArtifactPath $migrationSpecExamplePath -SchemaPath $migrationSpecSchemaPath
+    ) -join "`n" | ConvertFrom-Json
+    Add-Check ($artifactValidation.valid -and $artifactValidation.semanticValidation.semanticValid) "Migration-spec example did not pass schema and semantic validation."
+}
+catch {
+    Add-Check $false "Migration-spec example semantic validation failed: $($_.Exception.Message)"
+}
+
+try {
+    $handoffJsonExample = Join-Path $pluginRoot "skills/finalize-code-handoff/examples/code-handoff.example.json"
+    $handoffMarkdownExample = Join-Path $pluginRoot "skills/finalize-code-handoff/examples/code-handoff.example.md"
+    $handoffConsistency = @(
+        & $handoffMarkdownValidatorPath -HandoffJsonPath $handoffJsonExample -HandoffMarkdownPath $handoffMarkdownExample
+    ) -join "`n" | ConvertFrom-Json
+    Add-Check ($handoffConsistency.consistent) "Code-handoff JSON and Markdown examples are inconsistent."
+}
+catch {
+    Add-Check $false "Code-handoff Markdown consistency validation failed: $($_.Exception.Message)"
+}
+
+try {
+    $reviewJsonExample = Join-Path $pluginRoot "skills/author-migration-specs/examples/migration-review.example.json"
+    $reviewMarkdownExample = Join-Path $pluginRoot "skills/author-migration-specs/examples/migration-review.example.md"
+    $reviewConsistency = @(
+        & $reviewValidatorPath -ReviewJsonPath $reviewJsonExample -ReviewMarkdownPath $reviewMarkdownExample
+    ) -join "`n" | ConvertFrom-Json
+    Add-Check ($reviewConsistency.consistent) "Migration-review JSON and Markdown examples are inconsistent."
+}
+catch {
+    Add-Check $false "Migration-review Markdown consistency validation failed: $($_.Exception.Message)"
+}
+
+try {
+    $reviewValidation = @(
+        & $artifactValidatorPath -ArtifactPath $reviewJsonExample -SchemaPath (Join-Path $pluginRoot "schemas/migration-review.schema.json")
+    ) -join "`n" | ConvertFrom-Json
+    Add-Check ($reviewValidation.valid -and $reviewValidation.semanticValidation.semanticValid) "Migration-review example did not pass schema and semantic validation."
+}
+catch {
+    Add-Check $false "Migration-review example semantic validation failed: $($_.Exception.Message)"
+}
+
+$invalidSemanticFixture = New-TemporaryFile
+try {
+    $invalidSpec = Get-Content -LiteralPath $migrationSpecExamplePath -Raw | ConvertFrom-Json -Depth 100
+    $invalidSpec.contracts[0].messages[0].fields[1].number =
+        $invalidSpec.contracts[0].messages[0].fields[0].number
+    $invalidSpec | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $invalidSemanticFixture
+    $invalidResult = @(& $artifactSemanticValidatorPath -ArtifactPath $invalidSemanticFixture) -join "`n" | ConvertFrom-Json
+    Add-Check (-not $invalidResult.semanticValid -and
+        @($invalidResult.errors | Where-Object { $_ -like "*reuses field number*" }).Count -gt 0) "Artifact semantic validator did not reject duplicate Protobuf field numbers."
+}
+catch {
+    Add-Check $false "Could not exercise invalid artifact semantic fixture: $($_.Exception.Message)"
+}
+finally {
+    Remove-Item -LiteralPath $invalidSemanticFixture -Force -ErrorAction SilentlyContinue
 }
 
 $orchestrationSchemaPath = Join-Path $pluginRoot "schemas/orchestration-state.schema.json"

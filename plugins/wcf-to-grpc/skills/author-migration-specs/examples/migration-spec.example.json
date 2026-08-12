@@ -180,7 +180,7 @@
             {
               "cardinality": "singular",
               "conversionRules": [
-                "System.Decimal maps to contoso.common.v1.DecimalValue (units plus nanos); double is never used for money."
+                "System.Decimal maps to contoso.common.v1.DecimalValue using the approved canonical-string encoding; double is never used for money."
               ],
               "decisionIds": [
                 "DEC-decimal-representation"
@@ -1617,6 +1617,11 @@
             "mode": "exclusive-write",
             "path": "src/Contoso.Orders.Grpc/Program.cs",
             "reason": "Host bootstrap and DI composition have one owner."
+          },
+          {
+            "mode": "exclusive-write",
+            "path": "src/Contoso.Orders.Grpc/Contoso.Orders.Grpc.csproj",
+            "reason": "The host bootstrap package owns the host project file."
           },
           {
             "mode": "shared-read",

@@ -325,6 +325,11 @@ interaction class; summarize architecture, contracts, roadmap, work packages,
 blockers, and offline-handoff prerequisites; and emit the `outOfScopeActions`
 list (covering GitHub mutation, protected traffic, production access, production
 cutover, WCF retirement, golden-traffic capture, and retirement approval).
+Populate `renderedArtifacts` with every architecture, contract, roadmap, and
+work-package Markdown path that the reviewer must inspect. Each entry lists the
+stable ids and SHA-256 content digest bound by that rendering. The consolidated
+Markdown must link every entry and show its digest so approval never relies on
+an unlisted or subsequently changed artifact.
 
 Populate `offlineHandoffItems` for every non-blocking item that is not in
 the approval scope. Each item carries a `gate` value:

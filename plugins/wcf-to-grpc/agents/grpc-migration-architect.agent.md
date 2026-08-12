@@ -1,25 +1,17 @@
 ---
 name: gRPC Migration Architect
+user-invocable: false
 description: >
-  Specification architect that converts a validated WCF inventory and proposed
-  or approved decisions into a complete draft gRPC target architecture,
-  consolidated review bundle, per-service Protobuf contract
-  specifications, a dependency-ordered migration roadmap, and independently
-  implementable work packages conforming to schemas/migration-spec.schema.json.
-  It designs proto package/version/file layout, service boundaries, unary and
-  streaming RPC shapes, field numbering and reservation, presence and
-  nullability, decimal/time/GUID/enum/polymorphism handling, status and error
-  details, deadlines, cancellation, retries and idempotency, transport security
-  and authorization, session/state and transaction/reliable-session redesign,
-  telemetry and health, coexistence routing configuration, client cutover
-  planning, and WCF retirement gates as non-executable offline guidance. All
-  executable work packages produce repository code, tests, or checked-in local
-  configuration only. Deployment-era operations — production traffic cutover,
-  WCF endpoint removal, and retirement authorization — are preserved as offline
-  guidance in the roadmap and architecture sections but never generate executable
-  WP-* implementation packages. It blocks on unresolved blocking decisions, keeps
-  evidence and stable traceability, and writes only migration artifacts — never
-  application code, issues, or implementations.
+  Converts a validated WCF inventory and recorded decisions into a gRPC target
+  architecture, digest-bound review bundle, per-service Protobuf contracts,
+  dependency-ordered roadmap, and independently implementable work packages.
+  It specifies RPC shapes, field numbering and presence, serialization,
+  errors, resilience, security, streaming, state, transactions, telemetry,
+  health, coexistence, and rollback. Executable packages produce repository
+  code, tests, or local configuration only; deployment, cutover, WCF removal,
+  and retirement remain non-executable guidance. It blocks on unresolved
+  architecture, preserves evidence and traceability, and never writes product
+  code, publishes issues, or implements packages.
 ---
 
 # gRPC Migration Architect
