@@ -85,27 +85,36 @@ Run this authenticated test in a disposable copy of
 `fixtures/basic-unary/` so generated migration artifacts do not modify the
 checked-in fixture.
 
-1. Select **WCF Migration Orchestrator**; accept whole-repository scope or name
-   a narrower slice. Leave permissions denied unless a later action needs one.
-2. Confirm the orchestrator invokes **WCF Codebase Analyst** itself; it must not
+1. Select **WCF Migration Orchestrator** and request a migration without
+   supplying Stage 0 values. Confirm it uses a structured wizard with exactly
+   one focused question at a time rather than one free-form questionnaire.
+2. Accept a predefined choice for whole-repository scope, enter a custom output
+   directory, and select an isolated layout. Confirm the custom value is
+   validated and the wizard asks for `grpcRoot`; confirm it asks for
+   `copiedWcfFixtureRoot` only when copy-fixture mode is selected. Leave
+   permissions denied unless optional Issue publication needs mutation.
+3. Interrupt and resume after intake is persisted. Confirm completed values are
+   not asked again. Also start a separate disposable run with a complete Stage
+   0 prompt and confirm the wizard is skipped.
+4. Confirm the orchestrator invokes **WCF Codebase Analyst** itself; it must not
    ask you to switch agents or paste an inventory envelope.
-3. Confirm safe recommendations are proposed in one pass. At most one
+5. Confirm safe recommendations are proposed in one pass. At most one
    irreducible blocker appears at a time and answers persist to
    `decision-log.json`.
-4. Confirm mapping runs through **WCF-to-gRPC Mapper** and writes a
+6. Confirm mapping runs through **WCF-to-gRPC Mapper** and writes a
    schema-valid `mapping-result.json`.
-5. Interrupt and resume the session. The orchestrator must re-read state and
+7. Interrupt and resume the session. The orchestrator must re-read state and
    artifacts without repeating completed inventory, answered decisions, or
    mapping work.
-6. Confirm `migration-review.json/.md` contains the full plan and exact
+8. Confirm `migration-review.json/.md` contains the full plan and exact
    semantic digest. One human approval records only its listed decisions,
    specification, and work packages. Issue publication remains preview-only;
    protected traffic, production, cutover, rollback execution, and retirement
    remain separate gates.
-7. For an approved test specification, confirm each implementation invocation
+9. For an approved test specification, confirm each implementation invocation
    receives exactly one `WP-*` id, conflicting/shared packages remain
    sequential, and completion is derived from reports on disk.
-8. Temporarily make a delegated agent unavailable and confirm the orchestrator
+10. Temporarily make a delegated agent unavailable and confirm the orchestrator
    records the failure and emits a copyable manual recovery handoff rather than
    claiming completion.
 

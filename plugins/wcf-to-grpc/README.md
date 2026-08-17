@@ -7,7 +7,11 @@ solution build, repository-local tests, and a structured code handoff.
 
 Stage 0 records whether gRPC augments the existing solution or is created in
 an isolated solution that references WCF read-only, contains an immutable WCF
-test fixture, or contains only gRPC projects. WCF remains unchanged throughout.
+test fixture, or contains only gRPC projects. Missing Stage 0 values are
+collected by a sequential wizard: one structured question at a time, with
+readable choices, custom answers, conditional path questions, and saved values
+skipped on resume. A complete pre-seeded Stage 0 prompt remains supported.
+WCF remains unchanged throughout.
 Deployment,
 environment provisioning, production/protected traffic, runtime parity
 validation, cutover, live rollback, and WCF retirement are out-of-scope

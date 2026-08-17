@@ -643,6 +643,21 @@ if ((Test-Path -LiteralPath $pluginReadmePath -PathType Leaf) -and (Test-Path -L
     Add-Check ($orchestrationSchemaText -notmatch '"validationRuns"|"retirementOutcome"|"allowHarness"|"allowGoldenTraffic"|"allowLoadTest"|"allowProductionAccess"') "Orchestration state still stores removed operational gates or outcomes."
     Add-Check ($orchestrationSchemaText -like '*"code-complete"*' -and $orchestrationSchemaText -like '*"offline-handoff"*') "Orchestration state lacks code-only completion stages."
     Add-Check ($orchestrationSchemaText -like '*"capabilityCheck"*' -and $orchestrationSchemaText -like '*"attemptHistory"*') "Orchestration state lacks capability preflight or append-only attempt history."
+    Add-Check (
+        $orchestratorText -like "*ask_user*wizard input*" -and
+        $orchestratorText -like "*exactly one focused question per call*" -and
+        $orchestratorText -like "*free-form*custom answer*"
+    ) "Orchestrator lacks structured sequential Stage 0 wizard elicitation."
+    Add-Check (
+        $orchestratorText -like "*grpcRoot*only for an isolated layout*" -and
+        $orchestratorText -like "*copiedWcfFixtureRoot*only for copy-fixture mode*" -and
+        $orchestratorText -like "*GitHub mutation permission only when*Issue publication*"
+    ) "Orchestrator lacks conditional Stage 0 wizard questions."
+    Add-Check (
+        $orchestratorText -like "*complete Stage 0 prompt remains a supported advanced path*" -and
+        $orchestratorText -like "*never re-ask a value present in valid persisted state*" -and
+        $orchestratorText -like "*re-ask only*that field*"
+    ) "Orchestrator lacks Stage 0 wizard compatibility, resume, or focused-correction behavior."
     Add-Check ($orchestratorText -like "*capability-probe*" -and $orchestratorText -like "*do not retry*") "Orchestrator does not reject unchanged incapable implementation backends."
     $architectText = Get-Content -LiteralPath $architectPath -Raw
     Add-Check ($architectText -like "*approvalTransaction*" -and $architectText -like "*implementation*require*a new*design choice*") "Architect lacks atomic approval or implementation-readiness safeguards."

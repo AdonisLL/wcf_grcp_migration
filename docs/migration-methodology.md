@@ -17,6 +17,14 @@ solution, or create an isolated solution that references WCF read-only, copies
 an immutable WCF test fixture, or contains only gRPC projects. WCF is never
 modified in any mode.
 
+**Stage 0 wizard:** When intake is not supplied up front, the orchestrator asks
+one structured question at a time. Each bounded question presents readable
+choices and accepts a custom answer; follow-up paths appear only for the
+selected isolated layout. Whole-repository scope, the standard output
+directory, and denied permissions remain safe defaults. Existing answers are
+skipped, while an advanced user may still provide every Stage 0 value in the
+initial prompt.
+
 For how the plugin is built see [architecture.md](architecture.md); for the
 files it produces see [output-contracts.md](output-contracts.md).
 

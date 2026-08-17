@@ -117,6 +117,9 @@ the bounded ownership its assigned work package declares.
 
 The orchestrator drives stages 0–9. Each transition is gated on artifact
 state that can be read back from disk, which is what makes a run resumable.
+Stage 0 is a sequential structured wizard over only the missing intake values;
+it accepts custom answers, asks layout-specific paths conditionally, and skips
+values already supplied or persisted.
 
 ```text
 intake ──▶ inventory ──▶ proposals/blockers ──▶ mapping ──▶ draft + review bundle

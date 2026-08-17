@@ -8,10 +8,12 @@ evidence-backed analysis, an explicit decision record, a reviewable
 specification, and gated implementation ending with an affected solution build,
 repository-local tests, and a structured code handoff.
 
-Stage 0 asks whether to add gRPC to the existing solution or create an isolated
-solution in a new folder. An isolated solution may reference the original WCF
-projects read-only, contain an immutable WCF test fixture, or contain only gRPC
-projects. WCF remains unchanged in every mode.
+Stage 0 uses a sequential wizard for missing intake values, including whether
+to add gRPC to the existing solution or create an isolated solution in a new
+folder. Each question offers readable choices and a custom-answer path. An
+isolated solution may reference the original WCF projects read-only, contain an
+immutable WCF test fixture, or contain only gRPC projects. WCF remains unchanged
+in every mode.
 
 The plugin drafts before it interrupts. It selects only high-confidence,
 reversible, evidence-backed recommendations as proposed assumptions, then asks
@@ -128,7 +130,7 @@ Run Copilot CLI from the root of the WCF repository you want to migrate, then
 select **WCF Migration Orchestrator** with `/agent`.
 
 **Run the whole migration (recommended).** Select **WCF Migration
-Orchestrator**. You can start interactively with:
+Orchestrator** and start with:
 
 > Orchestrate a WCF to gRPC migration for this repository. Ask me for any
 > irreducible choices, prepare the complete recommended migration plan, then
@@ -136,12 +138,17 @@ Orchestrator**. You can start interactively with:
 > Ask whether to augment the existing solution or create an isolated solution.
 > Deployment, production traffic, cutover, and retirement are out of scope.
 
-The orchestrator will ask for any missing Stage 0 values and continue in the
-same conversation after you answer. It invokes each specialist agent directly,
-so you stay with the orchestrator instead of switching agents or copying
-handoff envelopes.
+The orchestrator initializes Stage 0 as a wizard. It asks one focused,
+structured question at a time for missing values, presents readable choices
+with recommended defaults and short tradeoffs, and lets you enter a custom
+answer. Conditional questions appear only when relevant. Values already
+supplied or saved are skipped, so you can continue in the same conversation
+without re-entering completed intake. It invokes each specialist agent
+directly, so you stay with the orchestrator instead of switching agents or
+copying handoff envelopes.
 
-**Complete Stage 0 prompt.** This example supplies every intake value up front:
+**Advanced: complete Stage 0 prompt.** You can bypass the wizard by supplying
+every intake value up front:
 
 > Orchestrate a WCF to gRPC migration. The repository root is the current
 > working directory. Scope the entire repository with no exclusions and write
@@ -156,10 +163,11 @@ handoff envelopes.
 > Deployment, protected traffic, cutover, rollback execution, and WCF
 > retirement are out of scope.
 
-Stage 0 establishes the following values. Omitted permissions default to
-denied. Repository kind comes from inventory, whole-repository scope is the
-default, and the decision stage proposes the current supported .NET LTS unless
-evidence makes it unsafe.
+Stage 0 establishes the following values. The wizard accepts a custom answer
+where applicable, then validates and normalizes it to the persisted contract.
+Omitted permissions default to denied. Repository kind comes from inventory,
+whole-repository scope is the default, and the decision stage proposes the
+current supported .NET LTS unless evidence makes it unsafe.
 
 | Intake value | Accepted values or example |
 |---|---|
@@ -261,7 +269,7 @@ The operator-controlled gates are:
 
 | Gate | What clears it |
 |---|---|
-| Stage 0 intake | Clarify scope only when the whole-repository default is not intended |
+| Stage 0 intake | Complete the guided missing-value questions; solution layout and isolated-layout paths require explicit answers, while scope, output, and permissions have documented defaults |
 | Focused decision blocker | Answer only when no safe behavior-preserving recommendation exists |
 | Consolidated architecture review | Approve, reject, or override the exact digest-bound decisions, specification, and work packages |
 | Issue publication | Approve the full preview using its matching digest and grant GitHub mutation |

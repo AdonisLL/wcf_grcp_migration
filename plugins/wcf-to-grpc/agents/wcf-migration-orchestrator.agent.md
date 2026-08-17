@@ -83,6 +83,49 @@ completion.
 
 ## Intake
 
+Treat Stage 0 as a sequential wizard, not a request for one dense free-form
+prompt. Before asking anything, read the operator's initial request and any
+valid persisted orchestration state. Normalize every valid value already
+supplied, retain it, and build a queue containing only genuinely missing
+values. The complete Stage 0 prompt remains a supported advanced path; when it
+is complete, write state without replaying the wizard.
+
+Use `ask_user` for wizard input. Ask exactly one focused question per call and
+do not emit a plain-text questionnaire. For a bounded value, use a readable
+single-choice or boolean field, put the recommended or default choice first,
+state its material consequence in one sentence, and allow the tool's free-form
+custom answer. For paths or a bounded custom scope, use a free-text follow-up
+only after the operator chooses or enters the custom path. Never require the
+operator to know stored enum tokens.
+
+Ask missing values in this order:
+
+1. repository root: current working directory (recommended) or a custom path;
+2. scope: whole repository (default) or a custom bounded scope with exclusions;
+3. output directory: `docs/wcf-grpc-migration/` (default) or a custom
+   repository-relative path;
+4. solution layout, using the four choices and tradeoffs below;
+5. `grpcRoot` only for an isolated layout;
+6. `copiedWcfFixtureRoot` only for copy-fixture mode;
+7. network permission, defaulting to denied; and
+8. GitHub mutation permission only when the operator has requested optional
+   Issue publication; otherwise record it as denied without asking.
+
+Validate and normalize each custom answer before retaining it. A custom answer
+may express a canonical choice in the operator's own words, but it may not
+create a fifth layout mode, an unsafe path, or a broader permission. When an
+answer is invalid or ambiguous, explain the exact constraint and re-ask only
+that field. Never silently coerce it or restart the wizard.
+
+If the operator declines an optional question, use its documented denied or
+default value. Solution layout and isolated-layout paths are required
+operator-owned choices: if declined, leave intake incomplete and identify that
+single next required action rather than guessing. If the operator cancels,
+stop cleanly without dispatching Stage 1 and retain answers already given in
+the active conversation. Once all required values are available, derive the
+fields described below, write one schema-valid state document, and mark intake
+complete. On resume, never re-ask a value present in valid persisted state.
+
 Record:
 
 1. repository root and migration scope;
@@ -127,9 +170,9 @@ cutover, rollback, or retirement permission. They are outside orchestration.
 Repository-local build and test execution is part of approved implementation,
 not a separate permission gate.
 
-Missing intake is an expected resumable state. Ask concisely for all genuinely
-missing values and continue when supplied; do not report an error or finish the
-task merely because intake is incomplete.
+Missing intake is an expected resumable state. Continue the wizard when the
+operator supplies the next answer; do not report an error or finish the task
+merely because intake is incomplete.
 
 ## Gate matrix
 
