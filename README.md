@@ -135,7 +135,8 @@ Orchestrator** and start with:
 > Orchestrate a WCF to gRPC migration for this repository. Ask me for any
 > irreducible choices, prepare the complete recommended migration plan, then
 > ask me to review it once. Stop separately for GitHub Issue publication.
-> Ask whether to augment the existing solution or create an isolated solution.
+> Guide me through missing Stage 0 values one question at a time. Show readable
+> choices with a recommended default and let me enter a custom answer.
 > Deployment, production traffic, cutover, and retirement are out of scope.
 
 The orchestrator initializes Stage 0 as a wizard. It asks one focused,
@@ -146,6 +147,12 @@ supplied or saved are skipped, so you can continue in the same conversation
 without re-entering completed intake. It invokes each specialist agent
 directly, so you stay with the orchestrator instead of switching agents or
 copying handoff envelopes.
+
+**What you will see.** The wizard first offers whole-repository or custom
+scope, then the four supported solution layouts with a custom-answer path that
+must normalize to one of those layouts. Layout-specific questions appear only
+when needed—for example, `grpcRoot` follows an isolated-layout choice, and the
+WCF fixture path appears only for copy-fixture mode.
 
 **Advanced: complete Stage 0 prompt.** You can bypass the wizard by supplying
 every intake value up front:
