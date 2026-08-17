@@ -1178,3 +1178,6 @@ if ($script:Failures.Count -gt 0) {
 
 Write-Host ""
 Write-Host "Validation passed: $($script:Checks) checks; $($allJsonFiles.Count) JSON files; $($schemaFiles.Count) schemas; $($markdownFiles.Count) Markdown files; $($expectedFiles.Count) fixtures." -ForegroundColor Green
+# Nested validators (for example the intentionally invalid semantic fixture) leave a
+# non-zero $LASTEXITCODE behind, so exit explicitly to report success to callers.
+exit 0
